@@ -35,13 +35,24 @@ function createMusicPlayerEmbed(queue, song, status = 'กำลังเล่�
   const duration = song.formattedDuration || '00:00';
   const currentTime = queue.formattedCurrentTime || '00:00';
 
-  // Progress Bar
+  // คำนวณเวลาที่เหลือและ Timestamp สำหรับนับถอยหลังสด
   const totalSec = song.duration || 1;
   const currentSec = queue.currentTime || 0;
+  const remainingSec = Math.max(totalSec - currentSec, 0);
+  const endTimestamp = Math.floor((Date.now() + remainingSec * 1000) / 1000);
+
+  // Progress Bar
   const percent = Math.min(Math.max((currentSec / totalSec) * 100, 0), 100);
   const totalBars = 12;
   const progress = Math.round((percent / 100) * totalBars);
-  const bar = '▬'.repeat(progress) + '🔘' + '▬'.repeat(totalBars - progress);
+  const bar = '▬'.repeat(progress) + '🔘' + '▬'.repeat(Math.max(totalBars - progress, 0));
+
+  let timeDisplay = `⏱️ **ความยาว:** \`${duration}\` • จบในอีก <t:${endTimestamp}:R>`;
+  if (isPaused) {
+    timeDisplay = `⏱️ **หยุดอยู่ที่:** \`${currentTime} / ${duration}\` (⏸️ พักเพลง)`;
+  } else if (song.isLive) {
+    timeDisplay = `🔴 **สตรีมสด (Live Stream)**`;
+  }
 
   return new EmbedBuilder()
     .setAuthor({
@@ -54,7 +65,7 @@ function createMusicPlayerEmbed(queue, song, status = 'กำลังเล่�
     .setColor(isPaused ? config.colors.warning : config.colors.primary)
     .setDescription(
       `👤 **ศิลปิน/ช่อง:** \`${song.uploader?.name || 'YouTube'}\`\n` +
-      `⏱️ **ระยะเวลา:** \`${currentTime} / ${duration}\`\n` +
+      `${timeDisplay}\n` +
       `\`${bar}\`\n\n` +
       `🔊 **ระดับเสียง:** \`${volume}%\` | 🔁 **โหมดวนซ้ำ:** \`${loopMode}\`\n` +
       `📜 **เพลงในคิวรอเล่น:** \`${queue.songs.length - 1}\` เพลง\n` +
@@ -317,12 +328,67 @@ function initDisTube(client) {
   return distube;
 }
 
+/**
+ * ทำความสะอาดข้อความตกค้างทั้งหมดในห้องขอเพลงเมื่อบอทเริ่มทำงาน และส่งแผงควบคุมเริ่มต้น
+ * @param {object} client - Discord Client Instance
+ */
+async function cleanupMusicChannelOnStartup(client) {
+  try {
+    const channelId = config.bot.musicChannelId;
+    if (!channelId) return;
+
+    // ดึงช่องขอเพลงโดยตรงจาก Discord API
+    const musicChannel = await client.channels.fetch(channelId).catch(() => null);
+    if (!musicChannel || !musicChannel.isTextBased()) return;
+
+    const guild = musicChannel.guild;
+    const botMember = guild.members.me || await guild.members.fetch(client.user.id).catch(() => null);
+    if (!botMember) return;
+
+    const permissions = musicChannel.permissionsFor(botMember);
+    if (!permissions || !permissions.has(PermissionFlagsBits.ManageMessages) || !permissions.has(PermissionFlagsBits.SendMessages)) {
+      logger.warn(`บอทไม่มีสิทธิ์ ManageMessages หรือ SendMessages ในห้อง #${musicChannel.name}`);
+      return;
+    }
+
+    // ดึงข้อความทั้งหมดในห้องขอเพลง (สูงสุด 100 ข้อความ)
+    const messages = await musicChannel.messages.fetch({ limit: 100 }).catch(() => null);
+    if (messages && messages.size > 0) {
+      logger.info(`[Music Startup] กำลังทำความสะอาดข้อความ ${messages.size} ข้อความ ในห้อง #${musicChannel.name}...`);
+      
+      const twoWeeksAgo = Date.now() - 14 * 24 * 60 * 60 * 1000;
+      const youngMessages = messages.filter(m => m.createdTimestamp > twoWeeksAgo);
+      const oldMessages = messages.filter(m => m.createdTimestamp <= twoWeeksAgo);
+
+      if (youngMessages.size > 0) {
+        await musicChannel.bulkDelete(youngMessages, true).catch(() => {});
+      }
+
+      for (const msg of oldMessages.values()) {
+        await msg.delete().catch(() => {});
+      }
+    }
+
+    // ส่งแผงควบคุม Standby อันใหม่ที่สะอาดเอี่ยม
+    const standbyEmbed = createStandbyEmbed(guild);
+    const panelMessage = await musicChannel.send({ embeds: [standbyEmbed] }).catch(() => null);
+    if (panelMessage) {
+      panelMessages.set(guild.id, panelMessage.id);
+    }
+
+    logger.success(`[Music Startup] ล้างข้อความตกค้างและรีเซ็ตแผงควบคุมใน #${musicChannel.name} (${guild.name}) สำเร็จ`);
+  } catch (error) {
+    logger.error('เกิดข้อผิดพลาดขณะทำความสะอาดห้องขอเพลงตอนเริ่มต้น:', error);
+  }
+}
+
 module.exports = {
   initDisTube,
   createMusicPlayerEmbed,
   createMusicControls,
   createStandbyEmbed,
   updateDedicatedMusicPanel,
+  cleanupMusicChannelOnStartup,
   isDedicatedMusicChannel,
   panelMessages
 };

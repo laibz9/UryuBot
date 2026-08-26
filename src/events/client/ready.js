@@ -4,6 +4,7 @@
  */
 
 const { ActivityType, Events } = require('discord.js');
+const { cleanupMusicChannelOnStartup } = require('../../utils/musicManager');
 const logger = require('../../utils/logger');
 
 module.exports = {
@@ -19,6 +20,9 @@ module.exports = {
     logger.success(`บอทออนไลน์แล้วในชื่อ: ${client.user.tag}`);
     logger.success(`ประจำการอยู่ทั้งหมด: ${client.guilds.cache.size} เซิร์ฟเวอร์`);
     logger.success(`==============================================`);
+
+    // ล้างข้อความตกค้างและตั้งค่าแผงควบคุมเพลงเริ่มต้นในห้องขอเพลง
+    await cleanupMusicChannelOnStartup(client);
 
     // ฟังก์ชันอัปเดตสถานะสีม่วง (Streaming Status)
     const updateStreamingPresence = () => {
