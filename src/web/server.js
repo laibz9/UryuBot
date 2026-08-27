@@ -431,8 +431,14 @@ function startWebServer(client) {
             icon: guild.iconURL({ dynamic: true }) || 'https://cdn-icons-png.flaticon.com/512/1069/1069210.png',
             memberCount: guild.memberCount,
             channels: guild.channels.cache
-              .filter(c => c.isTextBased() || c.type === 4)
-              .map(c => ({ id: c.id, name: c.name, type: c.type }))
+              .map(c => ({
+                id: c.id,
+                name: c.name,
+                type: c.type,
+                isVoice: Boolean(c.isVoiceBased?.() || c.type === 2 || c.type === 13),
+                isText: Boolean(c.isTextBased?.() || c.type === 0 || c.type === 5),
+                isCategory: Boolean(c.type === 4)
+              }))
               .sort((a, b) => a.name.localeCompare(b.name)),
             roles: guild.roles.cache
               .filter(r => r.name !== '@everyone')

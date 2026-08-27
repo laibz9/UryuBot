@@ -419,7 +419,7 @@ document.addEventListener('DOMContentLoaded', () => {
     cfgAdminRole.innerHTML = roleOptions;
     cfgModeratorRole.innerHTML = roleOptions;
 
-    const textChannels = guild.channels.filter(c => c.type !== 4);
+    const textChannels = (guild.channels || []).filter(c => c.isText || c.type === 0 || c.type === 5 || (!c.isVoice && c.type !== 4 && c.type !== 2 && c.type !== 13));
     const channelOptions = [
       '<option value="">-- ไม่กำหนดช่อง (None) --</option>',
       ...textChannels.map(c => `<option value="${c.id}"># ${c.name}</option>`)
@@ -1472,22 +1472,26 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateStudioChannelDropdowns(guild) {
     if (!guild) return;
 
-    // Populate Voice Channels for DJ
+    // Populate Voice Channels for DJ Studio (type 2 = Voice, type 13 = Stage Voice)
     if (djVoiceChannel) {
       djVoiceChannel.innerHTML = '<option value="">เลือกห้องเสียง...</option>';
-      const voiceChannels = (guild.channels || []).filter(c => c.type === 2);
-      voiceChannels.forEach(ch => {
-        const opt = document.createElement('option');
-        opt.value = ch.id;
-        opt.textContent = `🔊 ${ch.name}`;
-        djVoiceChannel.appendChild(opt);
-      });
+      const voiceChannels = (guild.channels || []).filter(c => c.isVoice || c.type === 2 || c.type === 13);
+      if (voiceChannels.length > 0) {
+        voiceChannels.forEach(ch => {
+          const opt = document.createElement('option');
+          opt.value = ch.id;
+          opt.textContent = `🔊 ${ch.name}`;
+          djVoiceChannel.appendChild(opt);
+        });
+      } else {
+        djVoiceChannel.innerHTML = '<option value="">ไม่พบห้องเสียงในเซิร์ฟเวอร์</option>';
+      }
     }
 
     // Populate Text Channels for Embed Builder
     if (embedChannelSelect) {
       embedChannelSelect.innerHTML = '<option value="">เลือกห้องแชท...</option>';
-      const textChannels = (guild.channels || []).filter(c => c.type === 0 || c.type === 5);
+      const textChannels = (guild.channels || []).filter(c => c.isText || c.type === 0 || c.type === 5);
       textChannels.forEach(ch => {
         const opt = document.createElement('option');
         opt.value = ch.id;
