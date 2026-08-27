@@ -49,7 +49,13 @@ module.exports = {
       const hasPerm = await checkCommandPermission(interaction, 'admin');
       if (!hasPerm) return;
 
-      const targetUser = interaction.options.getUser('user');
+      let targetUser = interaction.options.getUser('user') || interaction.options.getMember('user')?.user;
+      const rawValue = interaction.options.get('user')?.value;
+
+      if (!targetUser && rawValue) {
+        targetUser = await interaction.client.users.fetch(rawValue).catch(() => null);
+      }
+
       const reason = interaction.options.getString('reason') || 'ไม่ได้ระบุเหตุผล';
       const deleteMessageSeconds = interaction.options.getInteger('delete_messages') || 0;
       const guild = interaction.guild;
@@ -57,7 +63,7 @@ module.exports = {
 
       // 0. ตรวจสอบว่าระบุผู้ใช้ถูกต้องหรือไม่
       if (!targetUser) {
-        const errEmbed = createErrorEmbed('ไม่พบผู้ใช้', 'กรุณาระบุสมาชิกที่ต้องการแบนให้ถูกต้อง');
+        const errEmbed = createErrorEmbed('ไม่พบผู้ใช้', 'กรุณาระบุสมาชิกหรือบอทที่ต้องการแบนให้ถูกต้อง');
         return await interaction.reply({ embeds: [errEmbed], flags: MessageFlags.Ephemeral });
       }
 
@@ -67,7 +73,7 @@ module.exports = {
         return await interaction.reply({ embeds: [errEmbed], flags: MessageFlags.Ephemeral });
       }
 
-      // 2. ตรวจสอบว่าพยายามแบนบอทหรือไม่
+      // 2. ตรวจสอบว่าพยายามแบนบอทตัวเองหรือไม่
       if (targetUser.id === interaction.client.user.id) {
         const errEmbed = createErrorEmbed('ดำเนินการไม่สำเร็จ', config.messages.cannotTargetBot);
         return await interaction.reply({ embeds: [errEmbed], flags: MessageFlags.Ephemeral });
@@ -81,7 +87,7 @@ module.exports = {
       }
 
       // ตรวจสอบข้อมูล GuildMember (ถ้าอยู่ในเซิร์ฟเวอร์)
-      const targetMember = await guild.members.fetch(targetUser.id).catch(() => null);
+      const targetMember = interaction.options.getMember('user') || await guild.members.fetch(targetUser.id).catch(() => null);
 
       if (targetMember) {
         // ตรวจสอบลำดับยศของบอทกับเป้าหมาย

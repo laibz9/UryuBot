@@ -38,14 +38,20 @@ module.exports = {
       const hasPerm = await checkCommandPermission(interaction, 'moderator');
       if (!hasPerm) return;
 
-      const targetUser = interaction.options.getUser('user');
+      let targetUser = interaction.options.getUser('user') || interaction.options.getMember('user')?.user;
+      const rawValue = interaction.options.get('user')?.value;
+
+      if (!targetUser && rawValue) {
+        targetUser = await interaction.client.users.fetch(rawValue).catch(() => null);
+      }
+
       const reason = interaction.options.getString('reason') || 'ไม่ได้ระบุเหตุผล';
       const guild = interaction.guild;
       const executor = interaction.member;
 
       // 0. ตรวจสอบว่าระบุผู้ใช้ถูกต้องหรือไม่
       if (!targetUser) {
-        const errEmbed = createErrorEmbed('ไม่พบผู้ใช้', 'กรุณาระบุสมาชิกที่ต้องการเตะให้ถูกต้อง');
+        const errEmbed = createErrorEmbed('ไม่พบผู้ใช้', 'กรุณาระบุสมาชิกหรือบอทที่ต้องการเตะให้ถูกต้อง');
         return await interaction.reply({ embeds: [errEmbed], flags: MessageFlags.Ephemeral });
       }
 
@@ -62,10 +68,10 @@ module.exports = {
       }
 
       // ดึงข้อมูล GuildMember ของเป้าหมาย
-      const targetMember = await guild.members.fetch(targetUser.id).catch(() => null);
+      const targetMember = interaction.options.getMember('user') || await guild.members.fetch(targetUser.id).catch(() => null);
 
       if (!targetMember) {
-        const errEmbed = createErrorEmbed('ไม่พบสมาชิก', 'ผู้ใช้งานนี้ไม่ได้อยู่ในเซิร์ฟเวอร์นี้');
+        const errEmbed = createErrorEmbed('ไม่พบสมาชิก', 'สมาชิกหรือบอทนี้ไม่ได้อยู่ในเซิร์ฟเวอร์นี้แล้ว');
         return await interaction.reply({ embeds: [errEmbed], flags: MessageFlags.Ephemeral });
       }
 
