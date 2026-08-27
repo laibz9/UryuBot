@@ -43,7 +43,7 @@ module.exports = {
         const statusList = [
           '🛡️ ดูแลความปลอดภัยและระบบเซิร์ฟเวอร์',
           `👥 ประจำการดูแลสมาชิก ${totalMembers} คน`,
-          '⚡ Slash Commands | /ping',
+          '⚡ Slash Commands | /help',
           '💜 uryu_bot Community Guard'
         ];
 

@@ -1,47 +1,67 @@
-# 🤖 UryuBot • Discord Multi-Purpose Suite & Web Dashboard
+# 🤖 UryuBot • Enterprise Discord Suite & Web Dashboard
 
-โปรเจกต์ Discord Bot อเนกประสงค์ระดับ Production สร้างด้วย **Node.js (Discord.js v14)** เชื่อมต่อฐานข้อมูล **MySQL (`mysql2`)** พร้อมหน้าเว็บ **Web Setup Dashboard & Remote Actions** ปลอดภัยสูงสุดด้วยระบบ **Discord OAuth2 Login (Server Owner Only)**
+<div align="center">
+
+![UryuBot Banner](https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1200&auto=format&fit=crop)
+
+[![Discord.js](https://img.shields.io/badge/discord.js-v14.16.3-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.js.org)
+[![DisTube](https://img.shields.io/badge/DisTube-v5.2.3-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://distube.js.org)
+[![MySQL](https://img.shields.io/badge/MySQL-8.0+-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com)
+[![Express](https://img.shields.io/badge/Express-v4.19.2-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com)
+[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
+
+**สุดยอดโปรเจกต์ Discord Bot อเนกประสงค์ระดับ Enterprise สร้างด้วย Node.js (Discord.js v14)**  
+เชื่อมต่อฐานข้อมูล **MySQL Cloud** พร้อมหน้าเว็บ **Web Setup Dashboard v4.0** สไตล์ **Cyberpunk Glassmorphism**  
+ปลอดภัยสูงสุดด้วยระบบ **Discord OAuth2 Authorized App (Server Owner Only)**
+
+[🌟 ฟีเจอร์เด่น](#-ฟีเจอร์หลักทั้งหมด-key-modules) • [📜 สารบัญคำสั่ง (33 คำสั่ง)](#-สารบัญคำสั่งทั้งหมด-slash-commands-directory---33-คำสั่ง) • [💻 วิธีติดตั้ง Local](#-วิธีรันบนเครื่องคอมพิวเตอร์ส่วนตัว-local-development) • [🚀 นำขึ้น Cloud VPS](#-วิธีนำบอทขึ้น-cloud-vps-ubuntu-2404-lts) • [🔄 ระบบซิงค์ 1-Click](#-ระบบซิงค์-1-click-local---vps)
+
+</div>
 
 ---
 
 ## 🌟 ฟีเจอร์หลักทั้งหมด (Key Modules)
 
-### 1. 🌐 แผงตั้งค่าผ่านเว็บ & สั่งการบอทสด (Web Setup Dashboard)
-- **🏰 เลือกลำดับเซิร์ฟเวอร์**: สลับเซิร์ฟเวอร์ที่บอทอยู่ได้แบบไดนามิก
-- **🎛️ จัดการยศ (Roles Management)**: กำหนดยศ `Verified`, `Leader`, `Admin`, และ `Moderator`
-- **📺 จัดการช่องระบบ (Channels Management)**: กำหนด `ช่องยืนยันตัวตน (Verify)`, `ช่องต้อนรับ (Welcome)`, `ช่องบอกลา (Goodbye)`, `ช่องบันทึกความปลอดภัย (Logs)`, `ช่องขอเพลง (Music)`, และ `หมวดหมู่ทิกเก็ต (Ticket Category)`
-- **🔘 สวิตช์ฟังก์ชัน (Feature Toggles)**: เปิด/ปิดระบบต้อนรับ และระบบ Audit Logs
-- **⚡ ศูนย์สั่งการด่วน (Remote Action Center)**:
-  - 🔐 ส่งแผงยืนยันตัวตน CAPTCHA
-  - 🎫 ส่งแผงเปิดทิกเก็ตช่วยเหลือ
-  - 🎵 รีเซ็ตและติดตั้งห้องขอเพลง
-  - 🚨 สวิตช์ล็อกดาวน์เซิร์ฟเวอร์ฉุกเฉิน (Lockdown Toggle)
-- **📢 ส่งประกาศข่าวสารสด (Live Embed Announcer)**: พิมพ์หัวข้อ เนื้อหา เลือกสีแถบ และแปะรูปภาพ ยิงเข้า Discord ทันที
+### 1. 🌐 แผงควบคุมและตั้งค่าผ่านเว็บ (Web Setup Dashboard v4.0)
+- **💎 Enterprise Cyberpunk Glassmorphism UI**: ดีไซน์กระจก Frosted Glass ซ้อนเลเยอร์ พร้อมเอฟเฟกต์ไฟนีออน Ambient Mesh Animation
+- **🏰 Dynamic Guild Selector**: สลับเลือกดูและตั้งค่าเซิร์ฟเวอร์ที่บอทประจำการอยู่ได้ทันที
+- **🎛️ Roles Management**: กำหนดยศสำคัญของระบบ เช่น `Verified Role`, `Leader Role`, `Admin Role`, และ `Moderator Role`
+- **📺 Channels Management**: กำหนดช่องข้อความอัตโนมัติ (`Verify`, `Welcome`, `Goodbye`, `Audit Logs`, `Music Room`, `Ticket Category`)
+- **🔘 Feature Toggles**: สวิตช์เปิด/ปิดระบบต้อนรับ & บอกลา และระบบบันทึกความปลอดภัย
+- **⚡ Remote Action Center**:
+  - 🔐 **ส่งแผงยืนยันตัวตน**: ส่ง Embed ปุ่มเปิด CAPTCHA Modal
+  - 🎫 **ส่งแผงเปิดทิกเก็ต**: ส่ง Embed ปุ่มเปิดห้อง Ticket
+  - 🎵 **รีเซ็ตห้องเพลง**: ล้างข้อความตกค้างและส่งแผง Standby Player
+  - 🚨 **สวิตช์ล็อกดาวน์**: สลับสถานะเปิด/ปิด Emergency Lockdown ฉุกเฉิน
+- **📢 Live Embed Announcer**: พิมพ์หัวข้อ เนื้อหา เลือกสีแถบ และแปะรูปภาพ ยิงเข้าห้อง Discord ทันทีแบบ Realtime
 
 ---
 
 ### 2. 🔑 ระบบความปลอดภัย Discord OAuth2 (Server Owner Guard)
-- **Authorize App Login**: เข้าสู่ระบบผ่าน Discord OAuth2 ปลอดภัย 100%
-- **👑 Server Owner Protection**: ตรวจสอบ `guild.ownerId === user.id` เฉพาะเจ้าของเซิร์ฟเวอร์เท่านั้นที่สามารถเข้าถึงแผงตั้งค่าและสั่งการบอทได้
-- **🛡️ Protected REST APIs**: บล็อกการแก้ไขข้อมูลและคำสั่งควบคุมบอทจากผู้ไม่มีสิทธิ์ (`403 Forbidden`)
+- **Authorize App Login**: เข้าสู่ระบบผ่าน Discord OAuth2 อย่างปลอดภัย
+- **👑 Server Owner Protection**: ระบบตรวจสอบสิทธิ์ `guild.ownerId === user.id` ให้เฉพาะเจ้าของเซิร์ฟเวอร์เท่านั้นที่สามารถเข้าถึงแผงตั้งค่าและกดสั่งการบอทได้
+- **🛡️ Protected REST API**: บล็อกคำสั่งและการบันทึกข้อมูลจากผู้ไม่มีสิทธิ์ (`403 Forbidden`)
 
 ---
 
-### 3. 🐬 ฐานข้อมูล MySQL (`mysql2/promise`) + In-Memory Cache
-- **Auto Creation**: สร้าง Database `uryubot_db` และตาราง `guild_settings` อัตโนมัติเมื่อเริ่มระบบ
-- **⚡ 0ms Latency Cache**: โหลดข้อมูลขึ้น Memory Cache ตอนสตาร์ทบอท ทำให้ทุก Event และคำสั่งตอบสนองได้ทันที
-- **🛡️ Fail-Safe 100%**: หากไม่ได้เปิด MySQL บอทจะสลับไปใช้โหมด In-Memory + `.env` ชั่วคราว ป้องกันบอทแครช
+### 3. 🐬 ฐานข้อมูล MySQL (`mysql2/promise`) + 0ms Fast Memory Cache
+- **Auto Database & Table Init**: สร้างฐานข้อมูล `uryubot_db` และตาราง `guild_settings` ให้อัตโนมัติเมื่อสตาร์ท
+- **⚡ 0ms Fast Memory Cache**: โหลดการตั้งค่าทั้งหมดขึ้น Memory ทันที ทำให้ทุก Event และคำสั่งไม่ต้องรอ Query ข้อมูลซ้ำซ้อน
+- **🛡️ Fail-Safe 100%**: หากระบบฐานข้อมูลขัดข้อง บอทจะสลับไปใช้โหมด In-Memory + `.env` ชั่วคราว ป้องกันบอทแครช
 
 ---
 
-### 4. 🎵 ระบบเครื่องเล่นเพลงคุณภาพสูง (DisTube 48kHz Stereo)
-- **Dedicated Music Channel (`#ขอเพลง-music`)**: พิมพ์ชื่อเพลงหรือลิงก์ บอทจะลบข้อความและเริ่มเล่นเพลงทันที
-- **Persistent In-Place Panel**: แผงควบคุมเพลง Standby แก้ไขข้อความเดิมในห้อง ไม่ส่งซ้ำซ้อน
-- **Interactive Buttons**:
+### 4. 🎵 ระบบเครื่องเล่นเพลงคุณภาพสูง (DisTube v5 + Custom yt-dlp Extractor)
+- **Cross-Platform Audio Engine**:
+  - 🪟 **Windows**: ใช้ `ffmpeg-static` + `yt-dlp.exe` อัตโนมัติ
+  - 🐧 **Linux VPS**: ใช้ Native `/usr/bin/ffmpeg` + `/usr/local/bin/yt-dlp` รองรับ TLS/SSL Bypass สตรีมลื่นไหล ไม่ตัดเสียง
+- **Dedicated Music Room (`#ขอเพลง-music`)**: พิมพ์ชื่อเพลงหรือลิงก์ บอทจะลบข้อความและเริ่มเล่นเพลงให้อัตโนมัติ
+- **Persistent In-Place Panel**: แผงควบคุมเพลง Standby อัปเดตข้อความเดิม ไม่สแปมช่องแชท
+- **Interactive Control Buttons**:
   - `⏮️ ก่อนหน้า`, `⏯️ พัก/เล่นต่อ`, `⏭️ ข้าม`, `⏹️ หยุด`
-  - `🔉 -10%` / `🔊 +10%` ปุ่มปรับระดับเสียงแบบสดๆ
+  - `🔉 -10%` / `🔊 +10%` ปุ่มปรับระดับความดังเสียงแบบเรียลไทม์
   - `🔁 วนซ้ำ` (ปิด / วนเพลง / วนทั้งคิว) และ `📜 ดูคิวเพลง`
-- **รองรับแหล่งเพลง**: YouTube, Spotify, SoundCloud, และ Direct Audio Links
+- **Auto-Leave 60s**: เมื่อไม่มีสมาชิกอยู่ในห้องเสียงเกิน 60 วินาที บอทจะตัดการเชื่อมต่อและรีเซ็ตแผงเพลงให้อัตโนมัติ
 
 ---
 
@@ -54,7 +74,7 @@
 
 ### 6. 🎫 ระบบทิกเก็ตแจ้งปัญหาพร้อม HTML Transcript
 - สมาชิกกดปุ่มเปิดห้องทิกเก็ตส่วนตัว `#ticket-<username>`
-- **HTML Transcript**: เมื่อปิดทิกเก็ต บอทจะสร้างไฟล์บทสนทนา `.html` สไตล์ Discord Dark Theme พร้อมรูป Avatar และเวลาส่ง ส่งตรงเข้า DM ผู้ใช้และช่องบันทึก Logs
+- **HTML Transcript**: เมื่อปิดทิกเก็ต บอทจะสร้างไฟล์ประวัติแชท `.html` สไตล์ Discord Dark Theme พร้อมรูป Avatar และเวลาส่ง ส่งตรงเข้า DM ผู้ใช้และช่องบันทึก Logs
 - คำสั่ง: `/send-ticket`
 
 ---
@@ -78,7 +98,7 @@
 
 | หมวดหมู่ | คำสั่ง | คำอธิบาย | สิทธิ์ขั้นต่ำ |
 | :--- | :--- | :--- | :--- |
-| **🎵 ดนตรี (8)** | `/play <เพลง>` | ค้นหาและเริ่มเล่นเพลงจาก YouTube / Spotify | Everyone |
+| **🎵 ดนตรี (8)** | `/play <เพลง>` | ค้นหาและเริ่มเล่นเพลงจาก YouTube / Spotify / SoundCloud | Everyone |
 | | `/skip` | ข้ามไปยังเพลงถัดไปในคิว | Everyone |
 | | `/pause` | พักการเล่นเพลงชั่วคราว | Everyone |
 | | `/resume` | เล่นเพลงต่อจากที่หยุดไว้ | Everyone |
@@ -92,7 +112,7 @@
 | | `/8ball <คำถาม>` | ถามลูกแก้ววิเศษ 8-Ball ทำนายคำตอบ | Everyone |
 | | `/coinflip` | สุ่มเสี่ยงทายโยนเหรียญ หัว หรือ ก้อย | Everyone |
 | | `/dice [หน้า]` | ทอยลูกเต๋าสุ่มแต้ม | Everyone |
-| **💬 ทั่วไป (3)** | `/help` | ดูคู่มือคำสั่งแบบ Dropdown สวยงาม | Everyone |
+| **💬 ทั่วไป (3)** | `/help` | ดูคู่มือและคำอธิบายการใช้งานบอทแบบ Interactive Dropdown | Everyone |
 | | `/poll <คำถาม> <ตัวเลือก>` | สร้างโพลสำรวจความคิดเห็นสดพร้อมปุ่มโหวต | Everyone |
 | | `/ping` | ตรวจสอบความเร็ว Latency และ WebSocket Ping | Everyone |
 | **🛡️ ดูแลความสงบ (9)** | `/lockdown <สถานะ>` | 🚨 ล็อกดาวน์เซิร์ฟเวอร์ฉุกเฉิน (เปิด/ปิด) | Manage Channels |
@@ -114,14 +134,11 @@
 
 ---
 
----
-
 ## 🛠️ ความต้องการของระบบ (Requirements)
 
-- **Node.js**: เวอร์ชั่น `v18.0.0` หรือใหม่กว่า (แนะนำ `v20.x LTS`)
-- **MySQL Database**: เช่น **MySQL Community Server 8.0+**, **XAMPP**, **Laragon**
-- **FFmpeg**: จำเป็นสำหรับระบบเพลง (ติดตั้งมาในตัวผ่าน `ffmpeg-static`)
-- **PM2**: สำหรับรันบอทบน Cloud VPS ตลอด 24 ชม.
+- **Node.js**: เวอร์ชั่น `v18.0.0` หรือใหม่กว่า (แนะนำ `v20.x LTS` หรือ `v22.x`)
+- **MySQL Database**: เช่น **MySQL Server 8.0+**, **XAMPP**, **Laragon**
+- **FFmpeg**: จำเป็นสำหรับระบบเสียง (ติดตั้งอัตโนมัติบน Windows / `apt install ffmpeg` บน Linux)
 
 ---
 
@@ -164,146 +181,32 @@ npm start
 ## 🚀 วิธีนำบอทขึ้น Cloud VPS (Ubuntu 24.04 LTS)
 
 ### 1. เชื่อมต่อ SSH เข้า Cloud VPS
-เปิด Terminal / PowerShell บนคอมพิวเตอร์ของคุณ แล้วพิมพ์คำสั่ง:
 ```bash
 ssh root@YOUR_SERVER_IP
 # ตัวอย่าง: ssh root@119.10.137.245
 ```
-*(กรอกรหัสผ่าน VPS ที่ได้รับจากผู้ให้บริการ)*
 
----
-
-### 2. นำโค้ดโปรเจกต์ขึ้นเซิร์ฟเวอร์
-
-#### วิธีที่ A: ผ่าน Git (แนะนำ)
+### 2. โคลนโปรเจกต์จาก GitHub
 ```bash
 cd /root
-git clone <URL_GITHUB_REPOSITORY> UryuBot
+git clone https://github.com/laibz9/UryuBot.git UryuBot
 cd UryuBot
 ```
 
-#### วิธีที่ B: อัปโหลดผ่าน FileZilla / WinSCP
-- เชื่อมต่อผ่านโปรโตคอล **SFTP** (Port: `22`, User: `root`, Host: `IP_SERVER`)
-- ลากโฟลเดอร์โปรเจกต์ไปวางที่ `/root/UryuBot`
-
----
-
 ### 3. รันสคริปต์ 1-Click ติดตั้งอัตโนมัติ (1-Click Auto Deploy)
-ในโฟลเดอร์โปรเจกต์บน VPS ให้พิมพ์คำสั่ง:
 ```bash
 chmod +x deploy_vps.sh
 ./deploy_vps.sh
 ```
-สคริปต์จะทำการ:
-- 🔄 อัปเดตระบบ Ubuntu 24.04
-- 🟢 ติดตั้ง Node.js 20 LTS + PM2
-- 🐬 ติดตั้งและเปิดใช้งาน MySQL Server พร้อมสร้าง Database `uryubot_db`
-- 🛡️ เปิดพอร์ต Firewall (`22`, `80`, `443`, `3000`)
-- 📦 ติดตั้ง `npm install`
-- 🚀 สตาร์ทบอทด้วย PM2 แบบ 24/7 Auto-Restart
 
 ---
 
-### 4. สร้างและตั้งค่าไฟล์ `.env` บน Cloud VPS
-พิมพ์คำสั่งสร้างไฟล์ `.env`:
-```bash
-nano .env
-```
-กรอกข้อมูลของบอท:
-```env
-# Discord Bot Credentials
-DISCORD_TOKEN=YOUR_BOT_TOKEN
-CLIENT_ID=YOUR_CLIENT_ID
+## 🔄 ระบบซิงค์ 1-Click (Local -> VPS)
 
-# Web Dashboard & Discord OAuth2 (ใช้ IP ของ VPS)
-PORT=3000
-CLIENT_SECRET=YOUR_DISCORD_CLIENT_SECRET
-REDIRECT_URI=http://YOUR_SERVER_IP:3000/api/auth/callback
-SESSION_SECRET=uryu_secure_session_key_2026
-
-# MySQL Database (สร้างอัตโนมัติโดย deploy_vps.sh)
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_USER=uryuuser
-DB_PASSWORD=UryuBotSecurePass2026!
-DB_NAME=uryubot_db
-```
-*(กด `Ctrl + O` แล้วกด `Enter` เพื่อบันทึก และกด `Ctrl + X` เพื่อออก)*
-
----
-
-### 5. ตั้งค่า Discord Developer Portal ให้ตรงกับ IP Cloud
-1. ไปที่ [Discord Developer Portal](https://discord.com/developers/applications) > Application ของคุณ
-2. เมนู **OAuth2** > หัวข้อ **Redirects**:
-   - กด `Add Redirect`
-   - เพิ่ม URL: `http://YOUR_SERVER_IP:3000/api/auth/callback` (เช่น `http://119.10.137.245:3000/api/auth/callback`)
-   - กด **Save Changes**
-
----
-
-### 6. การจัดการและรันบอทบน VPS (เลือกใช้ได้ทั้ง PM2 และ Tmux)
-
-#### 🟢 ทางเลือกที่ 1: รันผ่าน PM2 (รันเบื้องหลัง 24/7 ไม่ต้องเปิดหน้าจอทิ้งไว้)
-```bash
-# เริ่มต้นรันบอท
-pm2 start uryubot
-
-# ดูสถานะการทำงาน
-pm2 status
-
-# ดู Log สดของบอท
-pm2 logs uryubot
-
-# รีสตาร์ทบอท
-pm2 restart uryubot
-
-# หยุดการทำงาน
-pm2 stop uryubot
-```
-
-#### 🪟 ทางเลือกที่ 2: รันผ่าน Tmux (รันแบบหน้าจอ Console สดๆ เลื่อนลูกกลิ้งเมาส์ดู Log ได้)
-```bash
-# 1. หยุด PM2 ก่อนเพื่อคืนพอร์ต
-pm2 stop uryubot
-
-# 2. เปิดหน้าต่าง tmux
-tmux
-
-# 3. สั่งรันบอทตามปกติ (โชว์ Log สดๆ สีสวยงาม)
-npm start
-
-# 4. พับหน้าจอบอทเก็บไว้ (Detach) เพื่อไปทำอย่างอื่น:
-# กด [Ctrl + B] แล้วปล่อยมือ จากนั้นกด [D]
-
-# 5. ดึงหน้าจอบอทกลับมาดูใหม่ (Attach):
-tmux a
-
-# 6. หยุดการทำงาน: กด [Ctrl + C] ในหน้าต่าง tmux
-```
-
----
-
-## ⚡ วิธีซิงค์โค้ดจากเครื่องขึ้น Cloud VPS (Workflow ที่แนะนำ)
-
-เมื่อคุณแก้ไขโค้ดหรือเพิ่มฟังก์ชันใหม่ๆ บนเครื่องคอมพิวเตอร์ของคุณเสร็จแล้ว ให้ทำตาม 2 ขั้นตอนนี้:
-
-### ขั้นตอนที่ 1: บันทึกและ Push โค้ดขึ้น GitHub ตามปกติ
-```bash
-git add .
-git commit -m "ใส่ข้อความอัปเดตโค้ดของคุณ"
-git push
-```
-
-### ขั้นตอนที่ 2: สั่งดึงโค้ดล่าสุดลง Cloud VPS (คำสั่งเดียว)
+เมื่อคุณแก้ไขโค้ดบนเครื่องคอมพิวเตอร์และ Push ขึ้น GitHub แล้ว สามารถซิงค์โค้ดทั้งหมดลง VPS ได้ทันทีด้วยคำสั่งเดียว:
 ```bash
 npm run sync
 ```
-
-**สิ่งที่ระบบ `npm run sync` ทำงานอัตโนมัติ:**
-1. 🚀 เชื่อมต่อ SSH ไปยัง Cloud VPS (ปลอดภัย 100% อ่านรหัสผ่านจากไฟล์ `.env` ในเครื่องของคุณเอง)
-2. 📦 สั่ง `git fetch` และ `git reset --hard origin/main` ดึงโค้ดเวอร์ชันล่าสุดจาก GitHub ลง VPS
-3. 📦 ตรวจสอบและอัปเดต `npm install --production`
-4. ✅ ซิงค์โค้ดเสร็จสมบูรณ์ โดย **ไม่สั่งเปิด/ปิดบอททับซ้อน** เพื่อให้คุณเข้าไปจัดการรันบอท (ผ่าน PM2 หรือ tmux) บน VPS ได้เองตามความต้องการ
 
 ---
 
@@ -311,39 +214,47 @@ npm run sync
 
 ```text
 UryuBot/
-├── scripts/                  # สคริปต์ยูทิลิตี้เสริม
-│   └── sync_to_vps.js        # ⚡ สคริปต์ 1-Command Auto Sync โค้ดไปยัง Cloud VPS
-├── src/
-│   ├── commands/             # คำสั่ง Slash Commands แยก 5 หมวดหมู่
-│   │   ├── admin/            # คำสั่งสำหรับผู้ดูแลระบบ
-│   │   ├── fun/              # คำสั่งมินิเกมและบันเทิง
-│   │   ├── general/          # คำสั่งทั่วไป (help, poll, ping)
-│   │   ├── moderation/       # คำสั่งดูแลความสงบ (ban, kick, timeout, lockdown)
-│   │   └── music/            # คำสั่งระบบดนตรี (play, skip, queue, volume)
-│   ├── components/           # ตัวจัดการ Interaction Components
-│   │   ├── buttons/          # ปุ่มกด (Verify, Ticket, Music Controls, Poll Vote)
-│   │   ├── modals/           # หน้าต่าง Modal (CAPTCHA, Ticket Reason)
-│   │   └── selectMenus/      # Dropdown เมนู (Help Menu)
-│   ├── config/               # ค่าคงที่ ธีมสี และตัวแปรระบบ (config.js)
-│   ├── database/             # ตัวจัดการฐานข้อมูล MySQL (db.js)
-│   ├── events/               # ตัวดักจับ Discord Events (guild, client, message)
-│   ├── handlers/             # ตัวโหลด Commands, Events, Components อัตโนมัติ
-│   ├── utils/                # ยูทิลิตี้เสริม (Embeds, MusicManager, Permissions, Logger)
-│   ├── web/                  # Express Web Server & Web Dashboard
-│   │   ├── public/           # Frontend SPA (index.html, index.css, app.js)
-│   │   └── server.js         # REST API & Discord OAuth2 Handler
-│   └── index.js              # Entry Point เริ่มต้นระบบ
-├── deploy_vps.sh             # 🚀 สคริปต์ 1-Click Auto Deploy บน Ubuntu 24.04
-├── ecosystem.config.js       # ⚙️ การตั้งค่า PM2 24/7 Process Manager
-├── .env.example              # ตัวอย่างไฟล์ Environment Variables
-├── .gitignore                # การตั้งค่า Git Ignore
-├── package.json              # รายการ Dependencies และ PM2 Scripts
-└── README.md                 # คู่มือและเอกสารประกอบโปรเจกต์
+├── .env.example                # ตัวอย่างการกำหนดค่า Environment Variables
+├── .gitignore                  # กรองไฟล์ที่ไม่ต้องการอัปโหลดขึ้น Git
+├── deploy_vps.sh               # สคริปต์ติดตั้งอัตโนมัติบน Ubuntu Cloud VPS
+├── ecosystem.config.js         # ไฟล์คอนฟิก PM2 Process Manager
+├── package.json                # ข้อมูลโปรเจกต์และ Dependencies
+├── README.md                   # เอกสารคู่มือการใช้งานบอท
+├── scripts/
+│   └── sync_to_vps.js          # สคริปต์ซิงค์โค้ดอัตโนมัติจาก Local ไปยัง VPS
+└── src/
+    ├── config/
+    │   ├── config.js           # โหลด Environment Variables และตั้งค่าระบบ
+    │   └── theme.js            # ค่าสี Hex, ไอคอน และสไตล์ Embed
+    ├── database/
+    │   ├── db.js               # เชื่อมต่อ MySQL และ In-Memory Cache Sync
+    │   └── migrations.js       # สร้างตารางและคอลัมน์อัตโนมัติ
+    ├── events/
+    │   ├── client/             # Event Ready, Error, Rate Limit
+    │   ├── guild/              # Event Member Add/Remove, Voice State Update
+    │   ├── interactions/       # Interaction Create, Buttons, Modals, Autocomplete
+    │   └── messages/           # Message Create (ดักจับเพลงในช่องขอเพลง)
+    ├── slashCommands/
+    │   ├── admin/              # คำสั่งผู้ดูแลระบบ (/setup-*, /send-*, /announce)
+    │   ├── fun/                # คำสั่งบันเทิง (/fortune, /hug, /joke, /8ball)
+    │   ├── general/            # คำสั่งทั่วไป (/help, /poll, /ping)
+    │   ├── moderation/         # คำสั่งดูแลความสงบ (/lockdown, /ban, /clear)
+    │   └── music/              # คำสั่งเพลง (/play, /skip, /stop, /queue)
+    ├── utils/
+    │   ├── customYtDlpPlugin.js# Plugin สตรีมเสียงความเร็วสูง bypass YouTube blocks
+    │   ├── logger.js           # ระบบแสดงผล Logs สวยงาม
+    │   ├── musicManager.js     # ควบคุม DisTube และแผง Standby ในห้องเพลง
+    │   └── transcriptGenerator.js # แปลงประวัติแชท Ticket เป็น HTML หรูหรา
+    └── web/
+        ├── server.js           # Express API Server & Discord OAuth2
+        └── public/             # เว็บ Dashboard (HTML / CSS / JS)
 ```
 
 ---
 
-## 📄 ใบอนุญาต (License)
+<div align="center">
 
-โปรเจกต์นี้เผยแพร่ภายใต้ใบอนุญาต **MIT License** &copy; 2026 UryuBot Suite.
+**Developed with ❤️ by UryuBot Team**  
+*Protected by Discord OAuth2 & Cloud Realtime Architecture.*
 
+</div>

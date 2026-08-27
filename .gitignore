@@ -1,23 +1,40 @@
 # ==========================================
-# UryuBot - Production Git Ignore Configuration
+# UryuBot - Enterprise Production Git Ignore
 # ==========================================
 
-# Dependencies
+# Dependencies & Package Managers
 node_modules/
+.pnp
+.pnp.js
 package-lock.json.bak
+yarn.lock
+pnpm-lock.yaml
 
-# Environment Variables & Secrets
+# Environment Variables, Secrets & Keys
 .env
 .env.*
 !.env.example
+*.pem
+*.key
+*.pub
+id_rsa*
 
-# Temporary Transcripts & Cache
+# Temporary Transcripts, Uploads & Cache
 transcripts/*.html
+!transcripts/.gitkeep
 temp/
 tmp/
 .cache/
+dist/
+build/
 
-# Logs & Debug Output
+# Testing, Scratch & Audit Scripts
+test_*.js
+run_*.js
+check_*.js
+scratch/
+
+# Logs & Process Monitor
 logs/
 *.log
 npm-debug.log*
@@ -35,7 +52,7 @@ ehthumbs.db
 Thumbs.db
 desktop.ini
 
-# IDE & Editor Configuration
+# IDE, Editor & Agent Directories
 .vscode/*
 !.vscode/settings.json
 !.vscode/extensions.json
@@ -43,3 +60,4 @@ desktop.ini
 *.sublime-project
 *.sublime-workspace
 .gemini/
+.agents/
