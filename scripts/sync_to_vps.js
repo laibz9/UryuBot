@@ -3,16 +3,27 @@
  * @description 1-Command Auto-Deploy: ดึงโค้ดล่าสุดบน Cloud VPS และรีสตาร์ทบอททันทีใน 2 วินาที
  */
 
+require('dotenv').config();
 const { Client } = require('ssh2');
 
+const host = process.env.VPS_HOST;
+const port = parseInt(process.env.VPS_PORT || '22', 10);
+const username = process.env.VPS_USER || 'root';
+const password = process.env.VPS_PASSWORD;
+
+if (!host || !password) {
+  console.error('❌ ไม่พบข้อมูลการเชื่อมต่อ VPS กรุณากำหนด VPS_HOST และ VPS_PASSWORD ในไฟล์ .env ก่อนใช้งาน');
+  process.exit(1);
+}
+
 const config = {
-  host: '119.10.137.245',
-  port: 22,
-  username: 'root',
-  password: 'W!!4Zi0bAgq6'
+  host,
+  port,
+  username,
+  password
 };
 
-console.log('🚀 [1/3] กำลังเชื่อมต่อ Cloud VPS (119.10.137.245)...');
+console.log(`🚀 [1/3] กำลังเชื่อมต่อ Cloud VPS (${host})...`);
 
 const conn = new Client();
 
