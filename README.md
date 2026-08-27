@@ -114,15 +114,18 @@
 
 ---
 
+---
+
 ## 🛠️ ความต้องการของระบบ (Requirements)
 
-- **Node.js**: เวอร์ชั่น `v18.0.0` หรือใหม่กว่า
-- **MySQL Database**: เช่น **XAMPP**, **Laragon**, หรือ **MySQL Community Server 8.0+**
+- **Node.js**: เวอร์ชั่น `v18.0.0` หรือใหม่กว่า (แนะนำ `v20.x LTS`)
+- **MySQL Database**: เช่น **MySQL Community Server 8.0+**, **XAMPP**, **Laragon**
 - **FFmpeg**: จำเป็นสำหรับระบบเพลง (ติดตั้งมาในตัวผ่าน `ffmpeg-static`)
+- **PM2**: สำหรับรันบอทบน Cloud VPS ตลอด 24 ชม.
 
 ---
 
-## ⚙️ ขั้นตอนการติดตั้งและเริ่มต้นใช้งาน (Installation)
+## 💻 วิธีรันบนเครื่องคอมพิวเตอร์ส่วนตัว (Local Development)
 
 ### 1. ติดตั้ง Dependencies
 ```bash
@@ -135,7 +138,6 @@ npm install
 # Discord Bot Credentials
 DISCORD_TOKEN=YOUR_BOT_TOKEN
 CLIENT_ID=YOUR_CLIENT_ID
-GUILD_ID=YOUR_GUILD_ID
 
 # Web Dashboard & Discord OAuth2
 PORT=3000
@@ -151,19 +153,111 @@ DB_PASSWORD=YOUR_DB_PASSWORD
 DB_NAME=uryubot_db
 ```
 
-### 3. ตั้งค่า Discord Developer Portal
-1. ไปที่ [Discord Developer Portal](https://discord.com/developers/applications) > Application ของคุณ
-2. เมนู **Bot**: เปิดใช้งาน **Privileged Gateway Intents** ทั้ง 3 ข้อ (`Presence`, `Server Members`, `Message Content`)
-3. เมนู **OAuth2**: 
-   - คัดลอก `Client Secret` ไปใส่ใน `.env`
-   - ในหัวข้อ **Redirects** ให้กด `Add Redirect` แล้วใส่ `http://localhost:3000/api/auth/callback` จากนั้นกด `Save Changes`
-
-### 4. สตาร์ทบอทและเปิดใช้งาน Web Dashboard
+### 3. สตาร์ทบอท
 ```bash
 npm start
 ```
-- บอทจะออนไลน์ใน Discord
 - เข้าใช้งาน Web Dashboard ได้ที่: 👉 **[http://localhost:3000](http://localhost:3000)**
+
+---
+
+## 🚀 วิธีนำบอทขึ้น Cloud VPS (Ubuntu 24.04 LTS)
+
+### 1. เชื่อมต่อ SSH เข้า Cloud VPS
+เปิด Terminal / PowerShell บนคอมพิวเตอร์ของคุณ แล้วพิมพ์คำสั่ง:
+```bash
+ssh root@YOUR_SERVER_IP
+# ตัวอย่าง: ssh root@119.10.137.245
+```
+*(กรอกรหัสผ่าน VPS ที่ได้รับจากผู้ให้บริการ)*
+
+---
+
+### 2. นำโค้ดโปรเจกต์ขึ้นเซิร์ฟเวอร์
+
+#### วิธีที่ A: ผ่าน Git (แนะนำ)
+```bash
+cd /root
+git clone <URL_GITHUB_REPOSITORY> UryuBot
+cd UryuBot
+```
+
+#### วิธีที่ B: อัปโหลดผ่าน FileZilla / WinSCP
+- เชื่อมต่อผ่านโปรโตคอล **SFTP** (Port: `22`, User: `root`, Host: `IP_SERVER`)
+- ลากโฟลเดอร์โปรเจกต์ไปวางที่ `/root/UryuBot`
+
+---
+
+### 3. รันสคริปต์ 1-Click ติดตั้งอัตโนมัติ (1-Click Auto Deploy)
+ในโฟลเดอร์โปรเจกต์บน VPS ให้พิมพ์คำสั่ง:
+```bash
+chmod +x deploy_vps.sh
+./deploy_vps.sh
+```
+สคริปต์จะทำการ:
+- 🔄 อัปเดตระบบ Ubuntu 24.04
+- 🟢 ติดตั้ง Node.js 20 LTS + PM2
+- 🐬 ติดตั้งและเปิดใช้งาน MySQL Server พร้อมสร้าง Database `uryubot_db`
+- 🛡️ เปิดพอร์ต Firewall (`22`, `80`, `443`, `3000`)
+- 📦 ติดตั้ง `npm install`
+- 🚀 สตาร์ทบอทด้วย PM2 แบบ 24/7 Auto-Restart
+
+---
+
+### 4. สร้างและตั้งค่าไฟล์ `.env` บน Cloud VPS
+พิมพ์คำสั่งสร้างไฟล์ `.env`:
+```bash
+nano .env
+```
+กรอกข้อมูลของบอท:
+```env
+# Discord Bot Credentials
+DISCORD_TOKEN=YOUR_BOT_TOKEN
+CLIENT_ID=YOUR_CLIENT_ID
+
+# Web Dashboard & Discord OAuth2 (ใช้ IP ของ VPS)
+PORT=3000
+CLIENT_SECRET=YOUR_DISCORD_CLIENT_SECRET
+REDIRECT_URI=http://YOUR_SERVER_IP:3000/api/auth/callback
+SESSION_SECRET=uryu_secure_session_key_2026
+
+# MySQL Database (สร้างอัตโนมัติโดย deploy_vps.sh)
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_USER=uryuuser
+DB_PASSWORD=UryuBotSecurePass2026!
+DB_NAME=uryubot_db
+```
+*(กด `Ctrl + O` แล้วกด `Enter` เพื่อบันทึก และกด `Ctrl + X` เพื่อออก)*
+
+---
+
+### 5. ตั้งค่า Discord Developer Portal ให้ตรงกับ IP Cloud
+1. ไปที่ [Discord Developer Portal](https://discord.com/developers/applications) > Application ของคุณ
+2. เมนู **OAuth2** > หัวข้อ **Redirects**:
+   - กด `Add Redirect`
+   - เพิ่ม URL: `http://YOUR_SERVER_IP:3000/api/auth/callback` (เช่น `http://119.10.137.245:3000/api/auth/callback`)
+   - กด **Save Changes**
+
+---
+
+### 6. เริ่มต้นและจัดการบอทด้วย PM2 (24/7 Management)
+
+```bash
+# สตาร์ทบอท / รีสตาร์ทหลังจากแก้ .env
+npm run pm2:restart
+
+# ตรวจสอบสถานะการทำงาน (Status / Memory / Uptime)
+npm run pm2:status
+
+# ดู Realtime Logs สดของบอท
+npm run pm2:logs
+
+# หยุดการทำงาน
+npm run pm2:stop
+```
+
+🌐 **เปิดหน้าเว็บ Dashboard ของบอท:** `http://YOUR_SERVER_IP:3000` (เช่น `http://119.10.137.245:3000`)
 
 ---
 
@@ -191,9 +285,11 @@ UryuBot/
 │   │   ├── public/           # Frontend SPA (index.html, index.css, app.js)
 │   │   └── server.js         # REST API & Discord OAuth2 Handler
 │   └── index.js              # Entry Point เริ่มต้นระบบ
+├── deploy_vps.sh             # 🚀 สคริปต์ 1-Click Auto Deploy บน Ubuntu 24.04
+├── ecosystem.config.js       # ⚙️ การตั้งค่า PM2 24/7 Process Manager
 ├── .env.example              # ตัวอย่างไฟล์ Environment Variables
 ├── .gitignore                # การตั้งค่า Git Ignore
-├── package.json              # รายการ Dependencies และ Scripts
+├── package.json              # รายการ Dependencies และ PM2 Scripts
 └── README.md                 # คู่มือและเอกสารประกอบโปรเจกต์
 ```
 
@@ -202,3 +298,4 @@ UryuBot/
 ## 📄 ใบอนุญาต (License)
 
 โปรเจกต์นี้เผยแพร่ภายใต้ใบอนุญาต **MIT License** &copy; 2026 UryuBot Suite.
+

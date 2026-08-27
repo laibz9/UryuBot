@@ -1,11 +1,16 @@
 {
-  "name": "discord-verify-bot",
+  "name": "uryubot",
   "version": "1.0.0",
-  "description": "Production-ready Discord Verification Bot with CAPTCHA Modal using Discord.js v14",
+  "description": "Production-ready Multi-Purpose Discord Suite with Web Dashboard & MySQL Storage",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "deploy": "node deploy-commands.js"
+    "deploy": "node deploy-commands.js",
+    "pm2:start": "pm2 start ecosystem.config.js",
+    "pm2:stop": "pm2 stop ecosystem.config.js",
+    "pm2:restart": "pm2 restart ecosystem.config.js",
+    "pm2:logs": "pm2 logs uryubot",
+    "pm2:status": "pm2 status"
   },
   "keywords": [
     "discord",
