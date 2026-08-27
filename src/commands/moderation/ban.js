@@ -6,6 +6,7 @@
 const { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } = require('discord.js');
 const { createSuccessEmbed, createErrorEmbed } = require('../../utils/embeds');
 const { checkCommandPermission } = require('../../utils/permissions');
+const { resolveTargetUser, resolveTargetMember } = require('../../utils/userResolver');
 const config = require('../../config/config');
 const logger = require('../../utils/logger');
 
@@ -49,13 +50,7 @@ module.exports = {
       const hasPerm = await checkCommandPermission(interaction, 'admin');
       if (!hasPerm) return;
 
-      let targetUser = interaction.options.getUser('user') || interaction.options.getMember('user')?.user;
-      const rawValue = interaction.options.get('user')?.value;
-
-      if (!targetUser && rawValue) {
-        targetUser = await interaction.client.users.fetch(rawValue).catch(() => null);
-      }
-
+      const targetUser = await resolveTargetUser(interaction, 'user');
       const reason = interaction.options.getString('reason') || 'ไม่ได้ระบุเหตุผล';
       const deleteMessageSeconds = interaction.options.getInteger('delete_messages') || 0;
       const guild = interaction.guild;
@@ -87,7 +82,7 @@ module.exports = {
       }
 
       // ตรวจสอบข้อมูล GuildMember (ถ้าอยู่ในเซิร์ฟเวอร์)
-      const targetMember = interaction.options.getMember('user') || await guild.members.fetch(targetUser.id).catch(() => null);
+      const targetMember = await resolveTargetMember(interaction, targetUser, 'user');
 
       if (targetMember) {
         // ตรวจสอบลำดับยศของบอทกับเป้าหมาย

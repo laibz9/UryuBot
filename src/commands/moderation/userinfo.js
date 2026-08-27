@@ -4,6 +4,7 @@
  */
 
 const { SlashCommandBuilder, EmbedBuilder, MessageFlags } = require('discord.js');
+const { resolveTargetUser, resolveTargetMember } = require('../../utils/userResolver');
 const config = require('../../config/config');
 const logger = require('../../utils/logger');
 
@@ -25,9 +26,9 @@ module.exports = {
    */
   async execute(interaction) {
     try {
-      const targetUser = interaction.options.getUser('user') || interaction.user;
+      const targetUser = (await resolveTargetUser(interaction, 'user')) || interaction.user;
       const guild = interaction.guild;
-      const member = await guild.members.fetch(targetUser.id).catch(() => null);
+      const member = await resolveTargetMember(interaction, targetUser, 'user');
 
       // สร้าง Embed ข้อมูลสมาชิก
       const embed = new EmbedBuilder()
@@ -61,11 +62,17 @@ module.exports = {
             inline: false
           },
           {
-            name: `📋 บทบาทยศ (${roles.length})`,
+            name: `🏷️ ยศ (${roles.length})`,
             value: roles.length > 0 ? roles.join(', ') : 'ไม่มียศพิเศษ',
             inline: false
           }
         );
+      } else {
+        embed.addFields({
+          name: '📥 สถานะในเซิร์ฟเวอร์',
+          value: 'ไม่ได้อยู่ในเซิร์ฟเวอร์นี้',
+          inline: false
+        });
       }
 
       await interaction.reply({ embeds: [embed] });
@@ -74,7 +81,7 @@ module.exports = {
 
       if (!interaction.replied && !interaction.deferred) {
         await interaction.reply({
-          content: 'เกิดข้อผิดพลาดในการดึงข้อมูลสมาชิก',
+          content: 'เกิดข้อผิดพลาดในการดึงข้อมูลสมาชิก กรุณาลองใหม่อีกครั้ง',
           flags: MessageFlags.Ephemeral
         });
       }

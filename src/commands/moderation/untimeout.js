@@ -1,18 +1,19 @@
 /**
  * @file src/commands/moderation/untimeout.js
- * @description Slash Command สำหรับยกเลิกการปิดแชทชั่วคราว (/untimeout)
+ * @description Slash Command สำหรับยกเลิกการปิดแชทสมาชิกชั่วคราว (/untimeout)
  */
 
 const { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } = require('discord.js');
 const { createSuccessEmbed, createErrorEmbed } = require('../../utils/embeds');
 const { checkCommandPermission } = require('../../utils/permissions');
+const { resolveTargetUser, resolveTargetMember } = require('../../utils/userResolver');
 const config = require('../../config/config');
 const logger = require('../../utils/logger');
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('untimeout')
-    .setDescription('ยกเลิกการปิดแชทชั่วคราวของสมาชิก (เฉพาะผู้ดูแลระบบ)')
+    .setDescription('ยกเลิกการปิดการใช้งานแชทของสมาชิก (Untimeout / Unmute)')
     .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
     .setDMPermission(false)
     .addUserOption(option =>
@@ -38,13 +39,7 @@ module.exports = {
       const hasPerm = await checkCommandPermission(interaction, 'moderator');
       if (!hasPerm) return;
 
-      let targetUser = interaction.options.getUser('user') || interaction.options.getMember('user')?.user;
-      const rawValue = interaction.options.get('user')?.value;
-
-      if (!targetUser && rawValue) {
-        targetUser = await interaction.client.users.fetch(rawValue).catch(() => null);
-      }
-
+      const targetUser = await resolveTargetUser(interaction, 'user');
       const reason = interaction.options.getString('reason') || 'ไม่ได้ระบุเหตุผล';
       const guild = interaction.guild;
 
@@ -54,10 +49,10 @@ module.exports = {
         return await interaction.reply({ embeds: [errEmbed], flags: MessageFlags.Ephemeral });
       }
 
-      const targetMember = interaction.options.getMember('user') || await guild.members.fetch(targetUser.id).catch(() => null);
+      const targetMember = await resolveTargetMember(interaction, targetUser, 'user');
 
       if (!targetMember) {
-        const errEmbed = createErrorEmbed('ไม่พบสมาชิก', 'ผู้ใช้งานนี้ไม่ได้อยู่ในเซิร์ฟเวอร์นี้');
+        const errEmbed = createErrorEmbed('ไม่พบสมาชิก', 'สมาชิกหรือบอทนี้ไม่ได้อยู่ในเซิร์ฟเวอร์นี้แล้ว');
         return await interaction.reply({ embeds: [errEmbed], flags: MessageFlags.Ephemeral });
       }
 
@@ -74,8 +69,8 @@ module.exports = {
         return await interaction.reply({ embeds: [errEmbed], flags: MessageFlags.Ephemeral });
       }
 
-      // ยกเลิก Timeout
-      await targetMember.timeout(null, `ยกเลิกโดย ${interaction.user.tag} | เหตุผล: ${reason}`);
+      // ดำเนินการยกเลิก Timeout
+      await targetMember.timeout(null, `Untimeout โดย ${interaction.user.tag} | เหตุผล: ${reason}`);
 
       logger.info(`ผู้ดูแลระบบ ${interaction.user.tag} ได้ยกเลิก Timeout ให้แก่ ${targetUser.tag} เหตุผล: ${reason}`);
 

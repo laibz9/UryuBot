@@ -6,13 +6,14 @@
 const { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } = require('discord.js');
 const { createSuccessEmbed, createErrorEmbed } = require('../../utils/embeds');
 const { checkCommandPermission } = require('../../utils/permissions');
+const { resolveTargetUser, resolveTargetMember } = require('../../utils/userResolver');
 const config = require('../../config/config');
 const logger = require('../../utils/logger');
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('timeout')
-    .setDescription('ปิดการใช้งานแชทของสมาชิกชั่วคราว (เฉพาะผู้ดูแลระบบ)')
+    .setDescription('ปิดการใช้งานแชทของสมาชิกชั่วคราว (Timeout / Mute)')
     .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers)
     .setDMPermission(false)
     .addUserOption(option =>
@@ -24,15 +25,15 @@ module.exports = {
     .addIntegerOption(option =>
       option
         .setName('duration')
-        .setDescription('ระยะเวลาในการปิดแชทชั่วคราว')
+        .setDescription('ระยะเวลาในการปิดการใช้งานแชท')
         .setRequired(true)
         .addChoices(
-          { name: '1 นาที', value: 60 * 1000 },
+          { name: '60 วินาที (1 นาที)', value: 60 * 1000 },
           { name: '5 นาที', value: 5 * 60 * 1000 },
           { name: '10 นาที', value: 10 * 60 * 1000 },
           { name: '1 ชั่วโมง', value: 60 * 60 * 1000 },
-          { name: '1 วัน', value: 24 * 60 * 60 * 1000 },
-          { name: '1 สัปดาห์', value: 7 * 24 * 60 * 60 * 1000 }
+          { name: '1 วัน (24 ชั่วโมง)', value: 24 * 60 * 60 * 1000 },
+          { name: '1 สัปดาห์ (7 วัน)', value: 7 * 24 * 60 * 60 * 1000 }
         )
     )
     .addStringOption(option =>
@@ -52,13 +53,7 @@ module.exports = {
       const hasPerm = await checkCommandPermission(interaction, 'moderator');
       if (!hasPerm) return;
 
-      let targetUser = interaction.options.getUser('user') || interaction.options.getMember('user')?.user;
-      const rawValue = interaction.options.get('user')?.value;
-
-      if (!targetUser && rawValue) {
-        targetUser = await interaction.client.users.fetch(rawValue).catch(() => null);
-      }
-
+      const targetUser = await resolveTargetUser(interaction, 'user');
       const durationMs = interaction.options.getInteger('duration');
       const reason = interaction.options.getString('reason') || 'ไม่ได้ระบุเหตุผล';
       const guild = interaction.guild;
@@ -82,10 +77,10 @@ module.exports = {
         return await interaction.reply({ embeds: [errEmbed], flags: MessageFlags.Ephemeral });
       }
 
-      const targetMember = interaction.options.getMember('user') || await guild.members.fetch(targetUser.id).catch(() => null);
+      const targetMember = await resolveTargetMember(interaction, targetUser, 'user');
 
       if (!targetMember) {
-        const errEmbed = createErrorEmbed('ไม่พบสมาชิก', 'ผู้ใช้งานนี้ไม่ได้อยู่ในเซิร์ฟเวอร์นี้');
+        const errEmbed = createErrorEmbed('ไม่พบสมาชิก', 'สมาชิกหรือบอทนี้ไม่ได้อยู่ในเซิร์ฟเวอร์นี้แล้ว');
         return await interaction.reply({ embeds: [errEmbed], flags: MessageFlags.Ephemeral });
       }
 
@@ -96,9 +91,9 @@ module.exports = {
         return await interaction.reply({ embeds: [errEmbed], flags: MessageFlags.Ephemeral });
       }
 
-      // 4. ตรวจสอบลำดับยศของบอทกับเป้าหมาย
-      if (botMember.roles.highest.position <= targetMember.roles.highest.position) {
-        const errEmbed = createErrorEmbed('ลำดับยศไม่เพียงพอ', config.messages.roleHierarchyError);
+      // 4. ตรวจสอบว่าเป้าหมายสามารถโดน Timeout ได้หรือไม่
+      if (!targetMember.moderatable) {
+        const errEmbed = createErrorEmbed('ดำเนินการไม่ได้', 'ไม่สามารถปิดการใช้งานแชทสมาชิกคนนี้ได้ (อาจมียศสูงกว่าบอท)');
         return await interaction.reply({ embeds: [errEmbed], flags: MessageFlags.Ephemeral });
       }
 
@@ -108,33 +103,34 @@ module.exports = {
         return await interaction.reply({ embeds: [errEmbed], flags: MessageFlags.Ephemeral });
       }
 
-      // ดำเนินการ Timeout
+      // 6. ดำเนินการ Timeout
       await targetMember.timeout(durationMs, `Timeout โดย ${interaction.user.tag} | เหตุผล: ${reason}`);
 
       logger.info(`ผู้ดูแลระบบ ${interaction.user.tag} ได้ Timeout สมาชิก ${targetUser.tag} ระยะเวลา: ${durationMs / 1000} วินาที เหตุผล: ${reason}`);
 
-      const durationMinutes = durationMs / (60 * 1000);
-      const durationDisplay = durationMinutes >= 60 * 24 
-        ? `${durationMinutes / (60 * 24)} วัน` 
-        : durationMinutes >= 60 
-          ? `${durationMinutes / 60} ชั่วโมง` 
-          : `${durationMinutes} นาที`;
+      // แปลงระยะเวลาเป็นข้อความที่อ่านง่าย
+      const durationMap = {
+        60000: '1 นาที',
+        300000: '5 นาที',
+        600000: '10 นาที',
+        3600000: '1 ชั่วโมง',
+        86400000: '1 วัน',
+        604800000: '1 สัปดาห์'
+      };
+      const durationDisplay = durationMap[durationMs] || `${durationMs / 1000} วินาที`;
 
       // ส่งบันทึกไปยัง Audit Log
       const { sendModActionLog } = require('../../utils/auditLogger');
       await sendModActionLog(guild, {
-        action: '⏳ ปิดแชทชั่วคราว (Timeout Command)',
+        action: '⏳ ปิดการใช้งานแชท (Timeout Command)',
         target: targetUser,
         moderator: interaction.user,
-        reason: reason,
-        details: [
-          { name: '⏰ ระยะเวลา', value: `${durationDisplay}`, inline: true }
-        ],
+        reason: `${reason} (ระยะเวลา: ${durationDisplay})`,
         color: config.colors.warning
       });
 
       const successEmbed = createSuccessEmbed(
-        'ปิดการใช้งานแชทชั่วคราวสำเร็จ',
+        'ปิดการใช้งานแชทสำเร็จ',
         `ปิดการใช้งานแชทของ **${targetUser.tag}** เป็นเวลา **${durationDisplay}** เรียบร้อยแล้ว\n\nเหตุผล: ${reason}`
       );
 
