@@ -272,6 +272,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (musicRequesterBox) musicRequesterBox.style.display = 'none';
           }
         }
+
+        // Also refresh DJ Deck when Live DJ Studio tab is active
+        const djTabPane = document.getElementById('tab-pane-dj');
+        if (djTabPane && djTabPane.classList.contains('active')) {
+          fetchDjQueue();
+        }
       }
     } catch (err) {
       console.warn('ไม่สามารถเชื่อมต่อ API /api/stats ได้ชั่วคราว:', err);
@@ -1501,160 +1507,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  /**
-   * ดึงข้อมูลสถิติสดและสถานะเพลง (/api/stats)
-   */
-  async function fetchLiveStats() {
-    try {
-      const res = await fetch('/api/stats');
-      if (!res.ok) return;
-      const data = await res.json();
-
-      // Stats counters
-      if (statGuilds) statGuilds.textContent = data.guildsCount || 0;
-      if (statMembers) statMembers.textContent = (data.membersCount || 0).toLocaleString();
-      if (statPing) statPing.textContent = `${data.ping || 0} ms`;
-      if (statUptime) statUptime.textContent = data.uptimeFormatted || '0m';
-      if (pingValue) pingValue.textContent = `${data.ping || 0} ms`;
-
-      // Hero Profile info
-      if (data.bot) {
-        if (botNameDisplay) botNameDisplay.textContent = data.bot.name;
-        if (botTagDisplay) botTagDisplay.textContent = data.bot.tag;
-        if (navBotAvatar) navBotAvatar.src = data.bot.avatar;
-        if (heroBotAvatar) heroBotAvatar.src = data.bot.avatar;
-        if (btnHeroInvite) btnHeroInvite.href = data.bot.inviteUrl || '#';
-      }
-
-      // Live Music Widget
-      if (data.music && data.music.isPlaying && data.music.currentSong) {
-        const s = data.music.currentSong;
-        if (musicSongName) musicSongName.textContent = s.name;
-        if (musicArtistName) musicArtistName.textContent = `${s.uploader} • 48kHz Stereo`;
-        if (musicGuildName) musicGuildName.textContent = data.music.guildName || 'Discord Lounge';
-        if (musicCover && s.thumbnail) musicCover.src = s.thumbnail;
-
-        if (musicBadgeText) musicBadgeText.textContent = data.music.isPaused ? 'Paused' : 'Playing';
-        if (musicPlayBtn) musicPlayBtn.innerHTML = data.music.isPaused ? '<i class="fa-solid fa-play"></i>' : '<i class="fa-solid fa-pause"></i>';
-
-        if (musicCurrentTime) musicCurrentTime.textContent = data.music.formattedCurrentTime || '00:00';
-        if (musicDuration) musicDuration.textContent = data.music.formattedDuration || '00:00';
-
-        if (musicProgressFill && data.music.duration > 0) {
-          const pct = Math.min(100, (data.music.currentTime / data.music.duration) * 100);
-          musicProgressFill.style.width = `${pct}%`;
-        }
-
-        if (musicVolText) musicVolText.textContent = `${data.music.volume || 100}%`;
-
-        if (musicRequesterBox) {
-          musicRequesterBox.style.display = 'inline-flex';
-          if (musicRequesterName) musicRequesterName.textContent = s.requester || 'User';
-        }
-
-        if (visualizer) {
-          if (data.music.isPaused) visualizer.classList.add('paused');
-          else visualizer.classList.remove('paused');
-        }
-      } else {
-        if (musicSongName) musicSongName.textContent = 'ยังไม่มีเพลงที่กำลังเล่น';
-        if (musicArtistName) musicArtistName.textContent = 'Uryu Music System • 48kHz Stereo';
-        if (musicBadgeText) musicBadgeText.textContent = 'Standby';
-        if (musicPlayBtn) musicPlayBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
-        if (musicProgressFill) musicProgressFill.style.width = '0%';
-        if (musicCurrentTime) musicCurrentTime.textContent = '00:00';
-        if (musicDuration) musicDuration.textContent = '00:00';
-        if (musicRequesterBox) musicRequesterBox.style.display = 'none';
-        if (visualizer) visualizer.classList.add('paused');
-      }
-
-      // Also refresh DJ deck if DJ tab is active
-      const djTabPane = document.getElementById('tab-pane-dj');
-      if (djTabPane && djTabPane.classList.contains('active')) {
-        fetchDjQueue();
-      }
-    } catch {}
-  }
-
-  /**
-   * ดึงรายชื่อคำสั่งทั้งหมดจาก API (/api/commands)
-   */
-  async function fetchCommands() {
-    try {
-      const res = await fetch('/api/commands');
-      if (!res.ok) return;
-      const data = await res.json();
-
-      if (data.success && data.commands) {
-        allCommands = data.commands;
-        renderCommands();
-      }
-    } catch (err) {
-      if (commandsContainer) {
-        commandsContainer.innerHTML = `
-          <div class="loading-spinner" style="color: var(--accent-red);">
-            <i class="fa-solid fa-triangle-exclamation"></i> ไม่สามารถโหลดรายการคำสั่งได้
-          </div>
-        `;
-      }
-    }
-  }
-
-  /**
-   * แสดงผลการ์ดคำสั่งตามเงื่อนไขการค้นหาและหมวดหมู่
-   */
-  function renderCommands() {
-    if (!commandsContainer) return;
-    const query = cmdSearchInput ? cmdSearchInput.value.toLowerCase().trim() : '';
-
-    const filtered = allCommands.filter(cmd => {
-      const matchCategory = (currentCategory === 'all' || cmd.category === currentCategory);
-      const matchQuery = (
-        cmd.name.toLowerCase().includes(query) ||
-        cmd.desc.toLowerCase().includes(query) ||
-        cmd.perm.toLowerCase().includes(query)
-      );
-      return matchCategory && matchQuery;
-    });
-
-    if (filtered.length === 0) {
-      commandsContainer.innerHTML = `
-        <div class="loading-spinner">
-          <i class="fa-solid fa-folder-open"></i> ไม่พบคำสั่งที่ตรงกับ "${query}"
-        </div>
-      `;
-      return;
-    }
-
-    commandsContainer.innerHTML = filtered.map(cmd => `
-      <div class="command-card glass-panel">
-        <div class="command-header">
-          <span class="cmd-name">${cmd.name}</span>
-          <span class="cmd-perm">${cmd.perm}</span>
-        </div>
-        <p class="cmd-desc">${cmd.desc}</p>
-      </div>
-    `).join('');
-  }
-
-  // Event Listeners สำหรับตัวกรองหมวดหมู่
-  if (filterBtns) {
-    filterBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        filterBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        currentCategory = btn.getAttribute('data-category');
-        renderCommands();
-      });
-    });
-  }
-
-  // Event Listener สำหรับช่องค้นหาคำสั่ง
-  if (cmdSearchInput) {
-    cmdSearchInput.addEventListener('input', () => {
-      renderCommands();
-    });
-  }
 
   // เริ่มต้นทำงาน
   checkUrlErrors();
