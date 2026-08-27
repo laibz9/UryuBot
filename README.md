@@ -257,7 +257,23 @@ npm run pm2:logs
 npm run pm2:stop
 ```
 
-🌐 **เปิดหน้าเว็บ Dashboard ของบอท:** `http://YOUR_SERVER_IP:3000` (เช่น `http://119.10.137.245:3000`)
+---
+
+## ⚡ วิธีซิงค์โค้ดจากเครื่องขึ้น Cloud VPS ทันที (1-Command Auto Sync)
+
+เมื่อคุณเขียนโค้ดหรือปรับแต่งฟังก์ชันใหม่ๆ บนเครื่องคอมพิวเตอร์ของคุณเสร็จแล้ว ให้รันคำสั่งเพียงเท่านี้:
+
+```bash
+git add . && git commit -m "update bot" && git push
+npm run sync
+```
+
+**สิ่งที่ระบบ `npm run sync` ทำงานอัตโนมัติ:**
+1. 🚀 เชื่อมต่อ SSH ไปยัง Cloud VPS
+2. 📦 สั่ง `git fetch` และ `git reset --hard origin/main` ดึงโค้ดเวอร์ชันล่าสุด
+3. 📦 ตรวจสอบและอัปเดต `npm install --production`
+4. 🔄 รีสตาร์ทบอทบน VPS ทันที (`pm2 restart uryubot`)
+5. 📊 แสดงผลสถานะการทำงานสดของ PM2
 
 ---
 
@@ -265,6 +281,8 @@ npm run pm2:stop
 
 ```text
 UryuBot/
+├── scripts/                  # สคริปต์ยูทิลิตี้เสริม
+│   └── sync_to_vps.js        # ⚡ สคริปต์ 1-Command Auto Sync & Deploy ไปยัง VPS
 ├── src/
 │   ├── commands/             # คำสั่ง Slash Commands แยก 5 หมวดหมู่
 │   │   ├── admin/            # คำสั่งสำหรับผู้ดูแลระบบ
