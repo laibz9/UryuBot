@@ -5,7 +5,7 @@
 
 const { Events, MessageFlags } = require('discord.js');
 const logger = require('../../utils/logger');
-const { handleButton, handleModal } = require('../../handlers/componentHandler');
+const { handleButton, handleModal, handleSelectMenu } = require('../../handlers/componentHandler');
 
 module.exports = {
   name: Events.InteractionCreate,
@@ -56,6 +56,12 @@ module.exports = {
       // 3. จัดการ Modal Submit Interaction
       if (interaction.isModalSubmit()) {
         await handleModal(interaction, client);
+        return;
+      }
+
+      // 4. จัดการ Select Menu (Dropdown) Interaction
+      if (interaction.isStringSelectMenu()) {
+        await handleSelectMenu(interaction, client);
         return;
       }
     } catch (globalError) {

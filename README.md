@@ -97,8 +97,7 @@
 | **Music** | `/resume` | เล่นเพลงต่อจากที่พักไว้ | ทุกคน |
 | **Music** | `/stop` | หยุดเล่นเพลง ล้างคิว และออกจากห้องเสียง | ทุกคน |
 | **Music** | `/queue` | แสดงรายชื่อเพลงที่รอเล่นในคิว | ทุกคน |
-| **Music** | `/volume` | ปรับระดับเสียงเพลง (1 - 100%) | ทุกคน |
-| **Music** | `/loop` | สลับโหมดวนซ้ำเพลง | ทุกคน |
+| **General** | `/help` | เปิดเมนูสารบัญคำสั่งและคู่มือระบบ (คัดกรองตามสิทธิ์อัตโนมัติ) | ทุกคน |
 | **General** | `/poll` | สร้างโพลสำรวจความคิดเห็นแบบเรียลไทม์ | ทุกคน |
 | **General** | `/ping` | เช็คค่า Latency และสถานะของบอท | ทุกคน |
 | **Fun** | `/8ball` | ลูกแก้วพยากรณ์คำตอบ | ทุกคน |
@@ -113,13 +112,13 @@
 ## 📁 โครงสร้างโปรเจกต์ (Project Structure)
 
 ```text
-uryu_bot/
+UryuBot/
 ├── .env                      # ไฟล์ตัวแปรสภาพแวดล้อมจริง
 ├── .env.example              # ตัวอย่างการตั้งค่าตัวแปรสภาพแวดล้อม
 ├── .gitignore                # รายการไฟล์ที่ไม่ต้องนำขึ้น Git
 ├── package.json              # โมดูล Dependencies และ Scripts
 ├── README.md                 # เอกสารคู่มือการใช้งานบอท
-├── deploy-commands.js        # สคริปต์ลงทะเบียน 32 Slash Commands
+├── deploy-commands.js        # สคริปต์ลงทะเบียน 33 Slash Commands
 └── src/
     ├── index.js              # จุดเริ่มต้นบอท Client Initialization
     ├── config/
@@ -127,7 +126,7 @@ uryu_bot/
     ├── handlers/
     │   ├── commandHandler.js # ตัวโหลด Slash Commands อัตโนมัติ
     │   ├── eventHandler.js   # ตัวโหลด Event Listeners อัตโนมัติ
-    │   └── componentHandler.js # ตัวจัดการ Button & Modal Interactivity
+    │   └── componentHandler.js # ตัวจัดการ Button, Modal & SelectMenu
     ├── events/
     │   ├── client/
     │   │   └── ready.js      # แจ้งเตือนเมื่อบอทออนไลน์และตั้ง Streaming Presence
@@ -136,18 +135,19 @@ uryu_bot/
     │   │   ├── guildMemberRemove.js # ระบบบอกลาสมาชิก
     │   │   ├── guildMemberUpdate.js # บันทึก Log การ Timeout และเปลี่ยนยศ
     │   │   ├── guildBanAdd.js       # บันทึก Log สมาชิกโดนแบน
-    │   │   └── guildBanRemove.js    # บันทึก Log สมาชิกถูกปลดแบน
+    │   │   ├── guildBanRemove.js    # บันทึก Log สมาชิกถูกปลดแบน
+    │   │   └── voiceStateUpdate.js  # ออกจากห้องเสียงอัตโนมัติเมื่อไม่มีสมาชิก
     │   ├── messages/
-    │   │   ├── messageCreate.js     # ตรวจจับข้อความในห้องขอเพลงอัตโนมัติ
+    │   │   ├── musicRequest.js      # ตรวจจับข้อความในห้องขอเพลงอัตโนมัติ
     │   │   ├── messageDelete.js     # บันทึก Log ข้อความถูกลบ
     │   │   └── messageUpdate.js     # บันทึก Log ข้อความถูกแก้ไข
     │   └── interactions/
-    │       └── interactionCreate.js # ประมวลผลคำสั่งและการคลิกปุ่ม
+    │       └── interactionCreate.js # ประมวลผลคำสั่ง ปุ่มกด และเมนู Dropdown
     ├── commands/
     │   ├── admin/            # คำสั่งตั้งค่าเซิร์ฟเวอร์ (/setup-*, /announce, /send-*)
     │   ├── moderation/       # คำสั่งผู้ดูแล (/lockdown, /ban, /kick, /timeout, /clear...)
     │   ├── music/            # คำสั่งเล่นเพลง (/play, /skip, /queue, /volume...)
-    │   ├── general/          # คำสั่งทั่วไป (/poll, /ping)
+    │   ├── general/          # คำสั่งทั่วไป (/help, /poll, /ping)
     │   └── fun/              # คำสั่งบันเทิง (/8ball, /dice, /fortune, /joke...)
     ├── components/
     │   ├── buttons/
@@ -156,8 +156,10 @@ uryu_bot/
     │   │   ├── ticketClose.js       # ปุ่มปิดทิกเก็ต & สร้าง HTML Transcript
     │   │   ├── pollVote.js          # ปุ่มโหวตโพลสำรวจความคิดเห็น
     │   │   └── musicButtons.js      # ปุ่มควบคุมแผงเครื่องเล่นเพลง
-    │   └── modals/
-    │       └── verifyModal.js       # โมดอลกรอกรหัส CAPTCHA
+    │   ├── modals/
+    │   │   └── verifyModal.js       # โมดอลกรอกรหัส CAPTCHA
+    │   └── selectMenus/
+    │       └── helpSelect.js        # เมนู Dropdown เลือกหมวดหมู่คำสั่ง /help
     └── utils/
         ├── logger.js         # ระบบ Log ใน Console แบบมี Timestamp
         ├── captcha.js        # ตัวสุ่มรหัส CAPTCHA ป้องกันบอท
@@ -166,6 +168,7 @@ uryu_bot/
         ├── auditLogger.js    # ฟังก์ชันส่งบันทึกกิจกรรม Mod Action Logs
         ├── transcript.js     # ตัวสร้าง HTML Transcript Discord Dark Theme
         ├── pollStore.js      # จัดเก็บผลโหวตและสร้าง Progress Bar
+        ├── helpGenerator.js  # ตัวสร้าง Help Embed และ Select Menu แยกตามสิทธิ์
         └── musicManager.js   # DisTube Engine, แผงควบคุมเพลง และ Extractor Plugins
 ```
 

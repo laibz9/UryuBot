@@ -17,11 +17,28 @@ module.exports = {
     moderatorRoleId: process.env.MODERATOR_ROLE_ID,
     welcomeChannelId: process.env.WELCOME_CHANNEL_ID,
     goodbyeChannelId: process.env.GOODBYE_CHANNEL_ID,
+    verifyChannelId: process.env.VERIFY_CHANNEL_ID || process.env.WELCOME_CHANNEL_ID,
     enableWelcomeSystem: process.env.ENABLE_WELCOME_SYSTEM !== 'false',
     logChannelId: process.env.LOG_CHANNEL_ID,
     enableLogSystem: process.env.ENABLE_LOG_SYSTEM !== 'false',
     ticketCategoryId: process.env.TICKET_CATEGORY_ID,
-    musicChannelId: process.env.MUSIC_CHANNEL_ID
+    musicChannelId: process.env.MUSIC_CHANNEL_ID,
+    webPort: parseInt(process.env.PORT || '3000', 10),
+    clientSecret: process.env.CLIENT_SECRET || '',
+    redirectUri: process.env.REDIRECT_URI || 'http://localhost:3000/api/auth/callback',
+    sessionSecret: process.env.SESSION_SECRET || 'uryu_secure_session_key_2026'
+  },
+
+  // การตั้งค่าฐานข้อมูล MySQL (mysql2)
+  db: {
+    host: process.env.DB_HOST || '127.0.0.1',
+    port: parseInt(process.env.DB_PORT || '3306', 10),
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_NAME || 'uryubot_db',
+    connectionLimit: 10,
+    waitForConnections: true,
+    queueLimit: 0
   },
 
   // ธีมสีสากลของ Embed (ระบบ Hex Colors สไตล์พรีเมียม)

@@ -53,28 +53,42 @@ const client = new Client({
 client.commands = new Collection();
 client.buttons = new Collection();
 client.modals = new Collection();
+client.selectMenus = new Collection();
 
 const { initDisTube } = require('./utils/musicManager');
 initDisTube(client);
 
 // ==========================================
-// 4. โหลด Handlers ทั้งหมด
+// 4. เริ่มต้นฐานข้อมูล MySQL และโหลดโมดูลต่างๆ
 // ==========================================
 
-logger.info('กำลังเริ่มต้นระบบและโหลดโมดูลต่างๆ...');
-loadCommands(client);
-loadEvents(client);
-loadComponents(client);
+const { initDatabase } = require('./database/db');
 
-// ==========================================
-// 5. เข้าสู่ระบบ Discord API
-// ==========================================
+async function bootstrap() {
+  logger.info('กำลังเริ่มต้นระบบและโหลดโมดูลต่างๆ...');
 
-if (!config.bot.token) {
-  logger.error('ไม่พบ DISCORD_TOKEN ในไฟล์ .env กรุณาระบุ Token ก่อนเริ่มต้นใช้งาน');
-  process.exit(1);
+  // เชื่อมต่อ MySQL และโหลด Cache
+  await initDatabase();
+
+  loadCommands(client);
+  loadEvents(client);
+  loadComponents(client);
+
+  const { startWebServer } = require('./web/server');
+  startWebServer(client);
+
+  // ==========================================
+  // 5. เข้าสู่ระบบ Discord API
+  // ==========================================
+
+  if (!config.bot.token) {
+    logger.error('ไม่พบ DISCORD_TOKEN ในไฟล์ .env กรุณาระบุ Token ก่อนเริ่มต้นใช้งาน');
+    process.exit(1);
+  }
+
+  client.login(config.bot.token).catch((error) => {
+    logger.error('ไม่สามารถเชื่อมต่อกับ Discord API ได้ (Token อาจไม่ถูกต้อง):', error);
+  });
 }
 
-client.login(config.bot.token).catch((error) => {
-  logger.error('ไม่สามารถเชื่อมต่อกับ Discord API ได้ (Token อาจไม่ถูกต้อง):', error);
-});
+bootstrap();

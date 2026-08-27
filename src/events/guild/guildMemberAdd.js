@@ -5,6 +5,7 @@
 
 const { Events, ChannelType, PermissionFlagsBits } = require('discord.js');
 const { createWelcomeEmbed } = require('../../utils/embeds');
+const { getGuildSettings } = require('../../database/db');
 const config = require('../../config/config');
 const logger = require('../../utils/logger');
 
@@ -18,17 +19,19 @@ module.exports = {
    */
   async execute(member) {
     try {
+      const guild = member.guild;
+      const settings = getGuildSettings(guild.id);
+
       // 0. ตรวจสอบว่าระบบต้อนรับถูกเปิดใช้งานอยู่หรือไม่
-      if (!config.bot.enableWelcomeSystem) {
+      if (!settings.enableWelcomeSystem) {
         return;
       }
 
-      const guild = member.guild;
       let welcomeChannel = null;
 
-      // 1. ค้นหาช่องต้อนรับจาก WELCOME_CHANNEL_ID ใน .env ก่อน
-      if (config.bot.welcomeChannelId) {
-        welcomeChannel = guild.channels.cache.get(config.bot.welcomeChannelId);
+      // 1. ค้นหาช่องต้อนรับจากฐานข้อมูล / .env ก่อน
+      if (settings.welcomeChannelId) {
+        welcomeChannel = guild.channels.cache.get(settings.welcomeChannelId);
       }
 
       // 2. หากไม่ได้ตั้งค่าใน .env ค้นหาช่องอัตโนมัติ (systemChannel หรือช่องชื่อ welcome/ต้อนรับ)

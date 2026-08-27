@@ -167,8 +167,11 @@ function createStandbyEmbed(guild) {
  * @returns {boolean}
  */
 function isDedicatedMusicChannel(channel) {
-  if (!channel || !config.bot.musicChannelId) return false;
-  return channel.id === config.bot.musicChannelId;
+  if (!channel || !channel.guild) return false;
+  const { getGuildSettings } = require('../database/db');
+  const settings = getGuildSettings(channel.guild.id);
+  const musicChannelId = settings.musicChannelId || config.bot.musicChannelId;
+  return Boolean(musicChannelId && channel.id === musicChannelId);
 }
 
 /**
@@ -179,9 +182,13 @@ function isDedicatedMusicChannel(channel) {
  */
 async function updateDedicatedMusicPanel(guild, queue = null, song = null) {
   try {
-    if (!config.bot.musicChannelId) return;
+    if (!guild) return;
+    const { getGuildSettings } = require('../database/db');
+    const settings = getGuildSettings(guild.id);
+    const musicChannelId = settings.musicChannelId || config.bot.musicChannelId;
+    if (!musicChannelId) return;
 
-    const musicChannel = guild.channels.cache.get(config.bot.musicChannelId);
+    const musicChannel = guild.channels.cache.get(musicChannelId);
     if (!musicChannel) return;
 
     let embed;

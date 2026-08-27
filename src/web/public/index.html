@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UryuBot • Discord Suite & Server Owner Dashboard</title>
+  <meta name="description" content="เว็บไซต์และแดชบอร์ดตั้งค่าบอท Discord สำหรับ Server Owner โดยเฉพาะ พร้อมระบบล็อกอิน Discord OAuth2">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/1069/1069210.png">
+
+  <!-- Google Fonts: Outfit, Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Ambient Glow Background Blobs -->
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+  <div class="ambient-glow glow-3"></div>
+
+  <!-- ================= Navigation Bar ================= -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="#" class="brand">
+        <div class="brand-logo-wrapper">
+          <img id="nav-bot-avatar" src="https://cdn-icons-png.flaticon.com/512/1069/1069210.png" alt="UryuBot Avatar" class="brand-avatar">
+          <span class="online-indicator"></span>
+        </div>
+        <span class="brand-name">Uryu<span class="gradient-text">Bot</span></span>
+      </a>
+
+      <div class="nav-links">
+        <a href="#stats"><i class="fa-solid fa-chart-line"></i> สถิติสด</a>
+        <a href="#dashboard"><i class="fa-solid fa-crown"></i> แผงตั้งค่า (Owner)</a>
+        <a href="#player"><i class="fa-solid fa-compact-disc"></i> เครื่องเล่นเพลง</a>
+        <a href="#features"><i class="fa-solid fa-shield-halved"></i> ฟีเจอร์หลัก</a>
+        <a href="#commands"><i class="fa-solid fa-terminal"></i> คำสั่งทั้งหมด</a>
+      </div>
+
+      <div class="nav-actions">
+        <div class="ping-badge" id="ping-badge">
+          <span class="ping-dot"></span>
+          <span id="ping-value">-- ms</span>
+        </div>
+
+        <!-- Auth Dynamic Container -->
+        <div id="auth-nav-container"></div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ================= Hero Section ================= -->
+  <header class="hero-section">
+    <div class="hero-container">
+      <div class="hero-content">
+        <div class="hero-badge">
+          <span class="badge-icon">👑</span>
+          <span>DISCORD OAUTH2 & SERVER OWNER SECURITY ACTIVE</span>
+        </div>
+
+        <h1 class="hero-title">
+          ควบคุมและตั้งค่าบอท <br><span class="gradient-text">เฉพาะเจ้าของเซิร์ฟเวอร์</span>
+        </h1>
+
+        <p class="hero-desc">
+          ปลอดภัยสูงสุดด้วยระบบยืนยันตัวตน Discord Authorized App (OAuth2) ให้เฉพาะ Server Owner เท่านั้นที่สามารถปรับแต่งยศ ช่องแชท และสั่งการบอทจากหน้าเว็บได้โดยตรง
+        </p>
+
+        <div class="hero-cta-group">
+          <a href="#dashboard" class="btn btn-primary btn-lg btn-glow">
+            <i class="fa-solid fa-crown"></i> เข้าสู่แผงตั้งค่า (Owner Panel)
+          </a>
+          <a href="https://discord.com" target="_blank" id="btn-hero-invite" class="btn btn-secondary btn-lg">
+            <i class="fa-brands fa-discord"></i> เชิญบอทเข้าเซิร์ฟเวอร์
+          </a>
+        </div>
+
+        <div class="hero-trust">
+          <div class="trust-item"><i class="fa-solid fa-shield-check"></i> Discord OAuth2 100% ปลอดภัย</div>
+          <div class="trust-item"><i class="fa-solid fa-lock"></i> ล็อกสิทธิ์เฉพาะ Server Owner</div>
+          <div class="trust-item"><i class="fa-solid fa-database"></i> SQLite Realtime Sync</div>
+        </div>
+      </div>
+
+      <div class="hero-visual">
+        <div class="avatar-card-wrapper">
+          <div class="avatar-ring"></div>
+          <div class="avatar-card glass-panel">
+            <img id="hero-bot-avatar" src="https://cdn-icons-png.flaticon.com/512/1069/1069210.png" alt="Bot Avatar" class="hero-avatar-img">
+            <div class="bot-card-info">
+              <h3 id="bot-name-display">UryuBot</h3>
+              <p id="bot-tag-display">UryuBot#0000</p>
+              <div class="bot-live-status">
+                <span class="status-dot"></span>
+                <span>Server Owner Protection Mode</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= Live Stats Section ================= -->
+  <section id="stats" class="stats-section">
+    <div class="container">
+      <div class="stats-grid">
+        <div class="stat-card glass-panel">
+          <div class="stat-icon icon-cyan"><i class="fa-solid fa-server"></i></div>
+          <div class="stat-data">
+            <h3 id="stat-guilds" class="counter">0</h3>
+            <p>เซิร์ฟเวอร์ที่ดูแล</p>
+          </div>
+        </div>
+
+        <div class="stat-card glass-panel">
+          <div class="stat-icon icon-green"><i class="fa-solid fa-users"></i></div>
+          <div class="stat-data">
+            <h3 id="stat-members" class="counter">0</h3>
+            <p>สมาชิกที่ดูแลทั้งหมด</p>
+          </div>
+        </div>
+
+        <div class="stat-card glass-panel">
+          <div class="stat-icon icon-yellow"><i class="fa-solid fa-bolt"></i></div>
+          <div class="stat-data">
+            <h3 id="stat-ping">-- ms</h3>
+            <p>ความเร็ว Latency</p>
+          </div>
+        </div>
+
+        <div class="stat-card glass-panel">
+          <div class="stat-icon icon-purple"><i class="fa-solid fa-clock"></i></div>
+          <div class="stat-data">
+            <h3 id="stat-uptime">0h 0m</h3>
+            <p>ออนไลน์ต่อเนื่อง</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= Web Setup Dashboard Section (Owner Only) ================= -->
+  <section id="dashboard" class="dashboard-section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag"><i class="fa-solid fa-crown"></i> SERVER OWNER CONTROL PANEL</span>
+        <h2>แผงตั้งค่าและสั่งการบอท <span class="gradient-text">Owner Dashboard</span></h2>
+        <p>ระบบความปลอดภัยระดับสูง: เฉพาะเจ้าของเซิร์ฟเวอร์ (Server Owner) ที่ล็อกอินด้วย Discord เท่านั้นจึงจะสามารถจัดการได้</p>
+      </div>
+
+      <!-- State 1: Locked Overlay (เมื่อยังไม่ได้ล็อกอิน หรือไม่ใช่เจ้าของ) -->
+      <div id="dashboard-lock-overlay" class="locked-panel glass-panel">
+        <div class="lock-icon-box">
+          <i class="fa-solid fa-lock"></i>
+        </div>
+        <h3>🔒 แผงควบคุมนี้สงวนสิทธิ์เฉพาะเจ้าของเซิร์ฟเวอร์</h3>
+        <p id="lock-message">กรุณาเข้าสู่ระบบด้วยบัญชี Discord ที่เป็น **เจ้าของเซิร์ฟเวอร์ (Server Owner)** เพื่อปลดล็อกแผงตั้งค่าและปุ่มสั่งการบอท</p>
+        <a href="/api/auth/login" class="btn btn-discord btn-lg btn-glow">
+          <i class="fa-brands fa-discord"></i> เข้าสู่ระบบด้วย Discord (Authorize App)
+        </a>
+      </div>
+
+      <!-- State 2: Unlocked Dashboard Content (เมื่อล็อกอินเป็น Owner สำเร็จ) -->
+      <div id="dashboard-content" class="dashboard-unlocked" style="display: none;">
+        
+        <!-- Server Selector Bar & Owner Profile Badge -->
+        <div class="guild-select-bar glass-panel">
+          <div class="guild-select-left">
+            <div class="owner-pill">
+              <img id="owner-avatar-img" src="" alt="Owner" class="owner-avatar">
+              <div>
+                <span class="owner-name" id="owner-name-display">Owner Name</span>
+                <span class="owner-tag-badge">👑 SERVER OWNER</span>
+              </div>
+            </div>
+          </div>
+          <div class="guild-select-right">
+            <label class="select-label"><i class="fa-solid fa-server"></i> เลือกเซิร์ฟเวอร์ของคุณ:</label>
+            <select id="guild-selector" class="custom-select">
+              <option value="">กำลังโหลดเซิร์ฟเวอร์...</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Dashboard Grid -->
+        <div class="dashboard-grid">
+          
+          <!-- Column 1: Roles Management -->
+          <div class="dashboard-card glass-panel">
+            <div class="card-header">
+              <div class="card-icon icon-cyan"><i class="fa-solid fa-id-badge"></i></div>
+              <div>
+                <h3>🎛️ ตั้งค่ายศของระบบ (Roles)</h3>
+                <p>กำหนดยศสำคัญสำหรับสิทธิ์และการยืนยันตัวตน</p>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label><i class="fa-solid fa-circle-check"></i> ยศยืนยันตัวตนผ่าน (Verified Role):</label>
+              <select id="cfg-verified-role" class="custom-select form-control"></select>
+            </div>
+
+            <div class="form-group">
+              <label><i class="fa-solid fa-crown"></i> ยศหัวหน้าเซิร์ฟเวอร์ (Leader Role):</label>
+              <select id="cfg-leader-role" class="custom-select form-control"></select>
+            </div>
+
+            <div class="form-group">
+              <label><i class="fa-solid fa-shield"></i> ยศผู้ดูแลระบบ (Admin Role):</label>
+              <select id="cfg-admin-role" class="custom-select form-control"></select>
+            </div>
+
+            <div class="form-group">
+              <label><i class="fa-solid fa-user-shield"></i> ยศผู้คุมความสงบ (Moderator Role):</label>
+              <select id="cfg-moderator-role" class="custom-select form-control"></select>
+            </div>
+          </div>
+
+          <!-- Column 2: Channels Setup -->
+          <div class="dashboard-card glass-panel">
+            <div class="card-header">
+              <div class="card-icon icon-purple"><i class="fa-solid fa-hashtag"></i></div>
+              <div>
+                <h3>📺 ตั้งค่าช่องระบบ (Channels)</h3>
+                <p>เลือกช่องสำหรับรับส่งข้อความแจ้งเตือนและระบบเพลง</p>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label><i class="fa-solid fa-shield-halved"></i> ช่องยืนยันตัวตน (Verify Channel):</label>
+              <select id="cfg-verify-channel" class="custom-select form-control"></select>
+            </div>
+
+            <div class="form-group">
+              <label><i class="fa-solid fa-door-open"></i> ช่องต้อนรับสมาชิกใหม่ (Welcome):</label>
+              <select id="cfg-welcome-channel" class="custom-select form-control"></select>
+            </div>
+
+            <div class="form-group">
+              <label><i class="fa-solid fa-door-closed"></i> ช่องบอกลาสมาชิก (Goodbye):</label>
+              <select id="cfg-goodbye-channel" class="custom-select form-control"></select>
+            </div>
+
+            <div class="form-group">
+              <label><i class="fa-solid fa-file-lines"></i> ช่องบันทึกประวัติ (Audit Logs):</label>
+              <select id="cfg-log-channel" class="custom-select form-control"></select>
+            </div>
+
+            <div class="form-group">
+              <label><i class="fa-solid fa-music"></i> ช่องขอเพลงเฉพาะ (Music Channel):</label>
+              <select id="cfg-music-channel" class="custom-select form-control"></select>
+            </div>
+
+            <div class="form-group">
+              <label><i class="fa-solid fa-folder"></i> หมวดหมู่เปิดทิกเก็ต (Ticket Category):</label>
+              <select id="cfg-ticket-category" class="custom-select form-control"></select>
+            </div>
+          </div>
+
+          <!-- Column 3: Feature Toggles & Save Button -->
+          <div class="dashboard-card glass-panel">
+            <div class="card-header">
+              <div class="card-icon icon-green"><i class="fa-solid fa-toggle-on"></i></div>
+              <div>
+                <h3>🔘 เปิด/ปิดการทำงาน (Features)</h3>
+                <p>สวิตช์ควบคุมฟังก์ชันอัตโนมัติ</p>
+              </div>
+            </div>
+
+            <div class="toggle-row">
+              <div>
+                <span class="toggle-title">ระบบข้อความต้อนรับ & บอกลา</span>
+                <p class="toggle-desc">ส่งการ์ดต้อนรับและบอกลาเมื่อมีคนเข้า-ออก</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="cfg-enable-welcome">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="toggle-row">
+              <div>
+                <span class="toggle-title">ระบบบันทึกความปลอดภัย (Audit Logs)</span>
+                <p class="toggle-desc">บันทึกเหตุการณ์ แบน เตะ Timeout แก้ไขข้อความ</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="cfg-enable-logs">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="save-box">
+              <button id="btn-save-settings" class="btn btn-primary btn-lg btn-glow btn-block">
+                <i class="fa-solid fa-floppy-disk"></i> บันทึกการตั้งค่าลง SQLite
+              </button>
+              <span id="save-status" class="save-status-text"></span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Remote Actions Center (สั่งการบอทผ่านเว็บ) -->
+        <div class="remote-actions-panel glass-panel">
+          <div class="card-header">
+            <div class="card-icon icon-yellow"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+            <div>
+              <h3>⚡ ศูนย์สั่งการด่วน (Remote Action Center)</h3>
+              <p>คลิกเพื่อสั่งให้บอทส่งแผงควบคุมเข้าช่องที่กำหนดได้ทันที</p>
+            </div>
+          </div>
+
+          <div class="actions-grid">
+            <div class="action-card">
+              <h4>🔐 ส่งแผงยืนยันตัวตน</h4>
+              <p>ส่ง Embed พร้อมปุ่ม CAPTCHA Modal</p>
+              <button id="btn-action-verify" class="btn btn-secondary btn-sm"><i class="fa-solid fa-paper-plane"></i> ส่งแผง Verify</button>
+            </div>
+
+            <div class="action-card">
+              <h4>🎫 ส่งแผงเปิดทิกเก็ต</h4>
+              <p>ส่ง Embed ปุ่มเปิด Ticket ขอความช่วยเหลือ</p>
+              <button id="btn-action-ticket" class="btn btn-secondary btn-sm"><i class="fa-solid fa-ticket"></i> ส่งแผง Ticket</button>
+            </div>
+
+            <div class="action-card">
+              <h4>🎵 ติดตั้งห้องขอเพลง</h4>
+              <p>ล้างข้อความเก่าและส่งแผงเล่นเพลง Standby</p>
+              <button id="btn-action-music" class="btn btn-secondary btn-sm"><i class="fa-solid fa-compact-disc"></i> รีเซ็ตห้องเพลง</button>
+            </div>
+
+            <div class="action-card">
+              <h4>🚨 ล็อกดาวน์ฉุกเฉิน</h4>
+              <p>ปิดสิทธิ์พิมพ์ของทุกคนทันทีเมื่อมีเหตุ</p>
+              <button id="btn-action-lockdown" class="btn btn-danger btn-sm"><i class="fa-solid fa-triangle-exclamation"></i> สลับสถานะ Lockdown</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Announcement Modal Box -->
+        <div class="announcement-panel glass-panel">
+          <div class="card-header">
+            <div class="card-icon icon-red"><i class="fa-solid fa-bullhorn"></i></div>
+            <div>
+              <h3>📢 ส่งประกาศทางการ (Live Embed Announcer)</h3>
+              <p>พิมพ์ข้อความประกาศแล้วส่งเข้า Discord ได้ทันทีแบบ Realtime</p>
+            </div>
+          </div>
+
+          <div class="announce-form-grid">
+            <div class="form-group">
+              <label>ช่องที่ต้องการส่งประกาศ:</label>
+              <select id="ann-channel" class="custom-select form-control"></select>
+            </div>
+            <div class="form-group">
+              <label>หัวข้อประกาศ (Title):</label>
+              <input type="text" id="ann-title" class="form-control" placeholder="เช่น กฎใหม่ของเซิร์ฟเวอร์ / กิจกรรมประจำสัปดาห์">
+            </div>
+            <div class="form-group full-width">
+              <label>เนื้อหาประกาศ (Description):</label>
+              <textarea id="ann-desc" class="form-control" rows="3" placeholder="พิมพ์รายละเอียดประกาศที่ต้องการแจ้งสมาชิก..."></textarea>
+            </div>
+            <div class="form-group">
+              <label>สีแถบ Embed (Hex Color):</label>
+              <input type="color" id="ann-color" class="form-control color-picker" value="#00f0ff">
+            </div>
+            <div class="form-group">
+              <label>ลิงก์รูปภาพประกอบ (URL รูป/GIF):</label>
+              <input type="text" id="ann-image" class="form-control" placeholder="https://example.com/banner.png">
+            </div>
+            <div class="form-group full-width">
+              <button id="btn-send-announcement" class="btn btn-primary btn-block">
+                <i class="fa-solid fa-paper-plane"></i> ส่งประกาศเข้าเซิร์ฟเวอร์ทันที
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= Live Music Player Widget ================= -->
+  <section id="player" class="player-section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag"><i class="fa-solid fa-music"></i> LIVE AUDIO STREAM</span>
+        <h2>แผงเครื่องเล่นเพลงสด <span class="gradient-text">Realtime Player</span></h2>
+        <p>แสดงสถานะและข้อมูลเพลงที่กำลังเปิดอยู่ในเซิร์ฟเวอร์แบบสดๆ</p>
+      </div>
+
+      <div class="player-widget glass-panel">
+        <div class="player-cover-box">
+          <img id="music-cover" src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnZzaGhhNTRrNXkxbndxczI4cnpna2tzYnR4cTN6enhrNHpzNWg5ZCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/26AHG5KGFxSkUWw1i/giphy.gif" alt="Cover" class="player-cover">
+          <div class="player-badge" id="music-status-badge">
+            <span class="status-dot"></span> <span id="music-badge-text">Standby</span>
+          </div>
+        </div>
+
+        <div class="player-details">
+          <div class="player-header">
+            <div>
+              <span class="server-label" id="music-guild-name">Discord Lounge</span>
+              <h3 id="music-song-name" class="song-title">ยังไม่มีเพลงที่กำลังเล่น</h3>
+              <p id="music-artist-name" class="song-artist">Uryu Music System • 48kHz Stereo</p>
+            </div>
+            <div class="visualizer" id="visualizer">
+              <span class="v-bar"></span>
+              <span class="v-bar"></span>
+              <span class="v-bar"></span>
+              <span class="v-bar"></span>
+              <span class="v-bar"></span>
+              <span class="v-bar"></span>
+            </div>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="progress-container">
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" id="music-progress-fill" style="width: 0%;"></div>
+            </div>
+            <div class="time-row">
+              <span id="music-current-time">00:00</span>
+              <span id="music-duration">00:00</span>
+            </div>
+          </div>
+
+          <!-- Player Controls Mock -->
+          <div class="player-mock-controls">
+            <div class="mock-btn"><i class="fa-solid fa-backward-step"></i></div>
+            <div class="mock-btn play-btn" id="music-play-btn"><i class="fa-solid fa-play"></i></div>
+            <div class="mock-btn"><i class="fa-solid fa-forward-step"></i></div>
+            <div class="mock-btn"><i class="fa-solid fa-repeat"></i></div>
+            <div class="mock-btn volume-box"><i class="fa-solid fa-volume-high"></i> <span>100%</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= Feature Showcase ================= -->
+  <section id="features" class="features-section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag"><i class="fa-solid fa-star"></i> CORE MODULES</span>
+        <h2>ระบบเด่นระดับพรีเมียม <span class="gradient-text">All-in-One</span></h2>
+        <p>ครบครันทุกฟังก์ชันที่เซิร์ฟเวอร์คอมมูนิตี้และเกมมิ่งต้องการ</p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card glass-panel">
+          <div class="feature-icon icon-cyan"><i class="fa-solid fa-shield-halved"></i></div>
+          <h3>🔐 ระบบยืนยันตัวตน CAPTCHA</h3>
+          <p>สุ่มรหัสตัวอักษรและตัวเลข 6 หลักแบบไดนามิก ป้องกันบอทและไอดีป่วน พร้อมแจกยศอัตโนมัติเมื่อตอบถูก</p>
+          <span class="cmd-pill">/send-verify</span>
+        </div>
+
+        <div class="feature-card glass-panel">
+          <div class="feature-icon icon-purple"><i class="fa-solid fa-compact-disc"></i></div>
+          <h3>🎵 ระบบดนตรี 2-in-1 คุณภาพสูง</h3>
+          <p>สตรีมเสียงคมชัดระดับ 48kHz Stereo พร้อมแผงควบคุมเพลง In-place ไม่สแปมข้อความ และปุ่มปรับเสียงสด</p>
+          <span class="cmd-pill">/setup-music</span> <span class="cmd-pill">/play</span>
+        </div>
+
+        <div class="feature-card glass-panel">
+          <div class="feature-icon icon-green"><i class="fa-solid fa-ticket"></i></div>
+          <h3>🎫 ระบบทิกเก็ต & HTML Transcript</h3>
+          <p>เปิดห้องช่วยเหลือส่วนตัวสำหรับติดต่อทีมงาน พร้อมระบบแปลงประวัติแชทเป็นไฟล์ HTML Transcript สุดหรู</p>
+          <span class="cmd-pill">/send-ticket</span>
+        </div>
+
+        <div class="feature-card glass-panel">
+          <div class="feature-icon icon-red"><i class="fa-solid fa-triangle-exclamation"></i></div>
+          <h3>🚨 ล็อกดาวน์เซิร์ฟเวอร์ฉุกเฉิน</h3>
+          <p>คำสั่ง Panic Mode ปิดสิทธิ์การพิมพ์ของสมาชิกทั้งเซิร์ฟเวอร์หรือเฉพาะห้องได้ทันทีในคลิกเดียวเมื่อเกิดเหตุ</p>
+          <span class="cmd-pill">/lockdown on/off</span>
+        </div>
+
+        <div class="feature-card glass-panel">
+          <div class="feature-icon icon-yellow"><i class="fa-solid fa-square-poll-vertical"></i></div>
+          <h3>📊 ระบบโพลสำรวจความคิดเห็นสด</h3>
+          <p>สร้างโพลพร้อมปุ่มกดโหวตและกราฟิก Progress Bar อัปเดตผลคะแนนแบบเรียลไทม์ทันทีที่สมาชิกคลิก</p>
+          <span class="cmd-pill">/poll</span>
+        </div>
+
+        <div class="feature-card glass-panel">
+          <div class="feature-icon icon-blue"><i class="fa-solid fa-dice"></i></div>
+          <h3>🎉 มินิเกม & เซียมซีดูดวง</h3>
+          <p>ชุดคำสั่งความบันเทิง เสี่ยงเซียมซีพร้อมเลขเด็ด, ลูกแก้ว 8-Ball, ทอยเต๋า, สุ่มโยนเหรียญ และส่งอ้อมกอด</p>
+          <span class="cmd-pill">/fortune</span> <span class="cmd-pill">/hug</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= Commands Directory Explorer ================= -->
+  <section id="commands" class="commands-section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag"><i class="fa-solid fa-terminal"></i> COMMANDS DIRECTORY</span>
+        <h2>สารบัญคำสั่งทั้งหมด <span class="gradient-text">Slash Commands</span></h2>
+        <p>ค้นหาและดูรายละเอียดคำสั่งทั้งหมด 33 คำสั่งของบอทได้ที่นี่</p>
+      </div>
+
+      <!-- Search & Filters -->
+      <div class="commands-toolbar glass-panel">
+        <div class="search-box">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="cmd-search" placeholder="พิมพ์ค้นหาคำสั่ง เช่น /play, /ban, /poll...">
+        </div>
+
+        <div class="filter-pills" id="filter-pills">
+          <button class="filter-btn active" data-category="all">ทั้งหมด (33)</button>
+          <button class="filter-btn" data-category="music"><i class="fa-solid fa-music"></i> ดนตรี (8)</button>
+          <button class="filter-btn" data-category="fun"><i class="fa-solid fa-dice"></i> บันเทิง (6)</button>
+          <button class="filter-btn" data-category="general"><i class="fa-solid fa-comment"></i> ทั่วไป (3)</button>
+          <button class="filter-btn" data-category="moderation"><i class="fa-solid fa-shield"></i> ดูแลความสงบ (9)</button>
+          <button class="filter-btn" data-category="admin"><i class="fa-solid fa-crown"></i> ผู้ดูแลระบบ (7)</button>
+        </div>
+      </div>
+
+      <!-- Commands Grid Container -->
+      <div class="commands-grid" id="commands-container">
+        <div class="loading-spinner">
+          <i class="fa-solid fa-circle-notch fa-spin"></i> กำลังโหลดรายการคำสั่ง...
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= Footer ================= -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <span class="brand-name">Uryu<span class="gradient-text">Bot</span></span>
+          <p>Multi-Purpose Discord Suite • Server Owner Control Center</p>
+        </div>
+        <div class="footer-links">
+          <a href="#stats">สถิติสด</a>
+          <a href="#dashboard">แผงตั้งค่า (Owner)</a>
+          <a href="#player">เครื่องเล่นเพลง</a>
+          <a href="#commands">คำสั่งทั้งหมด</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 UryuBot Suite. Protected by Discord OAuth2 & SQLite Storage.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="app.js"></script>
+</body>
+</html>

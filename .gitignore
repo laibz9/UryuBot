@@ -1,15 +1,53 @@
+# ==========================================
+# UryuBot - Production Git Ignore Configuration
+# ==========================================
+
 # Dependencies
 node_modules/
+package-lock.json.bak
 
-# Environment variables
+# Environment Variables & Secrets
 .env
+.env.*
+!.env.example
 
-# Logs
+# SQLite Database & Data Storage
+data/*.sqlite
+data/*.sqlite-wal
+data/*.sqlite-shm
+data/*.sqlite-journal
+data/*.db
+data/*.db-journal
+
+# Temporary Transcripts & Cache
+transcripts/*.html
+temp/
+tmp/
+.cache/
+
+# Logs & Debug Output
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 
-# System files
+# System & OS Files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+desktop.ini
+
+# IDE & Editor Configuration
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+*.sublime-project
+*.sublime-workspace
+.gemini/

@@ -4,6 +4,7 @@
  */
 
 const { EmbedBuilder, PermissionFlagsBits, ChannelType } = require('discord.js');
+const { getGuildSettings } = require('../database/db');
 const config = require('../config/config');
 const logger = require('./logger');
 
@@ -13,11 +14,13 @@ const logger = require('./logger');
  * @returns {object|null} GuildTextChannel หรือ null หากไม่พบ
  */
 function getLogChannel(guild) {
-  if (!guild || !config.bot.enableLogSystem) return null;
+  if (!guild) return null;
+  const settings = getGuildSettings(guild.id);
+  if (!settings.enableLogSystem) return null;
 
-  // 1. ค้นหาจาก LOG_CHANNEL_ID ใน config
-  if (config.bot.logChannelId) {
-    const channel = guild.channels.cache.get(config.bot.logChannelId);
+  // 1. ค้นหาจาก logChannelId ในฐานข้อมูล / config
+  if (settings.logChannelId) {
+    const channel = guild.channels.cache.get(settings.logChannelId);
     if (channel) return channel;
   }
 

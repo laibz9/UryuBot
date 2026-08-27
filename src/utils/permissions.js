@@ -5,6 +5,7 @@
 
 const { PermissionFlagsBits, MessageFlags } = require('discord.js');
 const config = require('../config/config');
+const { getGuildSettings } = require('../database/db');
 const { createErrorEmbed } = require('./embeds');
 
 /**
@@ -18,10 +19,12 @@ function isAdmin(member) {
   // 1. เจ้าของเซิร์ฟเวอร์ (Server Owner) มียศสูงสุดเสมอ
   if (member.guild.ownerId === member.id) return true;
 
-  // 2. มียศตาม LEADER_ROLE_ID หรือ ADMIN_ROLE_ID ใน .env หรือไม่
+  const settings = getGuildSettings(member.guild.id);
+
+  // 2. มียศตาม LEADER_ROLE_ID หรือ ADMIN_ROLE_ID หรือไม่
   if (
-    (config.bot.leaderRoleId && member.roles.cache.has(config.bot.leaderRoleId)) ||
-    (config.bot.adminRoleId && member.roles.cache.has(config.bot.adminRoleId))
+    (settings.leaderRoleId && member.roles.cache.has(settings.leaderRoleId)) ||
+    (settings.adminRoleId && member.roles.cache.has(settings.adminRoleId))
   ) {
     return true;
   }
@@ -45,8 +48,10 @@ function isModerator(member) {
   // หากเป็น Admin อยู่แล้วให้ผ่านทันที
   if (isAdmin(member)) return true;
 
-  // มียศตาม MODERATOR_ROLE_ID ใน .env หรือไม่
-  if (config.bot.moderatorRoleId && member.roles.cache.has(config.bot.moderatorRoleId)) {
+  const settings = getGuildSettings(member.guild.id);
+
+  // มียศตาม MODERATOR_ROLE_ID หรือไม่
+  if (settings.moderatorRoleId && member.roles.cache.has(settings.moderatorRoleId)) {
     return true;
   }
 

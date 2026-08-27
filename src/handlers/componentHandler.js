@@ -1,6 +1,6 @@
 /**
  * @file src/handlers/componentHandler.js
- * @description ตัวจัดการเส้นทางและโหลด Handlers สำหรับ Button และ Modal Interactions ตาม customId
+ * @description ตัวจัดการเส้นทางและโหลด Handlers สำหรับ Button, Modal, และ Select Menu Interactions
  */
 
 const fs = require('fs');
@@ -9,12 +9,13 @@ const { MessageFlags } = require('discord.js');
 const logger = require('../utils/logger');
 
 /**
- * โหลดไฟล์ Buttons และ Modals ทั้งหมดเข้าสู่ client.buttons และ client.modals Collections
+ * โหลดไฟล์ Buttons, Modals และ SelectMenus ทั้งหมดเข้าสู่ Collections ของ Client
  * @param {object} client - Instance ของ Discord Client
  */
 function loadComponents(client) {
   const buttonsPath = path.join(__dirname, '../components/buttons');
   const modalsPath = path.join(__dirname, '../components/modals');
+  const selectMenusPath = path.join(__dirname, '../components/selectMenus');
 
   // โหลด Button Handlers
   if (fs.existsSync(buttonsPath)) {
@@ -42,7 +43,21 @@ function loadComponents(client) {
     }
   }
 
-  logger.success('โหลด Component Handlers (Buttons & Modals) สำเร็จ');
+  // โหลด SelectMenu Handlers
+  if (fs.existsSync(selectMenusPath)) {
+    const selectMenuFiles = fs.readdirSync(selectMenusPath).filter(file => file.endsWith('.js'));
+    for (const file of selectMenuFiles) {
+      const filePath = path.join(selectMenusPath, file);
+      const selectMenu = require(filePath);
+      if (selectMenu && selectMenu.customId && typeof selectMenu.execute === 'function') {
+        if (!client.selectMenus) client.selectMenus = new Map();
+        client.selectMenus.set(selectMenu.customId, selectMenu);
+        logger.info(`โหลด SelectMenu Handler: customId [${selectMenu.customId}] สำเร็จ`);
+      }
+    }
+  }
+
+  logger.success('โหลด Component Handlers (Buttons, Modals & SelectMenus) สำเร็จ');
 }
 
 /**
@@ -89,7 +104,6 @@ async function handleButton(interaction, client) {
  * @param {object} client - Instance ของ Discord Client
  */
 async function handleModal(interaction, client) {
-  // ค้นหา Handler ที่ customId ตรงกัน หรือขึ้นต้นด้วย customId ที่กำหนด (กรณีส่งค่าพารามิเตอร์ผ่าน customId เช่น modal_verify:CAPTCHA)
   let modalKey = interaction.customId;
   if (modalKey.includes(':')) {
     modalKey = modalKey.split(':')[0];
@@ -117,8 +131,45 @@ async function handleModal(interaction, client) {
   }
 }
 
+/**
+ * ประมวลผลและส่งต่อการเลือกตัวเลือกใน Select Menu (AnySelectMenuInteraction)
+ * @param {object} interaction - Discord AnySelectMenuInteraction Object
+ * @param {object} client - Instance ของ Discord Client
+ */
+async function handleSelectMenu(interaction, client) {
+  let selectMenu = client.selectMenus?.get(interaction.customId);
+
+  if (!selectMenu) {
+    for (const [key, val] of client.selectMenus || []) {
+      if (interaction.customId.startsWith(key)) {
+        selectMenu = val;
+        break;
+      }
+    }
+  }
+
+  if (!selectMenu) {
+    logger.warn(`ไม่พบ SelectMenu Handler สำหรับ customId: ${interaction.customId}`);
+    return;
+  }
+
+  try {
+    await selectMenu.execute(interaction, client);
+  } catch (error) {
+    logger.error(`เกิดข้อผิดพลาดขณะรัน SelectMenu Handler [${interaction.customId}]:`, error);
+
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.reply({
+        content: 'เกิดข้อผิดพลาดในการประมวลผลเมนูนี้ กรุณาลองใหม่อีกครั้ง',
+        flags: MessageFlags.Ephemeral
+      }).catch(() => {});
+    }
+  }
+}
+
 module.exports = {
   loadComponents,
   handleButton,
-  handleModal
+  handleModal,
+  handleSelectMenu
 };

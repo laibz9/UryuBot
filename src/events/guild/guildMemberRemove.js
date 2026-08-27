@@ -5,6 +5,7 @@
 
 const { Events, ChannelType, PermissionFlagsBits } = require('discord.js');
 const { createGoodbyeEmbed } = require('../../utils/embeds');
+const { getGuildSettings } = require('../../database/db');
 const config = require('../../config/config');
 const logger = require('../../utils/logger');
 
@@ -18,19 +19,21 @@ module.exports = {
    */
   async execute(member) {
     try {
+      const guild = member.guild;
+      const settings = getGuildSettings(guild.id);
+
       // 0. ตรวจสอบว่าระบบบอกลาถูกเปิดใช้งานอยู่หรือไม่
-      if (!config.bot.enableWelcomeSystem) {
+      if (!settings.enableWelcomeSystem) {
         return;
       }
 
-      const guild = member.guild;
       let goodbyeChannel = null;
 
-      // 1. ค้นหาช่องแจ้งคนออกจาก GOODBYE_CHANNEL_ID หรือ WELCOME_CHANNEL_ID ใน .env
-      if (config.bot.goodbyeChannelId) {
-        goodbyeChannel = guild.channels.cache.get(config.bot.goodbyeChannelId);
-      } else if (config.bot.welcomeChannelId) {
-        goodbyeChannel = guild.channels.cache.get(config.bot.welcomeChannelId);
+      // 1. ค้นหาช่องแจ้งคนออกจากฐานข้อมูล / .env
+      if (settings.goodbyeChannelId) {
+        goodbyeChannel = guild.channels.cache.get(settings.goodbyeChannelId);
+      } else if (settings.welcomeChannelId) {
+        goodbyeChannel = guild.channels.cache.get(settings.welcomeChannelId);
       }
 
       // 2. หากไม่ได้ตั้งค่าใน .env ค้นหาช่องอัตโนมัติ (goodbye/leave/welcome)
