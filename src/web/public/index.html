@@ -51,7 +51,7 @@
       <div class="nav-links">
         <a href="#stats" class="nav-link"><i class="fa-solid fa-chart-pie"></i> <span>สถิติสด</span></a>
         <a href="#dashboard" class="nav-link"><i class="fa-solid fa-crown"></i> <span>แผงควบคุม</span></a>
-        <a href="#player" class="nav-link"><i class="fa-solid fa-compact-disc"></i> <span>เครื่องเล่นเพลง</span></a>
+        
         <a href="#features" class="nav-link"><i class="fa-solid fa-shield-halved"></i> <span>ฟีเจอร์หลัก</span></a>
         <a href="#commands" class="nav-link"><i class="fa-solid fa-terminal"></i> <span>คำสั่งทั้งหมด</span></a>
       </div>
@@ -841,69 +841,7 @@
     </div>
   </section>
 
-  <!-- ================= Live Music Player Widget ================= -->
-  <section id="player" class="player-section">
-    <div class="container">
-      <div class="section-header">
-        <span class="section-tag"><i class="fa-solid fa-music"></i> LIVE AUDIO STREAM</span>
-        <h2>แผงเครื่องเล่นเพลงสด <span class="gradient-text">Realtime Player</span></h2>
-        <p>แสดงสถานะและข้อมูลเพลงที่กำลังเปิดอยู่ในเซิร์ฟเวอร์แบบสดๆ</p>
-      </div>
-
-      <div class="player-widget glass-panel">
-        <div class="player-cover-box">
-          <div class="cover-vinyl-effect">
-            <img id="music-cover" src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnZzaGhhNTRrNXkxbndxczI4cnpna2tzYnR4cTN6enhrNHpzNWg5ZCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/26AHG5KGFxSkUWw1i/giphy.gif" alt="Cover" class="player-cover">
-          </div>
-          <div class="player-badge" id="music-status-badge">
-            <span class="status-dot"></span> <span id="music-badge-text">Standby</span>
-          </div>
-        </div>
-
-        <div class="player-details">
-          <div class="player-header">
-            <div>
-              <span class="server-label" id="music-guild-name">Discord Lounge</span>
-              <h3 id="music-song-name" class="song-title">ยังไม่มีเพลงที่กำลังเล่น</h3>
-              <p id="music-artist-name" class="song-artist">Uryu Music System • 48kHz Stereo</p>
-              <div class="requester-badge" id="music-requester-box">
-                <img id="music-requester-avatar" src="https://cdn-icons-png.flaticon.com/512/1069/1069210.png" alt="Requester" class="requester-avatar">
-                <span>เปิดโดย: <strong id="music-requester-name">-</strong></span>
-              </div>
-            </div>
-            <div class="visualizer" id="visualizer">
-              <span class="v-bar"></span>
-              <span class="v-bar"></span>
-              <span class="v-bar"></span>
-              <span class="v-bar"></span>
-              <span class="v-bar"></span>
-              <span class="v-bar"></span>
-            </div>
-          </div>
-
-          <!-- Progress Bar -->
-          <div class="progress-container">
-            <div class="progress-bar-bg">
-              <div class="progress-bar-fill" id="music-progress-fill" style="width: 0%;"></div>
-            </div>
-            <div class="time-row">
-              <span id="music-current-time">00:00</span>
-              <span id="music-duration">00:00</span>
-            </div>
-          </div>
-
-          <!-- Player Controls -->
-          <div class="player-mock-controls">
-            <div class="mock-btn" id="music-prev-btn" title="เล่นเพลงก่อนหน้า"><i class="fa-solid fa-backward-step"></i></div>
-            <div class="mock-btn play-btn" id="music-play-btn" title="เล่น/พักเพลง"><i class="fa-solid fa-play"></i></div>
-            <div class="mock-btn" id="music-next-btn" title="ข้ามเพลง"><i class="fa-solid fa-forward-step"></i></div>
-            <div class="mock-btn" id="music-stop-btn" title="หยุดเล่นเพลง"><i class="fa-solid fa-stop"></i></div>
-            <div class="mock-btn volume-box" id="music-vol-badge" title="ระดับเสียงปัจจุบัน"><i class="fa-solid fa-volume-high"></i> <span id="music-vol-text">100%</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
+  
 
   <!-- ================= Feature Showcase ================= -->
   <section id="features" class="features-section">
