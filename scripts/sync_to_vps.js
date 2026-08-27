@@ -1,6 +1,6 @@
 /**
  * @file scripts/sync_to_vps.js
- * @description 1-Command Auto-Deploy: ดึงโค้ดล่าสุดบน Cloud VPS และรีสตาร์ทบอททันทีใน 2 วินาที
+ * @description 1-Command Auto-Sync: ซิงค์โค้ดล่าสุดจาก GitHub ไปยัง Cloud VPS (ไม่ออโต้สตาร์ทบอท)
  */
 
 require('dotenv').config();
@@ -28,21 +28,19 @@ console.log(`🚀 [1/3] กำลังเชื่อมต่อ Cloud VPS (${
 const conn = new Client();
 
 conn.on('ready', () => {
-  console.log('✅ [2/3] เชื่อมต่อสำเร็จ! กำลังซิงค์โค้ดจาก GitHub และอัปเดตบอท...');
+  console.log('✅ [2/3] เชื่อมต่อสำเร็จ! กำลังดึงโค้ดล่าสุดจาก GitHub...');
 
   const cmd = `
     cd /root/UryuBot && 
     git fetch origin main && 
     git reset --hard origin/main && 
-    npm install --production && 
-    pm2 restart uryubot && 
-    pm2 status
+    npm install --production
   `;
 
   conn.exec(cmd, (err, stream) => {
     if (err) throw err;
     stream.on('close', (code) => {
-      console.log(`\n🎉 [3/3] ซิงค์โค้ดขึ้น Cloud VPS และเริ่มรันบอทเวอร์ชันล่าสุดสำเร็จแล้ว! (Code: ${code})`);
+      console.log(`\n🎉 [3/3] ซิงค์โค้ดขึ้น Cloud VPS สำเร็จแล้ว! (ไม่ได้สั่งรันบอท สามารถเข้า VPS ไป Start/Stop เองได้เลย)`);
       conn.end();
     }).on('data', (data) => {
       process.stdout.write(data);
