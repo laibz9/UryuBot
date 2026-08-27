@@ -4,6 +4,21 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+  /**
+   * แปลงจำนวนวินาทีเป็นสตริงเวลา MM:SS หรือ HH:MM:SS
+   */
+  function formatTimeSeconds(seconds) {
+    if (isNaN(seconds) || seconds < 0) return '00:00';
+    const s = Math.floor(seconds);
+    const hrs = Math.floor(s / 3600);
+    const mins = Math.floor((s % 3600) / 60);
+    const secs = s % 60;
+    if (hrs > 0) {
+      return `${hrs}:${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    }
+    return `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  }
+
   let allCommands = [];
   let allGuilds = [];
   let currentGuildId = '';
@@ -750,6 +765,34 @@ document.addEventListener('DOMContentLoaded', () => {
   const djQueueContainer = document.getElementById('dj-queue-container');
 
   let isUserSeeking = false;
+  let currentDjPlayback = {
+    isPlaying: false,
+    isPaused: false,
+    currentTime: 0,
+    duration: 0,
+    lastSyncTimestamp: Date.now()
+  };
+
+  // Realtime smooth sub-second timeline ticker (every 250ms)
+  setInterval(() => {
+    if (currentDjPlayback.isPlaying && !currentDjPlayback.isPaused && !isUserSeeking) {
+      const elapsed = (Date.now() - currentDjPlayback.lastSyncTimestamp) / 1000;
+      const estimatedSec = Math.min(currentDjPlayback.duration, currentDjPlayback.currentTime + elapsed);
+      
+      if (djTimeCur) djTimeCur.textContent = formatTimeSeconds(estimatedSec);
+      if (djSeekSlider && currentDjPlayback.duration > 0) {
+        djSeekSlider.value = estimatedSec;
+      }
+    }
+  }, 250);
+
+  // Dedicated 1-second background poll for DJ Queue & Status
+  setInterval(() => {
+    const djTabPane = document.getElementById('tab-pane-dj');
+    if (djTabPane && djTabPane.classList.contains('active')) {
+      fetchDjQueue();
+    }
+  }, 1000);
 
   async function fetchDjQueue() {
     if (!currentGuildId) return;
@@ -762,6 +805,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!data.success) return;
 
       if (data.isPlaying && data.currentSong) {
+        currentDjPlayback.isPlaying = true;
+        currentDjPlayback.isPaused = Boolean(data.isPaused);
+        currentDjPlayback.currentTime = Number(data.currentTime) || 0;
+        currentDjPlayback.duration = Number(data.duration) || 1;
+        currentDjPlayback.lastSyncTimestamp = Date.now();
         if (djTrackTitle) djTrackTitle.textContent = data.currentSong.name;
         if (djTrackArtist) djTrackArtist.textContent = `${data.currentSong.uploader} • 48kHz Stereo`;
         if (djTrackRequester) djTrackRequester.textContent = data.currentSong.requester;
@@ -800,6 +848,10 @@ document.addEventListener('DOMContentLoaded', () => {
           djLoopText.textContent = loopNames[data.repeatMode] || 'Off';
         }
       } else {
+        currentDjPlayback.isPlaying = false;
+        currentDjPlayback.isPaused = false;
+        currentDjPlayback.currentTime = 0;
+        currentDjPlayback.duration = 0;
         if (djTrackTitle) djTrackTitle.textContent = 'ยังไม่มีเพลงที่กำลังเล่น';
         if (djTrackArtist) djTrackArtist.textContent = 'Uryu Music System • 48kHz Stereo';
         if (djTrackRequester) djTrackRequester.textContent = '-';
@@ -912,8 +964,15 @@ document.addEventListener('DOMContentLoaded', () => {
   if (djSeekSlider) {
     djSeekSlider.addEventListener('mousedown', () => { isUserSeeking = true; });
     djSeekSlider.addEventListener('touchstart', () => { isUserSeeking = true; });
+    djSeekSlider.addEventListener('input', (e) => {
+      isUserSeeking = true;
+      const pos = Number(e.target.value);
+      if (djTimeCur) djTimeCur.textContent = formatTimeSeconds(pos);
+    });
     djSeekSlider.addEventListener('change', async (e) => {
-      const pos = e.target.value;
+      const pos = Number(e.target.value);
+      currentDjPlayback.currentTime = pos;
+      currentDjPlayback.lastSyncTimestamp = Date.now();
       try {
         await fetch('/api/music/seek', {
           method: 'POST',
@@ -1468,14 +1527,31 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch {}
   }
 
-  // Populate options helper for DJ and Embed
-  function updateStudioChannelDropdowns(guild) {
+    // Populate options helper for DJ and Embed
+  async function updateStudioChannelDropdowns(guild) {
     if (!guild) return;
 
-    // Populate Voice Channels for DJ Studio (type 2 = Voice, type 13 = Stage Voice)
+    let channels = guild.channels || [];
+
+    // Fallback: If channels are missing or voice channels not present, fetch from direct API
+    const hasVoice = channels.some(c => c.isVoice || c.type === 2 || c.type === 13);
+    if (!hasVoice && guild.id) {
+      try {
+        const cRes = await fetch(`/api/guilds/${guild.id}/channels`);
+        if (cRes.ok) {
+          const cData = await cRes.json();
+          if (cData.success && cData.channels) {
+            channels = cData.channels;
+            guild.channels = channels;
+          }
+        }
+      } catch {}
+    }
+
+    // Populate Voice Channels for DJ Studio
     if (djVoiceChannel) {
       djVoiceChannel.innerHTML = '<option value="">เลือกห้องเสียง...</option>';
-      const voiceChannels = (guild.channels || []).filter(c => c.isVoice || c.type === 2 || c.type === 13);
+      const voiceChannels = channels.filter(c => c.isVoice || c.type === 2 || c.type === 13);
       if (voiceChannels.length > 0) {
         voiceChannels.forEach(ch => {
           const opt = document.createElement('option');
@@ -1491,7 +1567,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Populate Text Channels for Embed Builder
     if (embedChannelSelect) {
       embedChannelSelect.innerHTML = '<option value="">เลือกห้องแชท...</option>';
-      const textChannels = (guild.channels || []).filter(c => c.isText || c.type === 0 || c.type === 5);
+      const textChannels = channels.filter(c => c.isText || c.type === 0 || c.type === 5);
       textChannels.forEach(ch => {
         const opt = document.createElement('option');
         opt.value = ch.id;

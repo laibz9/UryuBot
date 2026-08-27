@@ -460,8 +460,14 @@ function startWebServer(client) {
                 icon: guild.iconURL({ dynamic: true }) || 'https://cdn-icons-png.flaticon.com/512/1069/1069210.png',
                 memberCount: guild.memberCount,
                 channels: guild.channels.cache
-                  .filter(c => c.isTextBased() || c.type === 4)
-                  .map(c => ({ id: c.id, name: c.name, type: c.type }))
+                  .map(c => ({
+                    id: c.id,
+                    name: c.name,
+                    type: c.type,
+                    isVoice: Boolean(c.type === 2 || c.type === 13 || (typeof c.isVoiceBased === 'function' && c.isVoiceBased())),
+                    isText: Boolean(c.type === 0 || c.type === 5 || (typeof c.isTextBased === 'function' && c.isTextBased())),
+                    isCategory: Boolean(c.type === 4)
+                  }))
                   .sort((a, b) => a.name.localeCompare(b.name)),
                 roles: guild.roles.cache
                   .filter(r => r.name !== '@everyone')
@@ -483,6 +489,30 @@ function startWebServer(client) {
   /**
    * API: ดึงการตั้งค่าของเซิร์ฟเวอร์ (Protected)
    */
+  /**
+   * API: ดึงรายชื่อ Channels ของเซิร์ฟเวอร์แบบสดๆ
+   */
+  app.get('/api/guilds/:guildId/channels', async (req, res) => {
+    try {
+      const { guildId } = req.params;
+      const guild = client.guilds.cache.get(guildId) || await client.guilds.fetch(guildId).catch(() => null);
+      if (!guild) return res.status(404).json({ success: false, error: 'ไม่พบเซิร์ฟเวอร์' });
+
+      const channels = guild.channels.cache.map(c => ({
+        id: c.id,
+        name: c.name,
+        type: c.type,
+        isVoice: Boolean(c.type === 2 || c.type === 13 || (typeof c.isVoiceBased === 'function' && c.isVoiceBased())),
+        isText: Boolean(c.type === 0 || c.type === 5 || (typeof c.isTextBased === 'function' && c.isTextBased())),
+        isCategory: Boolean(c.type === 4)
+      })).sort((a, b) => a.name.localeCompare(b.name));
+
+      res.json({ success: true, channels });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
   app.get('/api/settings/:guildId', requireServerOwner, (req, res) => {
     try {
       const { guildId } = req.params;
