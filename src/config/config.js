@@ -33,7 +33,7 @@ module.exports = {
 
   // ข้อมูลเซิร์ฟเวอร์ Cloud VPS สำหรับการเชื่อมต่อและ Sync
   vps: {
-    host: process.env.VPS_HOST || '119.10.137.245',
+    host: process.env.VPS_HOST || '',
     port: parseInt(process.env.VPS_PORT || '22', 10),
     username: process.env.VPS_USER || 'root',
     password: process.env.VPS_PASSWORD || ''

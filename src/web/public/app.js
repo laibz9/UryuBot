@@ -408,8 +408,13 @@ document.addEventListener('DOMContentLoaded', () => {
         `).join('');
 
         currentGuildId = allGuilds[0].id;
+        guildSelector.value = currentGuildId;
+        
+        // โหลดข้อมูลช่องและยศของเซิร์ฟเวอร์แรกทันทีแบบอัตโนมัติ
         populateGuildOptions(allGuilds[0]);
         await loadGuildSettings(currentGuildId);
+        await updateStudioChannelDropdowns(allGuilds[0]);
+        fetchDjQueue();
       } else {
         guildSelector.innerHTML = '<option value="">ไม่พบเซิร์ฟเวอร์ที่บอทประจำการอยู่</option>';
       }
@@ -726,6 +731,11 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.classList.add('active');
         const targetPane = document.getElementById(`tab-pane-${tab}`);
         if (targetPane) targetPane.classList.add('active');
+
+        const selectedGuild = allGuilds.find(g => g.id === currentGuildId) || allGuilds[0];
+        if (selectedGuild) {
+          updateStudioChannelDropdowns(selectedGuild);
+        }
 
         if (tab === 'dj') {
           fetchDjQueue();
