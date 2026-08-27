@@ -132,7 +132,38 @@ function createGoodbyeEmbed(user, remainingCount, guild) {
     .setTimestamp();
 }
 
+/**
+ * สร้าง Embed สำหรับแผงเปิดตั๋ว Support Ticket
+ * @param {object} guild - ข้อมูล Guild/Server
+ * @returns {EmbedBuilder} Embed Object
+ */
+function createTicketPanelEmbed(guild) {
+  const iconURL = guild ? guild.iconURL({ dynamic: true, size: 512 }) : config.assets.securityIcon;
+
+  return new EmbedBuilder()
+    .setAuthor({
+      name: guild ? `${guild.name} • Help & Support` : 'Help & Support',
+      iconURL: iconURL
+    })
+    .setTitle('🎫 ศูนย์บริการและติดต่อทีมงาน (Support Ticket)')
+    .setDescription(
+      'หากคุณต้องการความช่วยเหลือ แจ้งปัญหา พบข้อผิดพลาด หรือติดต่อสอบถามเรื่องต่างๆ\n\n' +
+      '📌 **ขั้นตอนการเปิดตั๋ว:**\n' +
+      '1. กดปุ่ม **"📩 เปิดตั๋วติดต่อทีมงาน"** ด้านล่าง\n' +
+      '2. ระบบจะสร้างห้องแชทส่วนตัวสำหรับคุณโดยเฉพาะ\n' +
+      '3. พิมพ์รายละเอียดเรื่องที่ต้องการสอบถามและรอทีมงานตอบกลับ'
+    )
+    .setColor(config.colors.accent || '#06b6d4')
+    .setThumbnail('https://cdn-icons-png.flaticon.com/512/3209/3209849.png')
+    .setFooter({
+      text: 'Ticket Support System',
+      iconURL: config.assets.securityIcon
+    })
+    .setTimestamp();
+}
+
 module.exports = {
+  createTicketPanelEmbed,
   createVerificationEmbed,
   createSuccessEmbed,
   createErrorEmbed,
