@@ -468,30 +468,33 @@ document.addEventListener('DOMContentLoaded', () => {
    */
   async function loadGuildSettings(guildId) {
     try {
-      const res = await fetch(`/api/settings/${guildId}`, { credentials: 'include' });
+      const res = await fetch(`/api/settings/${guildId}?t=${Date.now()}`, { credentials: 'include' });
       if (!res.ok) return;
       const data = await res.json();
 
       if (data.success && data.settings) {
         const s = data.settings;
-        if (s.verifiedRoleId) cfgVerifiedRole.value = s.verifiedRoleId;
-        if (s.leaderRoleId) cfgLeaderRole.value = s.leaderRoleId;
-        if (s.adminRoleId) cfgAdminRole.value = s.adminRoleId;
-        if (s.moderatorRoleId) cfgModeratorRole.value = s.moderatorRoleId;
+        // Explicitly set each value (clearing if empty)
+        if (cfgVerifiedRole) cfgVerifiedRole.value = s.verifiedRoleId || '';
+        if (cfgLeaderRole) cfgLeaderRole.value = s.leaderRoleId || '';
+        if (cfgAdminRole) cfgAdminRole.value = s.adminRoleId || '';
+        if (cfgModeratorRole) cfgModeratorRole.value = s.moderatorRoleId || '';
 
-        if (s.verifyChannelId) cfgVerifyChannel.value = s.verifyChannelId;
-        if (s.welcomeChannelId) cfgWelcomeChannel.value = s.welcomeChannelId;
-        if (s.goodbyeChannelId) cfgGoodbyeChannel.value = s.goodbyeChannelId;
-        if (s.logChannelId) cfgLogChannel.value = s.logChannelId;
-        if (s.musicChannelId) cfgMusicChannel.value = s.musicChannelId;
-        if (s.ticketCategoryId) cfgTicketCategory.value = s.ticketCategoryId;
+        if (cfgVerifyChannel) cfgVerifyChannel.value = s.verifyChannelId || '';
+        if (cfgWelcomeChannel) cfgWelcomeChannel.value = s.welcomeChannelId || '';
+        if (cfgGoodbyeChannel) cfgGoodbyeChannel.value = s.goodbyeChannelId || '';
+        if (cfgLogChannel) cfgLogChannel.value = s.logChannelId || '';
+        if (cfgMusicChannel) cfgMusicChannel.value = s.musicChannelId || '';
+        if (cfgTicketCategory) cfgTicketCategory.value = s.ticketCategoryId || '';
 
-        cfgEnableWelcome.checked = Boolean(s.enableWelcomeSystem);
-        cfgEnableLogs.checked = Boolean(s.enableLogSystem);
-        if (cfgEnableAdminCmds) cfgEnableAdminCmds.checked = s.enableAdminCommands !== false;
-        if (cfgEnableModCmds) cfgEnableModCmds.checked = s.enableModerationCommands !== false;
+        if (cfgEnableWelcome) cfgEnableWelcome.checked = Boolean(s.enableWelcomeSystem);
+        if (cfgEnableLogs) cfgEnableLogs.checked = Boolean(s.enableLogSystem);
+        if (cfgEnableAdminCmds) cfgEnableAdminCmds.checked = Boolean(s.enableAdminCommands !== false);
+        if (cfgEnableModCmds) cfgEnableModCmds.checked = Boolean(s.enableModerationCommands !== false);
 
-        saveStatus.textContent = `อัปเดตล่าสุด: ${s.updatedAt || 'ค่าเริ่มต้น'}`;
+        if (saveStatus) {
+          saveStatus.textContent = `อัปเดตล่าสุด: ${s.updatedAt ? new Date(s.updatedAt).toLocaleTimeString() : 'ค่าเริ่มต้น'}`;
+        }
       }
     } catch (err) {
       console.error('ไม่สามารถโหลดการตั้งค่าได้:', err);

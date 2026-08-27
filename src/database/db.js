@@ -16,44 +16,43 @@ const settingsCache = new Map();
  * แปลงข้อมูลจาก DB Row ให้อยู่ในรูปแบบ Settings Object มาตรฐาน
  */
 function formatSettings(guildId, row = null) {
-  const c = config.bot;
   if (!row) {
     return {
       guildId,
-      verifiedRoleId: c.verifiedRoleId || '',
-      leaderRoleId: c.leaderRoleId || '',
-      adminRoleId: c.adminRoleId || '',
-      moderatorRoleId: c.moderatorRoleId || '',
-      verifyChannelId: c.verifyChannelId || c.welcomeChannelId || '',
-      welcomeChannelId: c.welcomeChannelId || '',
-      goodbyeChannelId: c.goodbyeChannelId || '',
-      enableWelcomeSystem: c.enableWelcomeSystem !== false,
-      logChannelId: c.logChannelId || '',
-      enableLogSystem: c.enableLogSystem !== false,
+      verifiedRoleId: '',
+      leaderRoleId: '',
+      adminRoleId: '',
+      moderatorRoleId: '',
+      verifyChannelId: '',
+      welcomeChannelId: '',
+      goodbyeChannelId: '',
+      enableWelcomeSystem: true,
+      logChannelId: '',
+      enableLogSystem: true,
       enableAdminCommands: true,
       enableModerationCommands: true,
-      ticketCategoryId: c.ticketCategoryId || '',
-      musicChannelId: c.musicChannelId || '',
+      ticketCategoryId: '',
+      musicChannelId: '',
       updatedAt: new Date().toISOString()
     };
   }
 
   return {
     guildId: row.guild_id,
-    verifiedRoleId: row.verified_role_id || c.verifiedRoleId || '',
-    leaderRoleId: row.leader_role_id || c.leaderRoleId || '',
-    adminRoleId: row.admin_role_id || c.adminRoleId || '',
-    moderatorRoleId: row.moderator_role_id || c.moderatorRoleId || '',
-    verifyChannelId: row.verify_channel_id || c.verifyChannelId || c.welcomeChannelId || '',
-    welcomeChannelId: row.welcome_channel_id || c.welcomeChannelId || '',
-    goodbyeChannelId: row.goodbye_channel_id || c.goodbyeChannelId || '',
-    enableWelcomeSystem: row.enable_welcome === 1 || row.enable_welcome === true || row.enable_welcome === undefined,
-    logChannelId: row.log_channel_id || c.logChannelId || '',
-    enableLogSystem: row.enable_logs === 1 || row.enable_logs === true || row.enable_logs === undefined,
-    enableAdminCommands: row.enable_admin_commands === 1 || row.enable_admin_commands === true || row.enable_admin_commands === undefined,
-    enableModerationCommands: row.enable_moderation_commands === 1 || row.enable_moderation_commands === true || row.enable_moderation_commands === undefined,
-    ticketCategoryId: row.ticket_category_id || c.ticketCategoryId || '',
-    musicChannelId: row.music_channel_id || c.musicChannelId || '',
+    verifiedRoleId: row.verified_role_id || '',
+    leaderRoleId: row.leader_role_id || '',
+    adminRoleId: row.admin_role_id || '',
+    moderatorRoleId: row.moderator_role_id || '',
+    verifyChannelId: row.verify_channel_id || '',
+    welcomeChannelId: row.welcome_channel_id || '',
+    goodbyeChannelId: row.goodbye_channel_id || '',
+    enableWelcomeSystem: row.enable_welcome === 1 || row.enable_welcome === true || row.enable_welcome === '1',
+    logChannelId: row.log_channel_id || '',
+    enableLogSystem: row.enable_logs === 1 || row.enable_logs === true || row.enable_logs === '1',
+    enableAdminCommands: row.enable_admin_commands === 1 || row.enable_admin_commands === true || row.enable_admin_commands === '1' || row.enable_admin_commands === undefined,
+    enableModerationCommands: row.enable_moderation_commands === 1 || row.enable_moderation_commands === true || row.enable_moderation_commands === '1' || row.enable_moderation_commands === undefined,
+    ticketCategoryId: row.ticket_category_id || '',
+    musicChannelId: row.music_channel_id || '',
     updatedAt: row.updated_at ? new Date(row.updated_at).toISOString() : new Date().toISOString()
   };
 }
