@@ -24,15 +24,29 @@ module.exports = {
     // ล้างข้อความตกค้างและตั้งค่าแผงควบคุมเพลงเริ่มต้นในห้องขอเพลง
     await cleanupMusicChannelOnStartup(client);
 
-    // ลงทะเบียน Slash Commands ไปยังทุกเซิร์ฟเวอร์ (Global Application Commands)
+    // ล้างคำสั่งระดับ Guild เก่าที่อาจซ้ำซ้อน และลงทะเบียน Global Application Commands
     try {
+      // 1. ล้างคำสั่งระดับ Guild เก่าที่ทำให้เกิดคำสั่งซ้ำ 2 อันใน Discord
+      for (const guild of client.guilds.cache.values()) {
+        try {
+          const guildCmds = await guild.commands.fetch();
+          if (guildCmds && guildCmds.size > 0) {
+            await guild.commands.set([]);
+            logger.info(`🧹 ล้างคำสั่งระดับ Guild ที่ซ้ำซ้อนในเซิร์ฟเวอร์ [${guild.name}] เรียบร้อย (${guildCmds.size} คำสั่ง)`);
+          }
+        } catch (gErr) {
+          // ข้ามหากไม่มีสิทธิ์ในบางกิลด์
+        }
+      }
+
+      // 2. ลงทะเบียน Global Application Commands เป็นชุดเดียว
       const commandsData = Array.from(client.commands.values()).map(cmd => cmd.data.toJSON ? cmd.data.toJSON() : cmd.data);
       if (client.application) {
         await client.application.commands.set(commandsData);
-        logger.success(`[Global Slash Commands] ลงทะเบียน ${commandsData.length} คำสั่งไปยังทุกเซิร์ฟเวอร์เรียบร้อยแล้ว!`);
+        logger.success(`[Global Slash Commands] ลงทะเบียน ${commandsData.length} คำสั่งหลักไปยังทุกเซิร์ฟเวอร์เรียบร้อยแล้ว!`);
       }
     } catch (err) {
-      logger.error('เกิดข้อผิดพลาดในการลงทะเบียน Global Slash Commands:', err);
+      logger.error('เกิดข้อผิดพลาดในการลงทะเบียน Slash Commands:', err);
     }
 
     // ฟังก์ชันอัปเดตสถานะสีม่วง (Streaming Status)
