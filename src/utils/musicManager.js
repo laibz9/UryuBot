@@ -7,7 +7,7 @@ const { DisTube } = require('distube');
 const { SpotifyPlugin } = require('@distube/spotify');
 const { SoundCloudPlugin } = require('@distube/soundcloud');
 const { DirectLinkPlugin } = require('@distube/direct-link');
-const { YtDlpPlugin } = require('@distube/yt-dlp');
+const { CustomYtDlpPlugin } = require('./customYtDlpPlugin');
 const {
   EmbedBuilder,
   ActionRowBuilder,
@@ -247,7 +247,7 @@ function initDisTube(client) {
       new SpotifyPlugin(),
       new SoundCloudPlugin(),
       new DirectLinkPlugin(),
-      new YtDlpPlugin({ update: false })
+      new CustomYtDlpPlugin()
     ]
   });
 
