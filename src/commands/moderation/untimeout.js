@@ -42,6 +42,12 @@ module.exports = {
       const reason = interaction.options.getString('reason') || 'ไม่ได้ระบุเหตุผล';
       const guild = interaction.guild;
 
+      // 0. ตรวจสอบว่าระบุผู้ใช้ถูกต้องหรือไม่
+      if (!targetUser) {
+        const errEmbed = createErrorEmbed('ไม่พบผู้ใช้', 'กรุณาระบุสมาชิกที่ต้องการยกเลิก Timeout ให้ถูกต้อง');
+        return await interaction.reply({ embeds: [errEmbed], flags: MessageFlags.Ephemeral });
+      }
+
       const targetMember = await guild.members.fetch(targetUser.id).catch(() => null);
 
       if (!targetMember) {

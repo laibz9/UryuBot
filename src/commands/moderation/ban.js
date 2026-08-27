@@ -55,6 +55,12 @@ module.exports = {
       const guild = interaction.guild;
       const executor = interaction.member;
 
+      // 0. ตรวจสอบว่าระบุผู้ใช้ถูกต้องหรือไม่
+      if (!targetUser) {
+        const errEmbed = createErrorEmbed('ไม่พบผู้ใช้', 'กรุณาระบุสมาชิกที่ต้องการแบนให้ถูกต้อง');
+        return await interaction.reply({ embeds: [errEmbed], flags: MessageFlags.Ephemeral });
+      }
+
       // 1. ตรวจสอบว่าพยายามแบนตัวเองหรือไม่
       if (targetUser.id === interaction.user.id) {
         const errEmbed = createErrorEmbed('ดำเนินการไม่สำเร็จ', config.messages.cannotTargetSelf);
