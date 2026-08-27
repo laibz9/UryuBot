@@ -241,20 +241,44 @@ DB_NAME=uryubot_db
 
 ---
 
-### 6. เริ่มต้นและจัดการบอทด้วย PM2 (24/7 Management)
+### 6. การจัดการและรันบอทบน VPS (เลือกใช้ได้ทั้ง PM2 และ Tmux)
 
+#### 🟢 ทางเลือกที่ 1: รันผ่าน PM2 (รันเบื้องหลัง 24/7 ไม่ต้องเปิดหน้าจอทิ้งไว้)
 ```bash
-# สตาร์ทบอท / รีสตาร์ทหลังจากแก้ .env
-npm run pm2:restart
+# เริ่มต้นรันบอท
+pm2 start uryubot
 
-# ตรวจสอบสถานะการทำงาน (Status / Memory / Uptime)
-npm run pm2:status
+# ดูสถานะการทำงาน
+pm2 status
 
-# ดู Realtime Logs สดของบอท
-npm run pm2:logs
+# ดู Log สดของบอท
+pm2 logs uryubot
+
+# รีสตาร์ทบอท
+pm2 restart uryubot
 
 # หยุดการทำงาน
-npm run pm2:stop
+pm2 stop uryubot
+```
+
+#### 🪟 ทางเลือกที่ 2: รันผ่าน Tmux (รันแบบหน้าจอ Console สดๆ เลื่อนลูกกลิ้งเมาส์ดู Log ได้)
+```bash
+# 1. หยุด PM2 ก่อนเพื่อคืนพอร์ต
+pm2 stop uryubot
+
+# 2. เปิดหน้าต่าง tmux
+tmux
+
+# 3. สั่งรันบอทตามปกติ (โชว์ Log สดๆ สีสวยงาม)
+npm start
+
+# 4. พับหน้าจอบอทเก็บไว้ (Detach) เพื่อไปทำอย่างอื่น:
+# กด [Ctrl + B] แล้วปล่อยมือ จากนั้นกด [D]
+
+# 5. ดึงหน้าจอบอทกลับมาดูใหม่ (Attach):
+tmux a
+
+# 6. หยุดการทำงาน: กด [Ctrl + C] ในหน้าต่าง tmux
 ```
 
 ---
@@ -269,11 +293,10 @@ npm run sync
 ```
 
 **สิ่งที่ระบบ `npm run sync` ทำงานอัตโนมัติ:**
-1. 🚀 เชื่อมต่อ SSH ไปยัง Cloud VPS
-2. 📦 สั่ง `git fetch` และ `git reset --hard origin/main` ดึงโค้ดเวอร์ชันล่าสุด
+1. 🚀 เชื่อมต่อ SSH ไปยัง Cloud VPS (ปลอดภัย 100% อ่านรหัสผ่านจาก `.env` ในเครื่องส่วนตัว)
+2. 📦 สั่ง `git fetch` และ `git reset --hard origin/main` ดึงโค้ดเวอร์ชันล่าสุดลง VPS
 3. 📦 ตรวจสอบและอัปเดต `npm install --production`
-4. 🔄 รีสตาร์ทบอทบน VPS ทันที (`pm2 restart uryubot`)
-5. 📊 แสดงผลสถานะการทำงานสดของ PM2
+4. ✅ ซิงค์โค้ดเสร็จสมบูรณ์ โดยไม่สั่งเปิดบอททับซ้อน เพื่อให้คุณเลือกวิธีรัน (PM2 หรือ tmux) ได้เองตามใจชอบ
 
 ---
 
@@ -282,7 +305,7 @@ npm run sync
 ```text
 UryuBot/
 ├── scripts/                  # สคริปต์ยูทิลิตี้เสริม
-│   └── sync_to_vps.js        # ⚡ สคริปต์ 1-Command Auto Sync & Deploy ไปยัง VPS
+│   └── sync_to_vps.js        # ⚡ สคริปต์ 1-Command Auto Sync โค้ดไปยัง Cloud VPS
 ├── src/
 │   ├── commands/             # คำสั่ง Slash Commands แยก 5 หมวดหมู่
 │   │   ├── admin/            # คำสั่งสำหรับผู้ดูแลระบบ
