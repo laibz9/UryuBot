@@ -824,9 +824,17 @@ function startWebServer(client) {
 
   // เริ่มต้นรับการเชื่อมต่อ
   app.listen(port, () => {
+    let displayUrl = `http://localhost:${port}`;
+    if (config.bot.redirectUri) {
+      try {
+        const parsed = new URL(config.bot.redirectUri);
+        displayUrl = `${parsed.protocol}//${parsed.host}`;
+      } catch {}
+    }
+
     logger.success(`==============================================`);
     logger.success(`🌐 Web Portal & Secure Dashboard ออนไลน์แล้วที่:`);
-    logger.success(`👉 http://localhost:${port}`);
+    logger.success(`👉 ${displayUrl}`);
     logger.success(`==============================================`);
   });
 
