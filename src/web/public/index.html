@@ -408,6 +408,28 @@
               </label>
             </div>
 
+            <div class="toggle-row">
+              <div>
+                <span class="toggle-title">คำสั่งผู้ดูแลระบบ (Admin Commands)</span>
+                <p class="toggle-desc">เปิด/ปิด /setup-*, /send-*, /announce</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="cfg-enable-admin-cmds">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="toggle-row">
+              <div>
+                <span class="toggle-title">คำสั่งดูแลความสงบ (Moderation Commands)</span>
+                <p class="toggle-desc">เปิด/ปิด /ban, /kick, /timeout, /clear, /lockdown (สำหรับผู้ที่ใช้ Wick)</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="cfg-enable-mod-cmds">
+                <span class="slider"></span>
+              </label>
+            </div>
+
             <div class="save-box">
               <button id="btn-save-settings" class="btn btn-primary btn-lg btn-glow btn-block">
                 <i class="fa-solid fa-floppy-disk"></i> บันทึกการตั้งค่าลง MySQL

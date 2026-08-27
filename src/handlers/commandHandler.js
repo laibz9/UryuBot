@@ -35,9 +35,10 @@ function loadCommands(client) {
 
         // ตรวจสอบว่าโมดูลมีข้อมูล data และ execute ครบถ้วนหรือไม่
         if (command && command.data && typeof command.execute === 'function') {
+          command.category = folder; // จัดเก็บหมวดหมู่ของคำสั่ง (admin, moderation, music, fun, general)
           client.commands.set(command.data.name, command);
           loadedCount++;
-          logger.info(`โหลดคำสั่ง Slash Command: /${command.data.name} สำเร็จ`);
+          logger.info(`โหลดคำสั่ง Slash Command: /${command.data.name} [${folder}] สำเร็จ`);
         } else {
           logger.warn(`ไฟล์คำสั่งที่ ${filePath} ขาดคุณสมบัติ "data" หรือ "execute"`);
         }

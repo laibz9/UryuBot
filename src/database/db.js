@@ -30,6 +30,8 @@ function formatSettings(guildId, row = null) {
       enableWelcomeSystem: c.enableWelcomeSystem !== false,
       logChannelId: c.logChannelId || '',
       enableLogSystem: c.enableLogSystem !== false,
+      enableAdminCommands: true,
+      enableModerationCommands: true,
       ticketCategoryId: c.ticketCategoryId || '',
       musicChannelId: c.musicChannelId || '',
       updatedAt: new Date().toISOString()
@@ -45,9 +47,11 @@ function formatSettings(guildId, row = null) {
     verifyChannelId: row.verify_channel_id || c.verifyChannelId || c.welcomeChannelId || '',
     welcomeChannelId: row.welcome_channel_id || c.welcomeChannelId || '',
     goodbyeChannelId: row.goodbye_channel_id || c.goodbyeChannelId || '',
-    enableWelcomeSystem: row.enable_welcome === 1 || row.enable_welcome === true,
+    enableWelcomeSystem: row.enable_welcome === 1 || row.enable_welcome === true || row.enable_welcome === undefined,
     logChannelId: row.log_channel_id || c.logChannelId || '',
-    enableLogSystem: row.enable_logs === 1 || row.enable_logs === true,
+    enableLogSystem: row.enable_logs === 1 || row.enable_logs === true || row.enable_logs === undefined,
+    enableAdminCommands: row.enable_admin_commands === 1 || row.enable_admin_commands === true || row.enable_admin_commands === undefined,
+    enableModerationCommands: row.enable_moderation_commands === 1 || row.enable_moderation_commands === true || row.enable_moderation_commands === undefined,
     ticketCategoryId: row.ticket_category_id || c.ticketCategoryId || '',
     musicChannelId: row.music_channel_id || c.musicChannelId || '',
     updatedAt: row.updated_at ? new Date(row.updated_at).toISOString() : new Date().toISOString()
@@ -101,11 +105,21 @@ async function initDatabase() {
         enable_welcome TINYINT(1) DEFAULT 1,
         log_channel_id VARCHAR(32) DEFAULT NULL,
         enable_logs TINYINT(1) DEFAULT 1,
+        enable_admin_commands TINYINT(1) DEFAULT 1,
+        enable_moderation_commands TINYINT(1) DEFAULT 1,
         ticket_category_id VARCHAR(32) DEFAULT NULL,
         music_channel_id VARCHAR(32) DEFAULT NULL,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     `);
+
+    // ตรวจสอบและเพิ่มคอลัมน์ใหม่ (Auto Migration)
+    try {
+      await pool.query(`ALTER TABLE guild_settings ADD COLUMN enable_admin_commands TINYINT(1) DEFAULT 1`);
+    } catch {}
+    try {
+      await pool.query(`ALTER TABLE guild_settings ADD COLUMN enable_moderation_commands TINYINT(1) DEFAULT 1`);
+    } catch {}
 
     // 4. โหลดข้อมูลทั้งหมดขึ้น In-Memory Cache
     const [rows] = await pool.query('SELECT * FROM guild_settings');
@@ -155,8 +169,9 @@ function getGuildSettings(guildId) {
         guild_id, verified_role_id, leader_role_id, admin_role_id,
         moderator_role_id, verify_channel_id, welcome_channel_id,
         goodbye_channel_id, enable_welcome, log_channel_id,
-        enable_logs, ticket_category_id, music_channel_id
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        enable_logs, enable_admin_commands, enable_moderation_commands,
+        ticket_category_id, music_channel_id
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       guildId,
       defaultSettings.verifiedRoleId,
@@ -169,6 +184,8 @@ function getGuildSettings(guildId) {
       defaultSettings.enableWelcomeSystem ? 1 : 0,
       defaultSettings.logChannelId,
       defaultSettings.enableLogSystem ? 1 : 0,
+      defaultSettings.enableAdminCommands ? 1 : 0,
+      defaultSettings.enableModerationCommands ? 1 : 0,
       defaultSettings.ticketCategoryId,
       defaultSettings.musicChannelId
     ]).catch(err => logger.error('[MySQL Insert Error]:', err.message));
@@ -200,6 +217,8 @@ async function updateGuildSettings(guildId, newSettings) {
     enableWelcomeSystem: newSettings.enableWelcomeSystem !== undefined ? Boolean(newSettings.enableWelcomeSystem) : current.enableWelcomeSystem,
     logChannelId: newSettings.logChannelId !== undefined ? newSettings.logChannelId : current.logChannelId,
     enableLogSystem: newSettings.enableLogSystem !== undefined ? Boolean(newSettings.enableLogSystem) : current.enableLogSystem,
+    enableAdminCommands: newSettings.enableAdminCommands !== undefined ? Boolean(newSettings.enableAdminCommands) : current.enableAdminCommands,
+    enableModerationCommands: newSettings.enableModerationCommands !== undefined ? Boolean(newSettings.enableModerationCommands) : current.enableModerationCommands,
     ticketCategoryId: newSettings.ticketCategoryId !== undefined ? newSettings.ticketCategoryId : current.ticketCategoryId,
     musicChannelId: newSettings.musicChannelId !== undefined ? newSettings.musicChannelId : current.musicChannelId,
     updatedAt: new Date().toISOString()
@@ -216,8 +235,9 @@ async function updateGuildSettings(guildId, newSettings) {
           guild_id, verified_role_id, leader_role_id, admin_role_id,
           moderator_role_id, verify_channel_id, welcome_channel_id,
           goodbye_channel_id, enable_welcome, log_channel_id,
-          enable_logs, ticket_category_id, music_channel_id
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          enable_logs, enable_admin_commands, enable_moderation_commands,
+          ticket_category_id, music_channel_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON DUPLICATE KEY UPDATE
           verified_role_id = VALUES(verified_role_id),
           leader_role_id = VALUES(leader_role_id),
@@ -229,6 +249,8 @@ async function updateGuildSettings(guildId, newSettings) {
           enable_welcome = VALUES(enable_welcome),
           log_channel_id = VALUES(log_channel_id),
           enable_logs = VALUES(enable_logs),
+          enable_admin_commands = VALUES(enable_admin_commands),
+          enable_moderation_commands = VALUES(enable_moderation_commands),
           ticket_category_id = VALUES(ticket_category_id),
           music_channel_id = VALUES(music_channel_id),
           updated_at = CURRENT_TIMESTAMP
@@ -244,6 +266,8 @@ async function updateGuildSettings(guildId, newSettings) {
         updated.enableWelcomeSystem ? 1 : 0,
         updated.logChannelId,
         updated.enableLogSystem ? 1 : 0,
+        updated.enableAdminCommands ? 1 : 0,
+        updated.enableModerationCommands ? 1 : 0,
         updated.ticketCategoryId,
         updated.musicChannelId
       ]);

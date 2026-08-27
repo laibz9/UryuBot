@@ -69,6 +69,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const cfgEnableWelcome = document.getElementById('cfg-enable-welcome');
   const cfgEnableLogs = document.getElementById('cfg-enable-logs');
+  const cfgEnableAdminCmds = document.getElementById('cfg-enable-admin-cmds');
+  const cfgEnableModCmds = document.getElementById('cfg-enable-mod-cmds');
   const btnSaveSettings = document.getElementById('btn-save-settings');
   const saveStatus = document.getElementById('save-status');
 
@@ -459,6 +461,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         cfgEnableWelcome.checked = Boolean(s.enableWelcomeSystem);
         cfgEnableLogs.checked = Boolean(s.enableLogSystem);
+        if (cfgEnableAdminCmds) cfgEnableAdminCmds.checked = s.enableAdminCommands !== false;
+        if (cfgEnableModCmds) cfgEnableModCmds.checked = s.enableModerationCommands !== false;
 
         saveStatus.textContent = `อัปเดตล่าสุด: ${s.updatedAt || 'ค่าเริ่มต้น'}`;
       }
@@ -503,7 +507,9 @@ document.addEventListener('DOMContentLoaded', () => {
         musicChannelId: cfgMusicChannel ? cfgMusicChannel.value : null,
         ticketCategoryId: cfgTicketCategory ? cfgTicketCategory.value : null,
         enableWelcomeSystem: cfgEnableWelcome ? cfgEnableWelcome.checked : false,
-        enableLogSystem: cfgEnableLogs ? cfgEnableLogs.checked : false
+        enableLogSystem: cfgEnableLogs ? cfgEnableLogs.checked : false,
+        enableAdminCommands: cfgEnableAdminCmds ? cfgEnableAdminCmds.checked : true,
+        enableModerationCommands: cfgEnableModCmds ? cfgEnableModCmds.checked : true
       };
 
       try {

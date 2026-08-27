@@ -3,8 +3,9 @@
  * @description Event Handler สำหรับดักจับทุก Interaction (Commands, Buttons, Modals) และส่งต่อไปยัง Handler ที่เหมาะสม
  */
 
-const { Events, MessageFlags } = require('discord.js');
+const { Events, MessageFlags, EmbedBuilder } = require('discord.js');
 const logger = require('../../utils/logger');
+const { getGuildSettings } = require('../../database/db');
 const { handleButton, handleModal, handleSelectMenu } = require('../../handlers/componentHandler');
 
 module.exports = {
@@ -25,6 +26,35 @@ module.exports = {
         if (!command) {
           logger.warn(`ไม่พบคำสั่ง Slash Command: /${interaction.commandName}`);
           return;
+        }
+
+        // ตรวจสอบการเปิด/ปิดหมวดหมู่คำสั่งตามการตั้งค่าของเซิร์ฟเวอร์
+        if (interaction.guildId) {
+          const settings = getGuildSettings(interaction.guildId);
+
+          // ตรวจสอบหมวดหมู่ Admin
+          if (command.category === 'admin' && settings.enableAdminCommands === false) {
+            const disabledEmbed = new EmbedBuilder()
+              .setColor('#ef4444')
+              .setTitle('⚠️ คำสั่งหมวดหมู่ผู้ดูแลระบบถูกปิดใช้งาน')
+              .setDescription(`คำสั่งในหมวดหมู่ **ผู้ดูแลระบบ (Admin Setup Commands)** ถูกปิดใช้งานสำหรับเซิร์ฟเวอร์นี้โดยเจ้าของเซิร์ฟเวอร์\n\n💡 *หากต้องการเปิดใช้งาน สามารถเปิดสวิตช์ได้ที่ Web Dashboard*`)
+              .setFooter({ text: 'UryuBot • Module Guard' })
+              .setTimestamp();
+
+            return interaction.reply({ embeds: [disabledEmbed], flags: MessageFlags.Ephemeral });
+          }
+
+          // ตรวจสอบหมวดหมู่ Moderation (ดูแลความสงบ)
+          if (command.category === 'moderation' && settings.enableModerationCommands === false) {
+            const disabledEmbed = new EmbedBuilder()
+              .setColor('#ef4444')
+              .setTitle('⚠️ คำสั่งหมวดหมู่ดูแลความสงบถูกปิดใช้งาน')
+              .setDescription(`คำสั่งในหมวดหมู่ **ดูแลความสงบ (Moderation Commands เช่น /ban, /kick, /timeout, /clear, /lockdown)** ถูกปิดใช้งานในเซิร์ฟเวอร์นี้โดยเจ้าของเซิร์ฟเวอร์ (เพื่อรองรับการใช้งานร่วมกับบอทความปลอดภัยอื่น เช่น Wick)\n\n💡 *หากต้องการเปิดใช้งาน สามารถเปิดสวิตช์ได้ที่ Web Dashboard*`)
+              .setFooter({ text: 'UryuBot • Module Guard' })
+              .setTimestamp();
+
+            return interaction.reply({ embeds: [disabledEmbed], flags: MessageFlags.Ephemeral });
+          }
         }
 
         try {
