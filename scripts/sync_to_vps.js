@@ -12,16 +12,17 @@ const config = {
   password: 'W!!4Zi0bAgq6'
 };
 
-console.log('🚀 [1/3] กำลังเชื่อมต่อ Cloud VPS...');
+console.log('🚀 [1/3] กำลังเชื่อมต่อ Cloud VPS (119.10.137.245)...');
 
 const conn = new Client();
 
 conn.on('ready', () => {
-  console.log('✅ [2/3] เชื่อมต่อสำเร็จ! กำลัง Git Pull และอัปเดตบอท...');
+  console.log('✅ [2/3] เชื่อมต่อสำเร็จ! กำลังซิงค์โค้ดจาก GitHub และอัปเดตบอท...');
 
   const cmd = `
     cd /root/UryuBot && 
-    git pull origin main || git pull origin master && 
+    git fetch origin main && 
+    git reset --hard origin/main && 
     npm install --production && 
     pm2 restart uryubot && 
     pm2 status
@@ -30,7 +31,7 @@ conn.on('ready', () => {
   conn.exec(cmd, (err, stream) => {
     if (err) throw err;
     stream.on('close', (code) => {
-      console.log(`\n🎉 [3/3] อัปเดตโค้ดและรีสตาร์ทบอทบน Cloud VPS สำเร็จแล้ว! (Code: ${code})`);
+      console.log(`\n🎉 [3/3] ซิงค์โค้ดขึ้น Cloud VPS และเริ่มรันบอทเวอร์ชันล่าสุดสำเร็จแล้ว! (Code: ${code})`);
       conn.end();
     }).on('data', (data) => {
       process.stdout.write(data);
