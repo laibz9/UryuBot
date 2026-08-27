@@ -708,59 +708,370 @@ function startWebServer(client) {
   });
 
   /**
-   * API: ส่งประกาศข่าวสาร (Protected)
+   * API: ดึงข้อมูลคิวเพลงสดและสถานะการเล่น (Live Queue & Playback Status)
    */
-  app.post('/api/actions/announce', requireServerOwner, async (req, res) => {
+  app.get('/api/music/queue/:guildId', (req, res) => {
     try {
-      const { guildId, channelId, title, description, color, image } = req.body;
-      const guild = client.guilds.cache.get(guildId);
-      const channel = guild.channels.cache.get(channelId);
-      if (!channel || !channel.isTextBased()) return res.status(400).json({ success: false, error: 'ช่องแชทไม่ถูกต้อง' });
+      const { guildId } = req.params;
+      const queue = client.distube?.getQueue(guildId);
 
-      const embed = new EmbedBuilder()
-        .setTitle(title || '📢 ประกาศจากเจ้าของเซิร์ฟเวอร์')
-        .setDescription(description || 'ไม่มีเนื้อหา')
-        .setColor(color || config.colors.accent)
-        .setAuthor({ name: guild.name, iconURL: guild.iconURL({ dynamic: true }) })
-        .setFooter({ text: `ประกาศโดย Server Owner (${req.user.username})`, iconURL: req.user.avatar })
-        .setTimestamp();
-
-      if (image && image.startsWith('http')) {
-        embed.setImage(image);
+      if (!queue || !queue.songs || queue.songs.length === 0) {
+        return res.json({
+          success: true,
+          isPlaying: false,
+          currentSong: null,
+          currentTime: 0,
+          duration: 0,
+          volume: 100,
+          repeatMode: 0,
+          isPaused: false,
+          queue: []
+        });
       }
 
-      await channel.send({ embeds: [embed] });
-      logger.success(`[Web Action] เจ้าของเซิร์ฟเวอร์ (${req.user.username}) ส่งประกาศเข้า #${channel.name}`);
-      res.json({ success: true, message: `ส่งประกาศข่าวสารเข้า #${channel.name} สำเร็จแล้ว` });
+      const current = queue.songs[0];
+      const songsList = queue.songs.map((s, idx) => ({
+        index: idx,
+        name: s.name,
+        url: s.url,
+        thumbnail: s.thumbnail,
+        duration: s.duration,
+        formattedDuration: s.formattedDuration,
+        uploader: s.uploader?.name || 'Unknown',
+        requester: s.user ? (s.user.global_name || s.user.username) : (s.member?.displayName || 'Unknown')
+      }));
+
+      res.json({
+        success: true,
+        isPlaying: true,
+        isPaused: Boolean(queue.paused),
+        currentTime: queue.currentTime || 0,
+        formattedCurrentTime: queue.formattedCurrentTime || '00:00',
+        duration: current.duration || 0,
+        formattedDuration: current.formattedDuration || '00:00',
+        volume: queue.volume || 100,
+        repeatMode: queue.repeatMode || 0,
+        currentSong: songsList[0],
+        queue: songsList.slice(1)
+      });
     } catch (error) {
       res.status(500).json({ success: false, error: error.message });
     }
   });
 
   /**
-   * API: ล็อกดาวน์ฉุกเฉิน (Protected)
+   * API: สั่งเล่นเพลงจากหน้าเว็บ (Direct Web Play - Search & Play)
    */
-  app.post('/api/actions/lockdown', requireServerOwner, async (req, res) => {
+  app.post('/api/music/play', requireServerOwner, async (req, res) => {
     try {
-      const { guildId, channelId, enable } = req.body;
-      const guild = client.guilds.cache.get(guildId);
-      const everyoneRole = guild.roles.everyone;
-      const lockState = enable === true;
+      const { guildId, voiceChannelId, textChannelId, query } = req.body;
+      if (!query || !query.trim()) return res.status(400).json({ success: false, error: 'กรุณาระบุชื่อเพลงหรือ URL' });
 
-      if (channelId && channelId !== 'all') {
-        const channel = guild.channels.cache.get(channelId);
-        if (channel && channel.isTextBased()) {
-          await channel.permissionOverwrites.edit(everyoneRole, { SendMessages: !lockState });
-        }
+      const guild = client.guilds.cache.get(guildId);
+      if (!guild) return res.status(404).json({ success: false, error: 'ไม่พบเซิร์ฟเวอร์' });
+
+      // หา Voice Channel
+      let voiceChannel = null;
+      if (voiceChannelId) {
+        voiceChannel = guild.channels.cache.get(voiceChannelId);
       } else {
-        const textChannels = guild.channels.cache.filter(c => c.isTextBased());
-        for (const ch of textChannels.values()) {
-          await ch.permissionOverwrites.edit(everyoneRole, { SendMessages: !lockState }).catch(() => {});
-        }
+        // หาห้องเสียงแรกที่มีคนอยู่ หรือห้องเสียงแรกของเซิร์ฟเวอร์
+        voiceChannel = guild.channels.cache.find(c => c.isVoiceBased() && c.members.size > 0) ||
+                       guild.channels.cache.find(c => c.isVoiceBased());
       }
 
-      logger.success(`[Web Action] เจ้าของเซิร์ฟเวอร์ (${req.user.username}) ปรับสถานะ Lockdown เป็น ${lockState}`);
-      res.json({ success: true, message: `ดำเนินการ${lockState ? '🚨 ล็อกดาวน์ฉุกเฉิน' : '🔓 ปลดล็อกดาวน์'} เรียบร้อยแล้ว` });
+      if (!voiceChannel) {
+        return res.status(400).json({ success: false, error: 'ไม่พบห้องเสียงที่จะให้บอทเข้าเล่นเพลง' });
+      }
+
+      // หา Text Channel
+      const textChannel = (textChannelId && guild.channels.cache.get(textChannelId)) ||
+                          guild.channels.cache.find(c => c.isTextBased()) || voiceChannel;
+
+      const member = guild.members.cache.get(req.user.id) || await guild.members.fetch(req.user.id).catch(() => null);
+
+      await client.distube.play(voiceChannel, query.trim(), {
+        textChannel: textChannel,
+        member: member || undefined
+      });
+
+      logger.success(`[Web DJ] (${req.user.username}) สั่งเล่นเพลง "${query}" ใน #${voiceChannel.name}`);
+      res.json({ success: true, message: `เริ่มเล่นเพลง "${query}" ในห้องเสียง #${voiceChannel.name} เรียบร้อยแล้ว!` });
+    } catch (error) {
+      logger.error('[Web DJ Play Error]:', error);
+      res.status(500).json({ success: false, error: error.message || 'ไม่สามารถเปิดเพลงได้' });
+    }
+  });
+
+  /**
+   * API: ปรับ Seek ข้ามเวลาเพลง (Music Seek)
+   */
+  app.post('/api/music/seek', requireMusicController, async (req, res) => {
+    try {
+      const queue = req.queue;
+      const { position } = req.body;
+      const posNumber = Number(position);
+      if (isNaN(posNumber) || posNumber < 0) {
+        return res.status(400).json({ success: false, error: 'ตำแหน่งเวลาไม่ถูกต้อง' });
+      }
+
+      queue.seek(posNumber);
+      res.json({ success: true, message: `กระโดดไปยังเวลา ${Math.floor(posNumber)} วินาที เรียบร้อย` });
+    } catch (error) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
+  /**
+   * API: ปรับระดับเสียง (Music Volume 0-100)
+   */
+  app.post('/api/music/volume', requireMusicController, async (req, res) => {
+    try {
+      const queue = req.queue;
+      const { volume } = req.body;
+      const volNumber = Math.max(0, Math.min(100, Number(volume) || 100));
+
+      queue.setVolume(volNumber);
+      res.json({ success: true, volume: volNumber, message: `ปรับระดับเสียงเป็น ${volNumber}% เรียบร้อย` });
+    } catch (error) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
+  /**
+   * API: ปรับโหมดเล่นซ้ำ (Music Loop Mode: 0=Off, 1=Song, 2=Queue)
+   */
+  app.post('/api/music/loop', requireMusicController, async (req, res) => {
+    try {
+      const queue = req.queue;
+      const { mode } = req.body;
+      let nextMode = Number(mode);
+      if (isNaN(nextMode) || nextMode < 0 || nextMode > 2) {
+        nextMode = (queue.repeatMode + 1) % 3;
+      }
+
+      queue.setRepeatMode(nextMode);
+      const modeNames = ['ปิดเล่นซ้ำ', '🔂 เล่นซ้ำเพลงนี้', '🔁 เล่นซ้ำทั้งคิว'];
+      res.json({ success: true, repeatMode: nextMode, message: `เปลี่ยนโหมดวนซ้ำเป็น: ${modeNames[nextMode]}` });
+    } catch (error) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
+  /**
+   * API: สลับคิวเพลงแบบสุ่ม (Music Shuffle)
+   */
+  app.post('/api/music/shuffle', requireMusicController, async (req, res) => {
+    try {
+      const queue = req.queue;
+      if (queue.songs.length <= 2) {
+        return res.status(400).json({ success: false, error: 'มีเพลงในคิวไม่เพียงพอสำหรับการสุ่ม' });
+      }
+
+      await queue.shuffle();
+      res.json({ success: true, message: 'สลับลำดับคิวเพลงแบบสุ่มเรียบร้อยแล้ว 🔀' });
+    } catch (error) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
+  /**
+   * API: ลบเพลงออกจากคิวตาม Index (Remove Song from Queue)
+   */
+  app.delete('/api/music/queue/:guildId/:index', requireMusicController, async (req, res) => {
+    try {
+      const queue = req.queue;
+      const index = parseInt(req.params.index, 10);
+
+      if (isNaN(index) || index <= 0 || index >= queue.songs.length) {
+        return res.status(400).json({ success: false, error: 'ลำดับเพลงในคิวไม่ถูกต้อง' });
+      }
+
+      const removed = queue.songs.splice(index, 1);
+      res.json({ success: true, message: `ลบเพลง "${removed[0]?.name}" ออกจากคิวเรียบร้อย` });
+    } catch (error) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
+  /**
+   * API: ส่ง Custom Embed Studio ไปยังช่อง Discord (Interactive Embed Builder)
+   */
+  app.post('/api/embeds/send', requireServerOwner, async (req, res) => {
+    try {
+      const {
+        guildId,
+        channelId,
+        title,
+        titleUrl,
+        description,
+        color,
+        authorName,
+        authorIcon,
+        authorUrl,
+        thumbnail,
+        image,
+        footerText,
+        footerIcon,
+        showTimestamp
+      } = req.body;
+
+      const guild = client.guilds.cache.get(guildId);
+      if (!guild) return res.status(404).json({ success: false, error: 'ไม่พบเซิร์ฟเวอร์' });
+
+      const channel = guild.channels.cache.get(channelId);
+      if (!channel || !channel.isTextBased()) {
+        return res.status(400).json({ success: false, error: 'กรุณาเลือกช่องข้อความที่ถูกต้อง' });
+      }
+
+      const embed = new EmbedBuilder();
+
+      if (title && title.trim()) embed.setTitle(title.trim());
+      if (titleUrl && titleUrl.startsWith('http')) embed.setURL(titleUrl.trim());
+      if (description && description.trim()) embed.setDescription(description.trim());
+      embed.setColor(color || config.colors.accent);
+
+      if (authorName && authorName.trim()) {
+        embed.setAuthor({
+          name: authorName.trim(),
+          iconURL: (authorIcon && authorIcon.startsWith('http')) ? authorIcon.trim() : undefined,
+          url: (authorUrl && authorUrl.startsWith('http')) ? authorUrl.trim() : undefined
+        });
+      }
+
+      if (thumbnail && thumbnail.startsWith('http')) embed.setThumbnail(thumbnail.trim());
+      if (image && image.startsWith('http')) embed.setImage(image.trim());
+
+      if (footerText && footerText.trim()) {
+        embed.setFooter({
+          text: footerText.trim(),
+          iconURL: (footerIcon && footerIcon.startsWith('http')) ? footerIcon.trim() : undefined
+        });
+      }
+
+      if (showTimestamp) {
+        embed.setTimestamp();
+      }
+
+      await channel.send({ embeds: [embed] });
+      logger.success(`[Embed Studio] (${req.user.username}) ส่ง Custom Embed เข้า #${channel.name}`);
+      res.json({ success: true, message: `ส่งประกาศ Embed เข้าห้อง #${channel.name} สำเร็จแล้ว! 🚀` });
+    } catch (error) {
+      logger.error('[Embed Studio Error]:', error);
+      res.status(500).json({ success: false, error: error.message || 'ส่งข้อความไม่สำเร็จ' });
+    }
+  });
+
+  /**
+   * API: ดึงรายชื่อสมาชิกในเซิร์ฟเวอร์สำหรับ Quick Moderation
+   */
+  app.get('/api/guilds/:guildId/members', requireServerOwner, async (req, res) => {
+    try {
+      const { guildId } = req.params;
+      const guild = client.guilds.cache.get(guildId);
+      if (!guild) return res.status(404).json({ success: false, error: 'ไม่พบเซิร์ฟเวอร์' });
+
+      // ดึงสมาชิกล่าสุดจาก Cache และ Fetch สูงสุด 100 คน
+      await guild.members.fetch({ limit: 100 }).catch(() => null);
+
+      const membersList = guild.members.cache.map(m => ({
+        id: m.id,
+        tag: m.user.tag,
+        username: m.user.username,
+        displayName: m.displayName,
+        avatar: m.user.displayAvatarURL({ dynamic: true, size: 64 }),
+        isBot: m.user.bot,
+        isOwner: guild.ownerId === m.id,
+        isTimedOut: m.isCommunicationDisabled(),
+        roles: m.roles.cache
+          .filter(r => r.id !== guild.id)
+          .sort((a, b) => b.position - a.position)
+          .map(r => ({ id: r.id, name: r.name, color: r.hexColor }))
+          .slice(0, 5),
+        joinedTimestamp: m.joinedTimestamp
+      }));
+
+      res.json({ success: true, count: membersList.length, members: membersList });
+    } catch (error) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
+  /**
+   * API: ดำเนินการ Quick Moderation จากหน้าเว็บ (Kick, Ban, Timeout)
+   */
+  app.post('/api/moderation/action', requireServerOwner, async (req, res) => {
+    try {
+      const { guildId, action, targetUserId, reason, durationMs, deleteMessages } = req.body;
+      const guild = client.guilds.cache.get(guildId);
+      if (!guild) return res.status(404).json({ success: false, error: 'ไม่พบเซิร์ฟเวอร์' });
+
+      if (!targetUserId) return res.status(400).json({ success: false, error: 'ไม่พบเป้าหมายผู้ใช้' });
+
+      const targetMember = await guild.members.fetch(targetUserId).catch(() => null);
+      const actionReason = reason || `สั่งการผ่าน Web Dashboard โดย ${req.user.username}`;
+
+      if (action === 'kick') {
+        if (!targetMember) return res.status(404).json({ success: false, error: 'ไม่พบสมาชิกในเซิร์ฟเวอร์' });
+        await targetMember.kick(actionReason);
+        logger.info(`[Web Mod] ${req.user.username} สั่งเตะ ${targetMember.user.tag}`);
+        return res.json({ success: true, message: `เตะ ${targetMember.user.tag} ออกจากเซิร์ฟเวอร์เรียบร้อย` });
+      }
+
+      if (action === 'ban') {
+        await guild.members.ban(targetUserId, {
+          deleteMessageSeconds: Number(deleteMessages) || 0,
+          reason: actionReason
+        });
+        logger.info(`[Web Mod] ${req.user.username} สั่งแบน User ID: ${targetUserId}`);
+        return res.json({ success: true, message: `แบนผู้ใช้ (ID: ${targetUserId}) ออกจากเซิร์ฟเวอร์เรียบร้อย` });
+      }
+
+      if (action === 'timeout') {
+        if (!targetMember) return res.status(404).json({ success: false, error: 'ไม่พบสมาชิกในเซิร์ฟเวอร์' });
+        const timeMs = Number(durationMs) || (5 * 60 * 1000);
+        await targetMember.timeout(timeMs, actionReason);
+        logger.info(`[Web Mod] ${req.user.username} สั่ง Timeout ${targetMember.user.tag} (${timeMs / 1000}s)`);
+        return res.json({ success: true, message: `ปิดการใช้งานแชท ${targetMember.user.tag} เป็นเวลา ${timeMs / 60000} นาที เรียบร้อย` });
+      }
+
+      if (action === 'untimeout') {
+        if (!targetMember) return res.status(404).json({ success: false, error: 'ไม่พบสมาชิกในเซิร์ฟเวอร์' });
+        await targetMember.timeout(null, actionReason);
+        logger.info(`[Web Mod] ${req.user.username} สั่งยกเลิก Timeout ให้ ${targetMember.user.tag}`);
+        return res.json({ success: true, message: `ยกเลิกการปิดแชทให้ ${targetMember.user.tag} เรียบร้อย` });
+      }
+
+      res.status(400).json({ success: false, error: 'คำสั่ง Action ไม่ถูกต้อง' });
+    } catch (error) {
+      logger.error('[Web Mod Error]:', error);
+      res.status(500).json({ success: false, error: error.message || 'ดำเนินการไม่สำเร็จ' });
+    }
+  });
+
+  /**
+   * API: ดึงประวัติ Audit Logs จากเซิร์ฟเวอร์
+   */
+  app.get('/api/guilds/:guildId/audit-logs', requireServerOwner, async (req, res) => {
+    try {
+      const { guildId } = req.params;
+      const guild = client.guilds.cache.get(guildId);
+      if (!guild) return res.status(404).json({ success: false, error: 'ไม่พบเซิร์ฟเวอร์' });
+
+      const logs = await guild.fetchAuditLogs({ limit: 15 }).catch(() => null);
+      if (!logs) return res.json({ success: true, entries: [] });
+
+      const entries = logs.entries.map(e => ({
+        id: e.id,
+        action: e.action,
+        actionName: String(e.action),
+        executor: e.executor ? { id: e.executor.id, tag: e.executor.tag, username: e.executor.username, avatar: e.executor.displayAvatarURL() } : null,
+        target: e.target ? { id: e.target.id, tag: e.target.tag || e.target.name || 'Target' } : null,
+        reason: e.reason || 'ไม่ได้ระบุเหตุผล',
+        createdTimestamp: e.createdTimestamp
+      }));
+
+      res.json({ success: true, count: entries.length, entries });
     } catch (error) {
       res.status(500).json({ success: false, error: error.message });
     }

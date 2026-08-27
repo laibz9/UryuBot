@@ -271,267 +271,572 @@
           </div>
         </div>
 
-        <!-- Dashboard Grid -->
-        <div class="dashboard-grid">
-          
-          <!-- Column 1: Roles Management -->
-          <div class="dashboard-card glass-panel">
+        <!-- Studio Navigation Tab Switcher -->
+        <div class="studio-tab-bar glass-panel">
+          <button class="studio-tab-btn active" data-tab="settings" id="tab-btn-settings">
+            <i class="fa-solid fa-sliders"></i>
+            <span>ตั้งค่าระบบเซิร์ฟเวอร์</span>
+          </button>
+          <button class="studio-tab-btn" data-tab="dj" id="tab-btn-dj">
+            <i class="fa-solid fa-compact-disc"></i>
+            <span>Live DJ Studio</span>
+            <span class="tab-pill">PRO</span>
+          </button>
+          <button class="studio-tab-btn" data-tab="embed" id="tab-btn-embed">
+            <i class="fa-solid fa-palette"></i>
+            <span>Embed Builder Studio</span>
+            <span class="tab-pill cyan">LIVE</span>
+          </button>
+          <button class="studio-tab-btn" data-tab="mod" id="tab-btn-mod">
+            <i class="fa-solid fa-user-shield"></i>
+            <span>Quick Moderation & Logs</span>
+          </button>
+        </div>
+
+        <!-- ================= TAB 1: Server Settings & Remote Actions ================= -->
+        <div id="tab-pane-settings" class="studio-tab-pane active">
+          <!-- Dashboard Grid -->
+          <div class="dashboard-grid">
+            
+            <!-- Column 1: Roles Management -->
+            <div class="dashboard-card glass-panel">
+              <div class="card-header">
+                <div class="card-icon icon-cyan"><i class="fa-solid fa-id-badge"></i></div>
+                <div>
+                  <h3>🎛️ ตั้งค่ายศของระบบ (Roles)</h3>
+                  <p>กำหนดยศสำคัญสำหรับสิทธิ์และการยืนยันตัวตน</p>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label><i class="fa-solid fa-circle-check"></i> ยศยืนยันตัวตนผ่าน (Verified Role):</label>
+                <div class="custom-select-wrapper">
+                  <select id="cfg-verified-role" class="custom-select form-control"></select>
+                  <i class="fa-solid fa-chevron-down select-chevron"></i>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label><i class="fa-solid fa-crown"></i> ยศหัวหน้าเซิร์ฟเวอร์ (Leader Role):</label>
+                <div class="custom-select-wrapper">
+                  <select id="cfg-leader-role" class="custom-select form-control"></select>
+                  <i class="fa-solid fa-chevron-down select-chevron"></i>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label><i class="fa-solid fa-shield"></i> ยศผู้ดูแลระบบ (Admin Role):</label>
+                <div class="custom-select-wrapper">
+                  <select id="cfg-admin-role" class="custom-select form-control"></select>
+                  <i class="fa-solid fa-chevron-down select-chevron"></i>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label><i class="fa-solid fa-user-shield"></i> ยศผู้คุมความสงบ (Moderator Role):</label>
+                <div class="custom-select-wrapper">
+                  <select id="cfg-moderator-role" class="custom-select form-control"></select>
+                  <i class="fa-solid fa-chevron-down select-chevron"></i>
+                </div>
+              </div>
+            </div>
+
+            <!-- Column 2: Channels Setup -->
+            <div class="dashboard-card glass-panel">
+              <div class="card-header">
+                <div class="card-icon icon-purple"><i class="fa-solid fa-hashtag"></i></div>
+                <div>
+                  <h3>📺 ตั้งค่าช่องระบบ (Channels)</h3>
+                  <p>เลือกช่องสำหรับรับส่งข้อความแจ้งเตือนและระบบเพลง</p>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label><i class="fa-solid fa-shield-halved"></i> ช่องยืนยันตัวตน (Verify Channel):</label>
+                <div class="custom-select-wrapper">
+                  <select id="cfg-verify-channel" class="custom-select form-control"></select>
+                  <i class="fa-solid fa-chevron-down select-chevron"></i>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label><i class="fa-solid fa-door-open"></i> ช่องต้อนรับสมาชิกใหม่ (Welcome):</label>
+                <div class="custom-select-wrapper">
+                  <select id="cfg-welcome-channel" class="custom-select form-control"></select>
+                  <i class="fa-solid fa-chevron-down select-chevron"></i>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label><i class="fa-solid fa-door-closed"></i> ช่องบอกลาสมาชิก (Goodbye):</label>
+                <div class="custom-select-wrapper">
+                  <select id="cfg-goodbye-channel" class="custom-select form-control"></select>
+                  <i class="fa-solid fa-chevron-down select-chevron"></i>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label><i class="fa-solid fa-file-lines"></i> ช่องบันทึกประวัติ (Audit Logs):</label>
+                <div class="custom-select-wrapper">
+                  <select id="cfg-log-channel" class="custom-select form-control"></select>
+                  <i class="fa-solid fa-chevron-down select-chevron"></i>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label><i class="fa-solid fa-music"></i> ช่องขอเพลงเฉพาะ (Music Channel):</label>
+                <div class="custom-select-wrapper">
+                  <select id="cfg-music-channel" class="custom-select form-control"></select>
+                  <i class="fa-solid fa-chevron-down select-chevron"></i>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label><i class="fa-solid fa-folder"></i> หมวดหมู่เปิดทิกเก็ต (Ticket Category):</label>
+                <div class="custom-select-wrapper">
+                  <select id="cfg-ticket-category" class="custom-select form-control"></select>
+                  <i class="fa-solid fa-chevron-down select-chevron"></i>
+                </div>
+              </div>
+            </div>
+
+            <!-- Column 3: Feature Toggles & Save Button -->
+            <div class="dashboard-card glass-panel">
+              <div class="card-header">
+                <div class="card-icon icon-green"><i class="fa-solid fa-toggle-on"></i></div>
+                <div>
+                  <h3>🔘 เปิด/ปิดการทำงาน (Features)</h3>
+                  <p>สวิตช์ควบคุมฟังก์ชันอัตโนมัติ</p>
+                </div>
+              </div>
+
+              <div class="toggle-row">
+                <div>
+                  <span class="toggle-title">ระบบข้อความต้อนรับ & บอกลา</span>
+                  <p class="toggle-desc">ส่งการ์ดต้อนรับและบอกลาเมื่อมีคนเข้า-ออก</p>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="cfg-enable-welcome">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="toggle-row">
+                <div>
+                  <span class="toggle-title">ระบบบันทึกความปลอดภัย (Audit Logs)</span>
+                  <p class="toggle-desc">บันทึกเหตุการณ์ แบน เตะ Timeout แก้ไขข้อความ</p>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="cfg-enable-logs">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="toggle-row">
+                <div>
+                  <span class="toggle-title">คำสั่งผู้ดูแลระบบ (Admin Commands)</span>
+                  <p class="toggle-desc">เปิด/ปิด /setup-*, /send-*, /announce</p>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="cfg-enable-admin-cmds">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="toggle-row">
+                <div>
+                  <span class="toggle-title">คำสั่งดูแลความสงบ (Moderation Commands)</span>
+                  <p class="toggle-desc">เปิด/ปิด /ban, /kick, /timeout, /clear, /lockdown (สำหรับผู้ที่ใช้ Wick)</p>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="cfg-enable-mod-cmds">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="save-box">
+                <button id="btn-save-settings" class="btn btn-primary btn-lg btn-glow btn-block">
+                  <i class="fa-solid fa-floppy-disk"></i> บันทึกการตั้งค่าลง MySQL
+                </button>
+                <span id="save-status" class="save-status-text"></span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Remote Actions Center (สั่งการบอทผ่านเว็บ) -->
+          <div class="remote-actions-panel glass-panel">
             <div class="card-header">
-              <div class="card-icon icon-cyan"><i class="fa-solid fa-id-badge"></i></div>
+              <div class="card-icon icon-yellow"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
               <div>
-                <h3>🎛️ ตั้งค่ายศของระบบ (Roles)</h3>
-                <p>กำหนดยศสำคัญสำหรับสิทธิ์และการยืนยันตัวตน</p>
+                <h3>⚡ ศูนย์สั่งการด่วน (Remote Action Center)</h3>
+                <p>คลิกเพื่อสั่งให้บอทส่งแผงควบคุมเข้าช่องที่กำหนดได้ทันที</p>
               </div>
             </div>
 
-            <div class="form-group">
-              <label><i class="fa-solid fa-circle-check"></i> ยศยืนยันตัวตนผ่าน (Verified Role):</label>
-              <div class="custom-select-wrapper">
-                <select id="cfg-verified-role" class="custom-select form-control"></select>
-                <i class="fa-solid fa-chevron-down select-chevron"></i>
+            <div class="actions-grid">
+              <div class="action-card glass-inner">
+                <div class="action-card-top">
+                  <div class="action-icon cyan"><i class="fa-solid fa-shield-check"></i></div>
+                  <h4>ส่งแผงยืนยันตัวตน</h4>
+                </div>
+                <p>ส่ง Embed พร้อมปุ่ม CAPTCHA Modal สุ่มรหัส 6 หลัก</p>
+                <button id="btn-action-verify" class="btn btn-secondary btn-sm"><i class="fa-solid fa-paper-plane"></i> ส่งแผง Verify</button>
               </div>
-            </div>
 
-            <div class="form-group">
-              <label><i class="fa-solid fa-crown"></i> ยศหัวหน้าเซิร์ฟเวอร์ (Leader Role):</label>
-              <div class="custom-select-wrapper">
-                <select id="cfg-leader-role" class="custom-select form-control"></select>
-                <i class="fa-solid fa-chevron-down select-chevron"></i>
+              <div class="action-card glass-inner">
+                <div class="action-card-top">
+                  <div class="action-icon green"><i class="fa-solid fa-ticket"></i></div>
+                  <h4>ส่งแผงเปิดทิกเก็ต</h4>
+                </div>
+                <p>ส่ง Embed ปุ่มเปิด Ticket ติดต่อทีมงานส่วนตัว</p>
+                <button id="btn-action-ticket" class="btn btn-secondary btn-sm"><i class="fa-solid fa-ticket"></i> ส่งแผง Ticket</button>
               </div>
-            </div>
 
-            <div class="form-group">
-              <label><i class="fa-solid fa-shield"></i> ยศผู้ดูแลระบบ (Admin Role):</label>
-              <div class="custom-select-wrapper">
-                <select id="cfg-admin-role" class="custom-select form-control"></select>
-                <i class="fa-solid fa-chevron-down select-chevron"></i>
+              <div class="action-card glass-inner">
+                <div class="action-card-top">
+                  <div class="action-icon purple"><i class="fa-solid fa-compact-disc"></i></div>
+                  <h4>ติดตั้งห้องขอเพลง</h4>
+                </div>
+                <p>ล้างข้อความเก่าและส่งแผงเล่นเพลง Standby อัตโนมัติ</p>
+                <button id="btn-action-music" class="btn btn-secondary btn-sm"><i class="fa-solid fa-compact-disc"></i> รีเซ็ตห้องเพลง</button>
               </div>
-            </div>
 
-            <div class="form-group">
-              <label><i class="fa-solid fa-user-shield"></i> ยศผู้คุมความสงบ (Moderator Role):</label>
-              <div class="custom-select-wrapper">
-                <select id="cfg-moderator-role" class="custom-select form-control"></select>
-                <i class="fa-solid fa-chevron-down select-chevron"></i>
+              <div class="action-card glass-inner">
+                <div class="action-card-top">
+                  <div class="action-icon red"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                  <h4>ล็อกดาวน์ฉุกเฉิน</h4>
+                </div>
+                <p>ปิดสิทธิ์พิมพ์ของทุกคนทันทีเมื่อมีเหตุไม่สงบ</p>
+                <button id="btn-action-lockdown" class="btn btn-danger btn-sm"><i class="fa-solid fa-lock"></i> สลับสถานะ Lockdown</button>
               </div>
             </div>
           </div>
+        </div>
 
-          <!-- Column 2: Channels Setup -->
-          <div class="dashboard-card glass-panel">
-            <div class="card-header">
-              <div class="card-icon icon-purple"><i class="fa-solid fa-hashtag"></i></div>
-              <div>
-                <h3>📺 ตั้งค่าช่องระบบ (Channels)</h3>
-                <p>เลือกช่องสำหรับรับส่งข้อความแจ้งเตือนและระบบเพลง</p>
+        <!-- ================= TAB 2: Live Web DJ Studio ================= -->
+        <div id="tab-pane-dj" class="studio-tab-pane">
+          <div class="dj-studio-grid">
+            
+            <!-- DJ Left: Player & Controls -->
+            <div class="dj-main-card glass-panel">
+              <div class="card-header">
+                <div class="card-icon icon-purple"><i class="fa-solid fa-compact-disc"></i></div>
+                <div>
+                  <h3>🎛️ Live DJ Deck & Stream Controls</h3>
+                  <p>ควบคุมการเล่นเพลง สตรีมเสียง และระดับเสียงแบบ Realtime</p>
+                </div>
+              </div>
+
+              <!-- Search & Play Input Row -->
+              <div class="dj-search-bar">
+                <div class="dj-search-input-wrap">
+                  <i class="fa-solid fa-magnifying-glass"></i>
+                  <input type="text" id="dj-search-input" placeholder="พิมพ์ชื่อเพลง หรือวางลิงก์ YouTube / Spotify / SoundCloud...">
+                </div>
+                <div class="dj-channel-select-wrap">
+                  <select id="dj-voice-channel" class="custom-select form-control">
+                    <option value="">เลือกห้องเสียง...</option>
+                  </select>
+                </div>
+                <button id="btn-dj-play" class="btn btn-primary btn-glow">
+                  <i class="fa-solid fa-play"></i> เล่นเพลง
+                </button>
+              </div>
+
+              <!-- Now Playing Vinyl Display -->
+              <div class="dj-player-deck glass-inner">
+                <div class="dj-vinyl-wrap">
+                  <img id="dj-cover-img" src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnZzaGhhNTRrNXkxbndxczI4cnpna2tzYnR4cTN6enhrNHpzNWg5ZCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/26AHG5KGFxSkUWw1i/giphy.gif" alt="Vinyl Cover" class="dj-cover">
+                  <div class="dj-vinyl-spindle"></div>
+                </div>
+
+                <div class="dj-track-info">
+                  <div class="dj-track-badge" id="dj-status-badge">
+                    <span class="status-dot"></span> <span id="dj-badge-text">STANDBY</span>
+                  </div>
+                  <h3 id="dj-track-title" class="dj-title">ยังไม่มีเพลงที่กำลังเล่น</h3>
+                  <p id="dj-track-artist" class="dj-artist">UryuBot Hi-Fi Audio Engine • 48kHz Stereo</p>
+                  <div class="dj-requester-pill">
+                    <i class="fa-solid fa-user"></i> ผู้ขอ: <strong id="dj-track-requester">-</strong>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Seeking Bar & Timers -->
+              <div class="dj-seek-container">
+                <div class="dj-seek-times">
+                  <span id="dj-time-cur">00:00</span>
+                  <span id="dj-time-total">00:00</span>
+                </div>
+                <input type="range" id="dj-seek-slider" min="0" max="100" value="0" class="dj-slider seek-slider">
+              </div>
+
+              <!-- Playback Action Buttons -->
+              <div class="dj-controls-row">
+                <button id="btn-dj-prev" class="dj-btn" title="เล่นเพลงก่อนหน้า"><i class="fa-solid fa-backward-step"></i></button>
+                <button id="btn-dj-toggle" class="dj-btn dj-btn-main" title="เล่น / พักเพลง"><i class="fa-solid fa-play"></i></button>
+                <button id="btn-dj-skip" class="dj-btn" title="ข้ามเพลง"><i class="fa-solid fa-forward-step"></i></button>
+                <button id="btn-dj-stop" class="dj-btn dj-btn-danger" title="หยุดเล่น & ล้างคิว"><i class="fa-solid fa-stop"></i></button>
+                
+                <div class="dj-divider"></div>
+
+                <button id="btn-dj-loop" class="dj-btn" title="โหมดวนซ้ำ"><i class="fa-solid fa-repeat"></i> <span id="dj-loop-text">Off</span></button>
+                <button id="btn-dj-shuffle" class="dj-btn" title="สุ่มลำดับคิว"><i class="fa-solid fa-shuffle"></i></button>
+
+                <!-- Volume Slider -->
+                <div class="dj-volume-control">
+                  <i class="fa-solid fa-volume-high" id="dj-vol-icon"></i>
+                  <input type="range" id="dj-vol-slider" min="0" max="100" value="100" class="dj-slider vol-slider">
+                  <span id="dj-vol-text">100%</span>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- DJ Right: Live Queue Manager -->
+            <div class="dj-queue-card glass-panel">
+              <div class="card-header">
+                <div class="card-icon icon-cyan"><i class="fa-solid fa-list-ol"></i></div>
+                <div>
+                  <h3>📜 คิวเพลงที่กำลังรอเล่น (<span id="dj-queue-badge">0</span> เพลง)</h3>
+                  <p>จัดการและลบเพลงในคิวได้ทันที</p>
+                </div>
+              </div>
+
+              <div class="dj-queue-scrollable" id="dj-queue-container">
+                <div class="dj-empty-queue">
+                  <i class="fa-solid fa-music"></i>
+                  <p>ไม่มีเพลงที่กำลังรอเล่นในคิว</p>
+                  <span>พิมพ์ค้นหาเพลงด้านซ้ายแล้วกดเล่นเพื่อเพิ่มเข้าคิว</span>
+                </div>
               </div>
             </div>
 
-            <div class="form-group">
-              <label><i class="fa-solid fa-shield-halved"></i> ช่องยืนยันตัวตน (Verify Channel):</label>
-              <div class="custom-select-wrapper">
-                <select id="cfg-verify-channel" class="custom-select form-control"></select>
-                <i class="fa-solid fa-chevron-down select-chevron"></i>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label><i class="fa-solid fa-door-open"></i> ช่องต้อนรับสมาชิกใหม่ (Welcome):</label>
-              <div class="custom-select-wrapper">
-                <select id="cfg-welcome-channel" class="custom-select form-control"></select>
-                <i class="fa-solid fa-chevron-down select-chevron"></i>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label><i class="fa-solid fa-door-closed"></i> ช่องบอกลาสมาชิก (Goodbye):</label>
-              <div class="custom-select-wrapper">
-                <select id="cfg-goodbye-channel" class="custom-select form-control"></select>
-                <i class="fa-solid fa-chevron-down select-chevron"></i>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label><i class="fa-solid fa-file-lines"></i> ช่องบันทึกประวัติ (Audit Logs):</label>
-              <div class="custom-select-wrapper">
-                <select id="cfg-log-channel" class="custom-select form-control"></select>
-                <i class="fa-solid fa-chevron-down select-chevron"></i>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label><i class="fa-solid fa-music"></i> ช่องขอเพลงเฉพาะ (Music Channel):</label>
-              <div class="custom-select-wrapper">
-                <select id="cfg-music-channel" class="custom-select form-control"></select>
-                <i class="fa-solid fa-chevron-down select-chevron"></i>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label><i class="fa-solid fa-folder"></i> หมวดหมู่เปิดทิกเก็ต (Ticket Category):</label>
-              <div class="custom-select-wrapper">
-                <select id="cfg-ticket-category" class="custom-select form-control"></select>
-                <i class="fa-solid fa-chevron-down select-chevron"></i>
-              </div>
-            </div>
           </div>
+        </div>
 
-          <!-- Column 3: Feature Toggles & Save Button -->
-          <div class="dashboard-card glass-panel">
-            <div class="card-header">
-              <div class="card-icon icon-green"><i class="fa-solid fa-toggle-on"></i></div>
-              <div>
-                <h3>🔘 เปิด/ปิดการทำงาน (Features)</h3>
-                <p>สวิตช์ควบคุมฟังก์ชันอัตโนมัติ</p>
+        <!-- ================= TAB 3: Interactive Embed Builder ================= -->
+        <div id="tab-pane-embed" class="studio-tab-pane">
+          <div class="embed-studio-grid">
+            
+            <!-- Left: Form Controls -->
+            <div class="embed-form-panel glass-panel">
+              <div class="card-header">
+                <div class="card-icon icon-cyan"><i class="fa-solid fa-palette"></i></div>
+                <div>
+                  <h3>🎨 ออกแบบข้อความ Embed (Design Controls)</h3>
+                  <p>ปรับแต่งทุกองค์ประกอบ แล้วตัวอย่างฝั่งขวาจะเปลี่ยนตามแบบ Realtime</p>
+                </div>
               </div>
-            </div>
 
-            <div class="toggle-row">
-              <div>
-                <span class="toggle-title">ระบบข้อความต้อนรับ & บอกลา</span>
-                <p class="toggle-desc">ส่งการ์ดต้อนรับและบอกลาเมื่อมีคนเข้า-ออก</p>
+              <div class="form-group">
+                <label><i class="fa-solid fa-hashtag"></i> ช่องแชทที่ต้องการส่งประกาศ:</label>
+                <div class="custom-select-wrapper">
+                  <select id="embed-channel-select" class="custom-select form-control"></select>
+                  <i class="fa-solid fa-chevron-down select-chevron"></i>
+                </div>
               </div>
-              <label class="switch">
-                <input type="checkbox" id="cfg-enable-welcome">
-                <span class="slider"></span>
-              </label>
-            </div>
 
-            <div class="toggle-row">
-              <div>
-                <span class="toggle-title">ระบบบันทึกความปลอดภัย (Audit Logs)</span>
-                <p class="toggle-desc">บันทึกเหตุการณ์ แบน เตะ Timeout แก้ไขข้อความ</p>
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label><i class="fa-solid fa-heading"></i> หัวข้อประกาศ (Title):</label>
+                  <input type="text" id="embed-title" class="form-control" placeholder="เช่น 📢 อัปเดตกฎและกิจกรรมใหม่!">
+                </div>
+                <div class="form-group">
+                  <label><i class="fa-solid fa-link"></i> ลิงก์หัวข้อ (Title URL):</label>
+                  <input type="text" id="embed-title-url" class="form-control" placeholder="https://example.com">
+                </div>
               </div>
-              <label class="switch">
-                <input type="checkbox" id="cfg-enable-logs">
-                <span class="slider"></span>
-              </label>
-            </div>
 
-            <div class="toggle-row">
-              <div>
-                <span class="toggle-title">คำสั่งผู้ดูแลระบบ (Admin Commands)</span>
-                <p class="toggle-desc">เปิด/ปิด /setup-*, /send-*, /announce</p>
+              <div class="form-group">
+                <label><i class="fa-solid fa-align-left"></i> เนื้อหาคำอธิบาย (Description - รองรับ Markdown):</label>
+                <textarea id="embed-desc" class="form-control" rows="4" placeholder="ยินดีต้อนรับสมาชิกทุกท่านเข้าสู่เซิร์ฟเวอร์!&#10;**ข้อที่ 1:** เคารพเพื่อนสมาชิก&#10;*ข้อที่ 2:* ห้ามสแปมลิงก์"></textarea>
               </div>
-              <label class="switch">
-                <input type="checkbox" id="cfg-enable-admin-cmds">
-                <span class="slider"></span>
-              </label>
-            </div>
 
-            <div class="toggle-row">
-              <div>
-                <span class="toggle-title">คำสั่งดูแลความสงบ (Moderation Commands)</span>
-                <p class="toggle-desc">เปิด/ปิด /ban, /kick, /timeout, /clear, /lockdown (สำหรับผู้ที่ใช้ Wick)</p>
+              <div class="form-group">
+                <label><i class="fa-solid fa-fill-drip"></i> สีแถบ Embed (Color Palette):</label>
+                <div class="color-palette-wrap">
+                  <input type="color" id="embed-color" class="color-picker" value="#00f0ff">
+                  <div class="color-presets">
+                    <button class="color-preset-btn" style="background:#00f0ff" data-color="#00f0ff" title="Cyan"></button>
+                    <button class="color-preset-btn" style="background:#9d4edd" data-color="#9d4edd" title="Purple"></button>
+                    <button class="color-preset-btn" style="background:#00e676" data-color="#00e676" title="Green"></button>
+                    <button class="color-preset-btn" style="background:#ff3366" data-color="#ff3366" title="Pink"></button>
+                    <button class="color-preset-btn" style="background:#ffb703" data-color="#ffb703" title="Yellow"></button>
+                    <button class="color-preset-btn" style="background:#2f3136" data-color="#2f3136" title="Dark"></button>
+                  </div>
+                </div>
               </div>
-              <label class="switch">
-                <input type="checkbox" id="cfg-enable-mod-cmds">
-                <span class="slider"></span>
-              </label>
-            </div>
 
-            <div class="save-box">
-              <button id="btn-save-settings" class="btn btn-primary btn-lg btn-glow btn-block">
-                <i class="fa-solid fa-floppy-disk"></i> บันทึกการตั้งค่าลง MySQL
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label><i class="fa-solid fa-user-pen"></i> ชื่อผู้เขียน (Author Name):</label>
+                  <input type="text" id="embed-author-name" class="form-control" placeholder="เช่น ทีมงานผู้ดูแลระบบ">
+                </div>
+                <div class="form-group">
+                  <label><i class="fa-solid fa-image"></i> รูปไอคอนผู้เขียน (Author Icon URL):</label>
+                  <input type="text" id="embed-author-icon" class="form-control" placeholder="https://example.com/icon.png">
+                </div>
+              </div>
+
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label><i class="fa-solid fa-image"></i> รูปขวาบน (Thumbnail URL):</label>
+                  <input type="text" id="embed-thumbnail" class="form-control" placeholder="https://example.com/thumb.png">
+                </div>
+                <div class="form-group">
+                  <label><i class="fa-solid fa-panorama"></i> รูปแบนเนอร์ใหญ่ (Banner Image URL):</label>
+                  <input type="text" id="embed-image" class="form-control" placeholder="https://example.com/banner.png">
+                </div>
+              </div>
+
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label><i class="fa-solid fa-note-sticky"></i> ข้อความท้าย (Footer Text):</label>
+                  <input type="text" id="embed-footer-text" class="form-control" placeholder="เช่น Uryu Community • ปลอดภัย 100%">
+                </div>
+                <div class="form-group">
+                  <label><i class="fa-solid fa-image"></i> ไอคอนท้าย (Footer Icon URL):</label>
+                  <input type="text" id="embed-footer-icon" class="form-control" placeholder="https://example.com/footer-icon.png">
+                </div>
+              </div>
+
+              <div class="embed-extra-row">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="embed-show-timestamp" checked>
+                  <span>แสดงวันที่และเวลาปัจจุบัน (Timestamp)</span>
+                </label>
+              </div>
+
+              <button id="btn-send-custom-embed" class="btn btn-primary btn-lg btn-glow btn-block">
+                <i class="fa-solid fa-paper-plane"></i> ส่งประกาศ Embed เข้า Discord ทันที
               </button>
-              <span id="save-status" class="save-status-text"></span>
             </div>
-          </div>
 
-        </div>
-
-        <!-- Remote Actions Center (สั่งการบอทผ่านเว็บ) -->
-        <div class="remote-actions-panel glass-panel">
-          <div class="card-header">
-            <div class="card-icon icon-yellow"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
-            <div>
-              <h3>⚡ ศูนย์สั่งการด่วน (Remote Action Center)</h3>
-              <p>คลิกเพื่อสั่งให้บอทส่งแผงควบคุมเข้าช่องที่กำหนดได้ทันที</p>
-            </div>
-          </div>
-
-          <div class="actions-grid">
-            <div class="action-card glass-inner">
-              <div class="action-card-top">
-                <div class="action-icon cyan"><i class="fa-solid fa-shield-check"></i></div>
-                <h4>ส่งแผงยืนยันตัวตน</h4>
+            <!-- Right: Live Discord Embed Mockup Preview -->
+            <div class="embed-preview-panel glass-panel">
+              <div class="card-header">
+                <div class="card-icon icon-purple"><i class="fa-brands fa-discord"></i></div>
+                <div>
+                  <h3>👁️ ตัวอย่างสดใน Discord (Live Preview)</h3>
+                  <p>หน้าตาเสมือนจริงที่จะปรากฏในแอป Discord ของสมาชิก</p>
+                </div>
               </div>
-              <p>ส่ง Embed พร้อมปุ่ม CAPTCHA Modal สุ่มรหัส 6 หลัก</p>
-              <button id="btn-action-verify" class="btn btn-secondary btn-sm"><i class="fa-solid fa-paper-plane"></i> ส่งแผง Verify</button>
-            </div>
 
-            <div class="action-card glass-inner">
-              <div class="action-card-top">
-                <div class="action-icon green"><i class="fa-solid fa-ticket"></i></div>
-                <h4>ส่งแผงเปิดทิกเก็ต</h4>
+              <div class="discord-chat-mockup">
+                <div class="discord-msg-row">
+                  <img src="https://cdn-icons-png.flaticon.com/512/1069/1069210.png" alt="Bot Avatar" class="discord-bot-avatar">
+                  <div class="discord-msg-content">
+                    <div class="discord-user-header">
+                      <span class="discord-username">UryuBot</span>
+                      <span class="discord-bot-tag">APP</span>
+                      <span class="discord-time">วันนี้ เวลา 12:00</span>
+                    </div>
+
+                    <!-- The Embed Box -->
+                    <div class="discord-embed" id="preview-embed-box" style="border-left-color: #00f0ff;">
+                      <div class="discord-embed-inner">
+                        
+                        <div class="discord-embed-top">
+                          <!-- Author -->
+                          <div class="discord-embed-author" id="preview-author-wrap" style="display: none;">
+                            <img id="preview-author-icon" src="" class="discord-author-icon">
+                            <span id="preview-author-name" class="discord-author-name">Author Name</span>
+                          </div>
+
+                          <!-- Title -->
+                          <h4 class="discord-embed-title" id="preview-title" style="display: none;"></h4>
+
+                          <!-- Description -->
+                          <div class="discord-embed-desc" id="preview-desc">พิมพ์ข้อความฝั่งซ้ายเพื่อดูตัวอย่างแบบสดๆ ได้ที่นี่...</div>
+                        </div>
+
+                        <!-- Thumbnail -->
+                        <div class="discord-embed-thumb-wrap" id="preview-thumb-wrap" style="display: none;">
+                          <img id="preview-thumb-img" src="" class="discord-embed-thumb">
+                        </div>
+
+                      </div>
+
+                      <!-- Big Banner Image -->
+                      <div class="discord-embed-image-wrap" id="preview-banner-wrap" style="display: none;">
+                        <img id="preview-banner-img" src="" class="discord-embed-banner">
+                      </div>
+
+                      <!-- Footer -->
+                      <div class="discord-embed-footer" id="preview-footer-wrap">
+                        <img id="preview-footer-icon" src="" class="discord-footer-icon" style="display: none;">
+                        <span id="preview-footer-text">UryuBot Live Embed Suite</span>
+                        <span class="discord-footer-dot" id="preview-footer-dot">•</span>
+                        <span class="discord-footer-time" id="preview-timestamp">วันนี้ เวลา 12:00</span>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
               </div>
-              <p>ส่ง Embed ปุ่มเปิด Ticket ติดต่อทีมงานส่วนตัว</p>
-              <button id="btn-action-ticket" class="btn btn-secondary btn-sm"><i class="fa-solid fa-ticket"></i> ส่งแผง Ticket</button>
+
             </div>
 
-            <div class="action-card glass-inner">
-              <div class="action-card-top">
-                <div class="action-icon purple"><i class="fa-solid fa-compact-disc"></i></div>
-                <h4>ติดตั้งห้องขอเพลง</h4>
-              </div>
-              <p>ล้างข้อความเก่าและส่งแผงเล่นเพลง Standby อัตโนมัติ</p>
-              <button id="btn-action-music" class="btn btn-secondary btn-sm"><i class="fa-solid fa-compact-disc"></i> รีเซ็ตห้องเพลง</button>
-            </div>
-
-            <div class="action-card glass-inner">
-              <div class="action-card-top">
-                <div class="action-icon red"><i class="fa-solid fa-triangle-exclamation"></i></div>
-                <h4>ล็อกดาวน์ฉุกเฉิน</h4>
-              </div>
-              <p>ปิดสิทธิ์พิมพ์ของทุกคนทันทีเมื่อมีเหตุไม่สงบ</p>
-              <button id="btn-action-lockdown" class="btn btn-danger btn-sm"><i class="fa-solid fa-lock"></i> สลับสถานะ Lockdown</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Live Announcement Modal Box -->
-        <div class="announcement-panel glass-panel">
-          <div class="card-header">
-            <div class="card-icon icon-red"><i class="fa-solid fa-bullhorn"></i></div>
-            <div>
-              <h3>📢 ส่งประกาศทางการ (Live Embed Announcer)</h3>
-              <p>พิมพ์ข้อความประกาศแล้วส่งเข้า Discord ได้ทันทีแบบ Realtime</p>
-            </div>
-          </div>
-
-          <div class="announce-form-grid">
-            <div class="form-group">
-              <label>ช่องที่ต้องการส่งประกาศ:</label>
-              <div class="custom-select-wrapper">
-                <select id="ann-channel" class="custom-select form-control"></select>
-                <i class="fa-solid fa-chevron-down select-chevron"></i>
-              </div>
-            </div>
-            <div class="form-group">
-              <label>หัวข้อประกาศ (Title):</label>
-              <input type="text" id="ann-title" class="form-control" placeholder="เช่น กฎใหม่ของเซิร์ฟเวอร์ / กิจกรรมประจำสัปดาห์">
-            </div>
-            <div class="form-group full-width">
-              <label>เนื้อหาประกาศ (Description):</label>
-              <textarea id="ann-desc" class="form-control" rows="3" placeholder="พิมพ์รายละเอียดประกาศที่ต้องการแจ้งสมาชิก..."></textarea>
-            </div>
-            <div class="form-group">
-              <label>สีแถบ Embed (Hex Color):</label>
-              <input type="color" id="ann-color" class="form-control color-picker" value="#00f0ff">
-            </div>
-            <div class="form-group">
-              <label>ลิงก์รูปภาพประกอบ (URL รูป/GIF):</label>
-              <input type="text" id="ann-image" class="form-control" placeholder="https://example.com/banner.png">
-            </div>
-            <div class="form-group full-width">
-              <button id="btn-send-announcement" class="btn btn-primary btn-block btn-glow">
-                <i class="fa-solid fa-paper-plane"></i> ส่งประกาศเข้าเซิร์ฟเวอร์ทันที
-              </button>
-            </div>
           </div>
         </div>
 
-      </div>
+        <!-- ================= TAB 4: Quick Moderation & Live Logs ================= -->
+        <div id="tab-pane-mod" class="studio-tab-pane">
+          <div class="mod-studio-grid">
+            
+            <!-- Left: Members Quick Management -->
+            <div class="mod-members-card glass-panel">
+              <div class="card-header">
+                <div class="card-icon icon-cyan"><i class="fa-solid fa-users-gear"></i></div>
+                <div>
+                  <h3>👥 จัดการสมาชิกด่วน (Member Inspector)</h3>
+                  <p>ค้นหาและจัดการสิทธิการใช้งานของสมาชิกในเซิร์ฟเวอร์</p>
+                </div>
+              </div>
+
+              <div class="mod-search-bar">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="mod-search-input" placeholder="ค้นหาสมาชิกด้วยชื่อ, Username หรือ User ID...">
+              </div>
+
+              <div class="mod-members-table-wrap">
+                <table class="mod-table">
+                  <thead>
+                    <tr>
+                      <th>สมาชิก</th>
+                      <th>ยศ</th>
+                      <th>สถานะ</th>
+                      <th>การกระทำด่วน</th>
+                    </tr>
+                  </thead>
+                  <tbody id="mod-members-tbody">
+                    <tr>
+                      <td colspan="4" class="text-center">กำลังโหลดรายชื่อสมาชิก...</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Right: Live Audit Logs Feed -->
+            <div class="mod-logs-card glass-panel">
+              <div class="card-header">
+                <div class="card-icon icon-yellow"><i class="fa-solid fa-shield-halved"></i></div>
+                <div>
+                  <h3>🛡️ บันทึกความปลอดภัยสด (Live Audit Feed)</h3>
+                  <p>ประวัติการเตะ แบน และเปลี่ยนแปลงในเซิร์ฟเวอร์ล่าสุด</p>
+                </div>
+              </div>
+
+              <div class="mod-logs-feed" id="mod-audit-feed">
+                <div class="empty-log-msg">กำลังโหลดประวัติ Audit Logs...</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
 
     </div>
   </section>
@@ -714,7 +1019,61 @@
     </div>
   </footer>
 
+  <!-- Quick Moderation Action Modal Dialog -->
+  <div id="mod-action-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-card glass-panel">
+      <div class="modal-header">
+        <h3 id="mod-modal-title"><i class="fa-solid fa-gavel"></i> ดำเนินการกับสมาชิก</h3>
+        <button id="btn-close-mod-modal" class="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-target-info">
+          <img id="mod-modal-avatar" src="" alt="Avatar" class="modal-target-avatar">
+          <div>
+            <strong id="mod-modal-name">User Name</strong>
+            <span id="mod-modal-id" class="modal-target-id">ID: 000000000000000000</span>
+          </div>
+        </div>
+
+        <div class="form-group" id="mod-duration-group" style="display: none;">
+          <label><i class="fa-solid fa-clock"></i> ระยะเวลา Timeout:</label>
+          <div class="custom-select-wrapper">
+            <select id="mod-modal-duration" class="custom-select form-control">
+              <option value="300000">5 นาที</option>
+              <option value="600000">10 นาที</option>
+              <option value="3600000">1 ชั่วโมง</option>
+              <option value="86400000">1 วัน (24 ชั่วโมง)</option>
+              <option value="604800000">1 สัปดาห์ (7 วัน)</option>
+            </select>
+            <i class="fa-solid fa-chevron-down select-chevron"></i>
+          </div>
+        </div>
+
+        <div class="form-group" id="mod-delete-msg-group" style="display: none;">
+          <label><i class="fa-solid fa-trash"></i> ลบประวัติข้อความย้อนหลัง:</label>
+          <div class="custom-select-wrapper">
+            <select id="mod-modal-del-msg" class="custom-select form-control">
+              <option value="0">ไม่ลบข้อความ</option>
+              <option value="86400">ย้อนหลัง 24 ชั่วโมง</option>
+              <option value="604800">ย้อนหลัง 7 วัน</option>
+            </select>
+            <i class="fa-solid fa-chevron-down select-chevron"></i>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label><i class="fa-solid fa-comment-dots"></i> เหตุผล:</label>
+          <input type="text" id="mod-modal-reason" class="form-control" placeholder="พิมพ์เหตุผลหรือปล่อยว่างเพื่อใช้ค่าเริ่มต้น...">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-cancel-mod-modal" class="btn btn-secondary btn-sm">ยกเลิก</button>
+        <button id="btn-confirm-mod-modal" class="btn btn-danger btn-sm"><i class="fa-solid fa-check"></i> ยืนยันการดำเนินการ</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Scripts -->
-  <script src="app.js?v=4.0"></script>
+  <script src="app.js?v=4.5"></script>
 </body>
 </html>
