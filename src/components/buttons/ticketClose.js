@@ -10,6 +10,8 @@ const {
 const { generateHtmlTranscript } = require('../../utils/transcript');
 const { sendAuditLog } = require('../../utils/auditLogger');
 const { createErrorEmbed } = require('../../utils/embeds');
+const { updateGuildSettings } = require('../../database/db');
+const { ChannelType } = require('discord.js');
 const config = require('../../config/config');
 const logger = require('../../utils/logger');
 
@@ -140,12 +142,29 @@ module.exports = {
 
       logger.success(`ปิดห้องทิกเก็ต #${channel.name} เรียบร้อยโดย ${closer.tag}`);
 
-      // 7. หน่วงเวลา 5 วินาทีแล้วลบห้อง
+      // 7. หน่วงเวลา 5 วินาทีแล้วลบห้อง และตรวจสอบเพื่อลบ Category หากไม่มีห้องเหลือ
       setTimeout(async () => {
         try {
+          const parentCategory = channel.parent;
           await channel.delete(`Ticket ปิดโดย ${closer.tag}`);
+
+          // หากห้องอยู่ใน Category ให้ตรวจสอบว่ามี Ticket อื่นเหลืออยู่หรือไม่
+          if (parentCategory && parentCategory.type === ChannelType.GuildCategory) {
+            const remainingChannels = guild.channels.cache.filter(
+              c => c.parentId === parentCategory.id && c.id !== channel.id
+            );
+
+            // หากเป็น Ticket สุดท้ายที่ถูกลบ -> ลบ Category ออกอัตโนมัติ
+            if (remainingChannels.size === 0) {
+              await parentCategory.delete('ลบ Category อัตโนมัติเนื่องจากไม่มีห้อง Ticket เหลืออยู่').catch(() => null);
+              if (typeof updateGuildSettings === 'function') {
+                await updateGuildSettings(guild.id, { ticketCategoryId: null });
+              }
+              logger.info(`[Ticket System] ลบ Category "${parentCategory.name}" อัตโนมัติเนื่องจากไม่มีห้อง Ticket เหลืออยู่`);
+            }
+          }
         } catch (err) {
-          logger.error('เกิดข้อผิดพลาดขณะลบห้อง Ticket:', err);
+          logger.error('เกิดข้อผิดพลาดขณะลบห้อง Ticket หรือ Category:', err);
         }
       }, 5000);
     } catch (error) {

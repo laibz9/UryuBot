@@ -13,7 +13,7 @@ const {
   MessageFlags
 } = require('discord.js');
 const { createErrorEmbed } = require('../../utils/embeds');
-const { getGuildSettings, getNextTicketNumber } = require('../../database/db');
+const { getGuildSettings, getNextTicketNumber, updateGuildSettings } = require('../../database/db');
 const config = require('../../config/config');
 const logger = require('../../utils/logger');
 
@@ -116,13 +116,60 @@ module.exports = {
       const cleanUsername = user.username.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 15) || 'user';
       const channelName = `ticket-${cleanUsername}-${ticketNum}`;
 
-      // 5. ตรวจสอบ Category จากการตั้งค่า Ticket Category
+      // 5. ตรวจสอบหรือสร้าง Ticket Category อัตโนมัติหากยังไม่มี
       let parentCategoryId = null;
+
       if (settings.ticketCategoryId) {
         const categoryChannel = guild.channels.cache.get(settings.ticketCategoryId) || 
                                 await guild.channels.fetch(settings.ticketCategoryId).catch(() => null);
         if (categoryChannel && categoryChannel.type === ChannelType.GuildCategory) {
           parentCategoryId = categoryChannel.id;
+        }
+      }
+
+      // ถ้าไม่มีตามการตั้งค่า ให้ค้นหา Category ที่มีชื่อ "TICKETS" หรือ "ทิกเก็ต"
+      if (!parentCategoryId) {
+        const existingCat = guild.channels.cache.find(
+          c => c.type === ChannelType.GuildCategory && (c.name.toUpperCase().includes('TICKET') || c.name.includes('ทิกเก็ต'))
+        );
+        if (existingCat) {
+          parentCategoryId = existingCat.id;
+          if (typeof updateGuildSettings === 'function') {
+            await updateGuildSettings(guild.id, { ticketCategoryId: existingCat.id });
+          }
+        }
+      }
+
+      // หากในเซิร์ฟเวอร์ยังไม่มี Category Ticket เลย ให้บอทสร้าง Category "🎫 TICKETS" อัตโนมัติ!
+      if (!parentCategoryId) {
+        try {
+          const newCategory = await guild.channels.create({
+            name: '🎫 TICKETS',
+            type: ChannelType.GuildCategory,
+            permissionOverwrites: [
+              {
+                id: guild.id,
+                deny: [PermissionFlagsBits.ViewChannel]
+              },
+              {
+                id: botMember.id,
+                allow: [
+                  PermissionFlagsBits.ViewChannel,
+                  PermissionFlagsBits.ManageChannels,
+                  PermissionFlagsBits.SendMessages
+                ]
+              }
+            ],
+            reason: 'สร้าง Category สำหรับระบบ Ticket อัตโนมัติ'
+          });
+
+          parentCategoryId = newCategory.id;
+          if (typeof updateGuildSettings === 'function') {
+            await updateGuildSettings(guild.id, { ticketCategoryId: newCategory.id });
+          }
+          logger.success(`[Ticket System] สร้าง Category "${newCategory.name}" อัตโนมัติสำเร็จในเซิร์ฟเวอร์ ${guild.name}`);
+        } catch (catErr) {
+          logger.warn(`[Ticket System] ไม่สามารถสร้าง Category อัตโนมัติได้: ${catErr.message}`);
         }
       }
 
