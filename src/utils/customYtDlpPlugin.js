@@ -5,6 +5,19 @@
 
 const { ExtractorPlugin, Song, Playlist, DisTubeError } = require('distube');
 const { spawn } = require('child_process');
+const path = require('path');
+const fs = require('fs');
+
+function getYtDlpPath() {
+  if (process.platform === 'win32') {
+    const localExe = path.resolve(__dirname, '../../node_modules/@distube/yt-dlp/bin/yt-dlp.exe');
+    if (fs.existsSync(localExe)) return localExe;
+    return 'yt-dlp';
+  }
+  if (fs.existsSync('/usr/local/bin/yt-dlp')) return '/usr/local/bin/yt-dlp';
+  if (fs.existsSync('/usr/bin/yt-dlp')) return '/usr/bin/yt-dlp';
+  return 'yt-dlp';
+}
 
 function getBestAudioStreamUrl(info) {
   if (!info) return null;
@@ -20,8 +33,7 @@ function getBestAudioStreamUrl(info) {
 
 function runYtDlp(target) {
   return new Promise((resolve, reject) => {
-    const isWindows = process.platform === 'win32';
-    const command = isWindows ? 'yt-dlp' : (require('fs').existsSync('/usr/local/bin/yt-dlp') ? '/usr/local/bin/yt-dlp' : 'yt-dlp');
+    const command = getYtDlpPath();
 
     const args = [
       '--dump-single-json',
@@ -59,7 +71,7 @@ function runYtDlp(target) {
     });
 
     proc.on('error', (err) => {
-      reject(new DisTubeError('YTDLP_SPAWN_ERROR', `Cannot spawn yt-dlp: ${err.message}`));
+      reject(new DisTubeError('YTDLP_SPAWN_ERROR', `Cannot spawn yt-dlp (${command}): ${err.message}`));
     });
   });
 }
