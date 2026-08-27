@@ -136,7 +136,16 @@ module.exports = {
         createdRoles.push(`✅ **Member (มีอยู่แล้ว)**: \`${memberRole.id}\``);
       }
 
-      // 5. มอบยศ Leader และ Admin ให้แก่คนที่รันคำสั่งทันที
+      // 5. บันทึก Role IDs ลงฐานข้อมูล MySQL อัตโนมัติทันที
+      const { updateGuildSettings } = require('../../database/db');
+      await updateGuildSettings(guild.id, {
+        leaderRoleId: leaderRole.id,
+        adminRoleId: adminRole.id,
+        moderatorRoleId: modRole.id,
+        verifiedRoleId: memberRole.id
+      });
+
+      // 6. มอบยศ Leader และ Admin ให้แก่คนที่รันคำสั่งทันที
       if (leaderRole && botMember.roles.highest.position > leaderRole.position) {
         await member.roles.add(leaderRole).catch(() => {});
       }
@@ -144,23 +153,16 @@ module.exports = {
         await member.roles.add(adminRole).catch(() => {});
       }
 
-      logger.success(`สร้างและตั้งค่ายศในเซิร์ฟเวอร์ ${guild.name} สำเร็จโดย ${interaction.user.tag}`);
+      logger.success(`สร้างและตั้งค่ายศในเซิร์ฟเวอร์ ${guild.name} และบันทึกลง MySQL สำเร็จ`);
 
-      // 6. สร้าง Embed รายงานผลลัพธ์พร้อม Role IDs
+      // 7. สร้าง Embed รายงานผลลัพธ์พร้อมแจ้งสถานะบันทึกสำเร็จ
       const resultEmbed = new EmbedBuilder()
-        .setTitle('🎉 สร้างยศและตั้งค่าสิทธิ์อัตโนมัติเรียบร้อย!')
+        .setTitle('🎉 สร้างยศและบันทึกลงฐานข้อมูล MySQL สำเร็จ!')
         .setDescription(
-          'บอทได้ทำการสร้างยศพร้อมกำหนดสิทธิ์ (Permissions) ที่ถูกต้องให้เรียบร้อยแล้วครับ\n\n' +
-          '📋 **รายการยศและ Role ID:**\n' +
+          'บอทได้ทำการสร้างยศ กำหนดสิทธิ์ และ **บันทึกการตั้งค่าลงฐานข้อมูล MySQL เรียบร้อยแล้ว** (ไม่ต้องไปแก้ .env เอง)\n\n' +
+          '📋 **รายการยศที่บันทึกแล้ว:**\n' +
           createdRoles.join('\n') + '\n\n' +
-          '💡 **ขั้นตอนถัดไป:**\n' +
-          'นำ Role ID ด้านบนไปวางใส่ในไฟล์ `.env` ของคุณดังนี้:\n' +
-          '```env\n' +
-          `LEADER_ROLE_ID=${leaderRole.id}\n` +
-          `ADMIN_ROLE_ID=${adminRole.id}\n` +
-          `MODERATOR_ROLE_ID=${modRole.id}\n` +
-          `VERIFIED_ROLE_ID=${memberRole.id}\n` +
-          '```\n' +
+          '💡 **คุณสามารถปรับเปลี่ยนยศเพิ่มเติมได้ตลอดเวลาผ่าน [Web Dashboard](http://localhost:3000/#dashboard)**\n\n' +
           '⚠️ **ข้อควรระวังสำคัญ:**\n' +
           'อย่าลืมไปที่ **Server Settings ➡️ Roles** แล้วลาก **ยศของบอท** ขึ้นไปอยู่ **"สูงกว่า"** ยศทั้งหมดนี้ด้วยนะครับ!'
         )

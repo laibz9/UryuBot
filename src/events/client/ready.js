@@ -24,6 +24,17 @@ module.exports = {
     // ล้างข้อความตกค้างและตั้งค่าแผงควบคุมเพลงเริ่มต้นในห้องขอเพลง
     await cleanupMusicChannelOnStartup(client);
 
+    // ลงทะเบียน Slash Commands ไปยังทุกเซิร์ฟเวอร์ (Global Application Commands)
+    try {
+      const commandsData = Array.from(client.commands.values()).map(cmd => cmd.data.toJSON ? cmd.data.toJSON() : cmd.data);
+      if (client.application) {
+        await client.application.commands.set(commandsData);
+        logger.success(`[Global Slash Commands] ลงทะเบียน ${commandsData.length} คำสั่งไปยังทุกเซิร์ฟเวอร์เรียบร้อยแล้ว!`);
+      }
+    } catch (err) {
+      logger.error('เกิดข้อผิดพลาดในการลงทะเบียน Global Slash Commands:', err);
+    }
+
     // ฟังก์ชันอัปเดตสถานะสีม่วง (Streaming Status)
     const updateStreamingPresence = () => {
       try {

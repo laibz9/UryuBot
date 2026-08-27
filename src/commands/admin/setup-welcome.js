@@ -72,21 +72,27 @@ module.exports = {
 
       // หากเลือกปิดใช้งานระบบ
       if (status === 'disable') {
-        config.bot.enableWelcomeSystem = false;
+        const { updateGuildSettings } = require('../../database/db');
+        await updateGuildSettings(guild.id, { enableWelcomeSystem: false });
         const disableEmbed = new EmbedBuilder()
           .setTitle('🔴 ปิดใช้งานระบบต้อนรับเรียบร้อย!')
-          .setDescription('ระบบต้อนรับและบอกลาถูกปิดใช้งานแล้ว บอทจะไม่ส่งข้อความเมื่อมีคนเข้าหรือออกจากเซิร์ฟเวอร์\n\n*(คุณสามารถเปลี่ยนเป็น ENABLE_WELCOME_SYSTEM=false ในไฟล์ .env ได้เช่นกัน)*')
+          .setDescription('ระบบต้อนรับและบอกลาถูกปิดใช้งานแล้ว และบันทึกลงฐานข้อมูล MySQL เรียบร้อยครับ')
           .setColor(config.colors.danger)
           .setTimestamp();
         return await interaction.reply({ embeds: [disableEmbed], flags: MessageFlags.Ephemeral });
       }
 
-      // หากเลือกเปิดใช้งาน
-      config.bot.enableWelcomeSystem = true;
-
       const welcomeChannel = interaction.options.getChannel('welcome_channel') || interaction.channel;
       const goodbyeChannel = interaction.options.getChannel('goodbye_channel') || welcomeChannel;
       const botMember = guild.members.me;
+
+      // บันทึกลง MySQL ทันที
+      const { updateGuildSettings } = require('../../database/db');
+      await updateGuildSettings(guild.id, {
+        welcomeChannelId: welcomeChannel.id,
+        goodbyeChannelId: goodbyeChannel.id,
+        enableWelcomeSystem: true
+      });
 
       // 1. ตรวจสอบสิทธิ์ของบอทในช่องต้อนรับ
       const welcomePerms = welcomeChannel.permissionsFor(botMember);

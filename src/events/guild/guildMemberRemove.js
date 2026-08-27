@@ -66,7 +66,7 @@ module.exports = {
       logger.info(`ส่งข้อความบอกลาสมาชิก ${member.user.tag} ในเซิร์ฟเวอร์ ${guild.name} สำเร็จ`);
 
       // 5. ตรวจสอบว่าเป็นการเตะโดย Admin/Mod หรือไม่เพื่อบันทึก Log
-      if (config.bot.enableLogSystem && guild.members.me.permissions.has(PermissionFlagsBits.ViewAuditLog)) {
+      if (settings.enableLogSystem && guild.members.me.permissions.has(PermissionFlagsBits.ViewAuditLog)) {
         try {
           const auditLogs = await guild.fetchAuditLogs({
             limit: 1,

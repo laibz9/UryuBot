@@ -341,49 +341,52 @@ function initDisTube(client) {
  */
 async function cleanupMusicChannelOnStartup(client) {
   try {
-    const channelId = config.bot.musicChannelId;
-    if (!channelId) return;
+    const { getGuildSettings } = require('../database/db');
+    for (const guild of client.guilds.cache.values()) {
+      const settings = getGuildSettings(guild.id);
+      const channelId = settings.musicChannelId || config.bot.musicChannelId;
+      if (!channelId) continue;
 
-    // ดึงช่องขอเพลงโดยตรงจาก Discord API
-    const musicChannel = await client.channels.fetch(channelId).catch(() => null);
-    if (!musicChannel || !musicChannel.isTextBased()) return;
+      // ดึงช่องขอเพลงโดยตรงจาก Discord API
+      const musicChannel = await client.channels.fetch(channelId).catch(() => null);
+      if (!musicChannel || !musicChannel.isTextBased()) continue;
 
-    const guild = musicChannel.guild;
-    const botMember = guild.members.me || await guild.members.fetch(client.user.id).catch(() => null);
-    if (!botMember) return;
+      const botMember = guild.members.me || await guild.members.fetch(client.user.id).catch(() => null);
+      if (!botMember) continue;
 
-    const permissions = musicChannel.permissionsFor(botMember);
-    if (!permissions || !permissions.has(PermissionFlagsBits.ManageMessages) || !permissions.has(PermissionFlagsBits.SendMessages)) {
-      logger.warn(`บอทไม่มีสิทธิ์ ManageMessages หรือ SendMessages ในห้อง #${musicChannel.name}`);
-      return;
-    }
-
-    // ดึงข้อความทั้งหมดในห้องขอเพลง (สูงสุด 100 ข้อความ)
-    const messages = await musicChannel.messages.fetch({ limit: 100 }).catch(() => null);
-    if (messages && messages.size > 0) {
-      logger.info(`[Music Startup] กำลังทำความสะอาดข้อความ ${messages.size} ข้อความ ในห้อง #${musicChannel.name}...`);
-      
-      const twoWeeksAgo = Date.now() - 14 * 24 * 60 * 60 * 1000;
-      const youngMessages = messages.filter(m => m.createdTimestamp > twoWeeksAgo);
-      const oldMessages = messages.filter(m => m.createdTimestamp <= twoWeeksAgo);
-
-      if (youngMessages.size > 0) {
-        await musicChannel.bulkDelete(youngMessages, true).catch(() => {});
+      const permissions = musicChannel.permissionsFor(botMember);
+      if (!permissions || !permissions.has(PermissionFlagsBits.ManageMessages) || !permissions.has(PermissionFlagsBits.SendMessages)) {
+        logger.warn(`บอทไม่มีสิทธิ์ ManageMessages หรือ SendMessages ในห้อง #${musicChannel.name}`);
+        continue;
       }
 
-      for (const msg of oldMessages.values()) {
-        await msg.delete().catch(() => {});
+      // ดึงข้อความทั้งหมดในห้องขอเพลง (สูงสุด 100 ข้อความ)
+      const messages = await musicChannel.messages.fetch({ limit: 100 }).catch(() => null);
+      if (messages && messages.size > 0) {
+        logger.info(`[Music Startup] กำลังทำความสะอาดข้อความ ${messages.size} ข้อความ ในห้อง #${musicChannel.name}...`);
+        
+        const twoWeeksAgo = Date.now() - 14 * 24 * 60 * 60 * 1000;
+        const youngMessages = messages.filter(m => m.createdTimestamp > twoWeeksAgo);
+        const oldMessages = messages.filter(m => m.createdTimestamp <= twoWeeksAgo);
+
+        if (youngMessages.size > 0) {
+          await musicChannel.bulkDelete(youngMessages, true).catch(() => {});
+        }
+
+        for (const msg of oldMessages.values()) {
+          await msg.delete().catch(() => {});
+        }
       }
-    }
 
-    // ส่งแผงควบคุม Standby อันใหม่ที่สะอาดเอี่ยม
-    const standbyEmbed = createStandbyEmbed(guild);
-    const panelMessage = await musicChannel.send({ embeds: [standbyEmbed] }).catch(() => null);
-    if (panelMessage) {
-      panelMessages.set(guild.id, panelMessage.id);
-    }
+      // ส่งแผงควบคุม Standby อันใหม่ที่สะอาดเอี่ยม
+      const standbyEmbed = createStandbyEmbed(guild);
+      const panelMessage = await musicChannel.send({ embeds: [standbyEmbed] }).catch(() => null);
+      if (panelMessage) {
+        panelMessages.set(guild.id, panelMessage.id);
+      }
 
-    logger.success(`[Music Startup] ล้างข้อความตกค้างและรีเซ็ตแผงควบคุมใน #${musicChannel.name} (${guild.name}) สำเร็จ`);
+      logger.success(`[Music Startup] ล้างข้อความตกค้างและรีเซ็ตแผงควบคุมใน #${musicChannel.name} (${guild.name}) สำเร็จ`);
+    }
   } catch (error) {
     logger.error('เกิดข้อผิดพลาดขณะทำความสะอาดห้องขอเพลงตอนเริ่มต้น:', error);
   }

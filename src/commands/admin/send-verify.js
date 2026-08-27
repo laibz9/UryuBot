@@ -40,8 +40,12 @@ module.exports = {
       const hasPerm = await checkCommandPermission(interaction, 'admin');
       if (!hasPerm) return;
 
-      // ตรวจสอบห้องเป้าหมาย หากไม่ระบุให้ใช้ห้องปัจจุบัน
-      const targetChannel = interaction.options.getChannel('channel') || interaction.channel;
+      // ตรวจสอบห้องเป้าหมาย หากไม่ระบุให้ใช้ช่อง Verify จาก MySQL หรือห้องปัจจุบัน
+      const { getGuildSettings } = require('../../database/db');
+      const settings = getGuildSettings(interaction.guild.id);
+      const targetChannel = interaction.options.getChannel('channel') ||
+                            (settings.verifyChannelId ? interaction.guild.channels.cache.get(settings.verifyChannelId) : null) ||
+                            interaction.channel;
 
       // ตรวจสอบสิทธิ์การส่งข้อความของบอทในช่องเป้าหมาย
       const permissions = targetChannel.permissionsFor(interaction.guild.members.me);

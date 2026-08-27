@@ -64,20 +64,25 @@ module.exports = {
 
       // หากเลือกปิดใช้งานระบบ
       if (status === 'disable') {
-        config.bot.enableLogSystem = false;
+        const { updateGuildSettings } = require('../../database/db');
+        await updateGuildSettings(guild.id, { enableLogSystem: false });
         const disableEmbed = new EmbedBuilder()
           .setTitle('🔴 ปิดใช้งานระบบบันทึกประวัติเรียบร้อย')
-          .setDescription('ระบบ Audit Logger ถูกปิดใช้งานแล้ว บอทจะไม่บันทึกการลบหรือแก้ไขข้อความ\n\n*(คุณสามารถเปลี่ยนเป็น ENABLE_LOG_SYSTEM=false ในไฟล์ .env ได้เช่นกัน)*')
+          .setDescription('ระบบ Audit Logger ถูกปิดใช้งานแล้ว และบันทึกลง MySQL เรียบร้อยครับ')
           .setColor(config.colors.danger)
           .setTimestamp();
         return await interaction.reply({ embeds: [disableEmbed], flags: MessageFlags.Ephemeral });
       }
 
-      // หากเลือกเปิดใช้งาน
-      config.bot.enableLogSystem = true;
-
       const logChannel = interaction.options.getChannel('channel') || interaction.channel;
       const botMember = guild.members.me;
+
+      // บันทึกลง MySQL ทันที
+      const { updateGuildSettings } = require('../../database/db');
+      await updateGuildSettings(guild.id, {
+        logChannelId: logChannel.id,
+        enableLogSystem: true
+      });
 
       // 1. ตรวจสอบสิทธิ์ของบอทในช่องเป้าหมาย
       const permissions = logChannel.permissionsFor(botMember);

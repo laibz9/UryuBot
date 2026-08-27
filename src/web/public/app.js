@@ -1,6 +1,6 @@
 /**
  * @file src/web/public/app.js
- * @description Script จัดการ Web Setup Dashboard, Discord OAuth2 Login, Realtime Polling, และ SQLite Sync
+ * @description Script จัดการ Web Setup Dashboard, Discord OAuth2 Login, Realtime Polling, และ MySQL Sync
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -38,6 +38,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const musicCurrentTime = document.getElementById('music-current-time');
   const musicDuration = document.getElementById('music-duration');
   const musicPlayBtn = document.getElementById('music-play-btn');
+  const musicPrevBtn = document.getElementById('music-prev-btn');
+  const musicNextBtn = document.getElementById('music-next-btn');
+  const musicStopBtn = document.getElementById('music-stop-btn');
+  const musicVolText = document.getElementById('music-vol-text');
+  const musicRequesterBox = document.getElementById('music-requester-box');
+  const musicRequesterAvatar = document.getElementById('music-requester-avatar');
+  const musicRequesterName = document.getElementById('music-requester-name');
 
   // Dashboard & Auth State Elements
   const dashboardLockOverlay = document.getElementById('dashboard-lock-overlay');
@@ -128,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
    */
   async function checkAuthStatus() {
     try {
-      const res = await fetch('/api/auth/user');
+      const res = await fetch('/api/auth/user', { credentials: 'include' });
       if (!res.ok) return;
       const data = await res.json();
 
@@ -144,8 +151,9 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
         `;
 
-        // 2. ตรวจสอบสิทธิ์ว่ามีเซิร์ฟเวอร์ที่เป็นเจ้าของหรือไม่
-        if (data.isOwnerOfAny) {
+        // 2. ตรวจสอบสิทธิ์ว่ามีเซิร์ฟเวอร์ที่ดูแลหรือไม่
+        const hasGuilds = data.isOwnerOfAny || (data.ownedGuilds && data.ownedGuilds.length > 0) || (data.ownedGuildsCount > 0);
+        if (hasGuilds) {
           dashboardLockOverlay.style.display = 'none';
           dashboardContent.style.display = 'block';
 
@@ -154,10 +162,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
           await fetchGuilds();
         } else {
-          // ล็อกอินแล้วแต่ไม่ใช่เจ้าของเซิร์ฟเวอร์ใดเลย
+          // ล็อกอินแล้วแต่ยังไม่มีเซิร์ฟเวอร์ที่บอทอยู่
           dashboardLockOverlay.style.display = 'block';
           dashboardContent.style.display = 'none';
-          lockMessage.innerHTML = `⚠️ บัญชี Discord ของคุณ (<strong>${currentUser.username}</strong>) ไม่ได้เป็นเจ้าของเซิร์ฟเวอร์ใดๆ ที่บอทประจำการอยู่ กรุณาเข้าสู่ระบบด้วยบัญชีที่เป็น <strong>Server Owner</strong> ครับ`;
+          lockMessage.innerHTML = `⚠️ บัญชี Discord ของคุณ (<strong>${currentUser.username}</strong>) เข้าสู่ระบบสำเร็จแล้ว แต่ยังไม่มีเซิร์ฟเวอร์ที่บอทประจำการอยู่ กรุณาเชิญบอทเข้าเซิร์ฟเวอร์ของคุณก่อนครับ`;
         }
       } else {
         // ยังไม่ได้เข้าสู่ระบบ
@@ -175,66 +183,91 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  let currentPlayingGuildId = null;
+
   /**
-   * ดึงข้อมูลสถิติสดและสถานะเพลงจาก REST API (/api/stats)
+   * ดึงข้อมูลสถิติสดและสถานะเพลงจาก REST API (/api/stats) แบบ Realtime
    */
   async function fetchLiveStats() {
     try {
-      const res = await fetch('/api/stats');
+      const res = await fetch(`/api/stats?t=${Date.now()}`);
       if (!res.ok) return;
       const data = await res.json();
 
       if (data.success) {
         if (data.bot) {
           if (data.bot.avatar) {
-            navBotAvatar.src = data.bot.avatar;
-            heroBotAvatar.src = data.bot.avatar;
+            if (navBotAvatar) navBotAvatar.src = data.bot.avatar;
+            if (heroBotAvatar) heroBotAvatar.src = data.bot.avatar;
           }
-          if (data.bot.name) botNameDisplay.textContent = data.bot.name;
-          if (data.bot.tag) botTagDisplay.textContent = data.bot.tag;
+          if (data.bot.name && botNameDisplay) botNameDisplay.textContent = data.bot.name;
+          if (data.bot.tag && botTagDisplay) botTagDisplay.textContent = data.bot.tag;
           if (data.bot.inviteUrl) {
-            btnInvite.href = data.bot.inviteUrl;
-            btnHeroInvite.href = data.bot.inviteUrl;
+            if (btnInvite) btnInvite.href = data.bot.inviteUrl;
+            if (btnHeroInvite) btnHeroInvite.href = data.bot.inviteUrl;
           }
         }
 
         if (data.stats) {
-          statGuilds.textContent = data.stats.guildCount.toLocaleString();
-          statMembers.textContent = data.stats.totalMembers.toLocaleString();
-          statPing.textContent = `${data.stats.ping} ms`;
-          pingValue.textContent = `${data.stats.ping} ms`;
-          statUptime.textContent = data.stats.uptimeFormatted;
+          if (statGuilds) statGuilds.textContent = data.stats.guildCount.toLocaleString();
+          if (statMembers) statMembers.textContent = data.stats.totalMembers.toLocaleString();
+          if (statPing) statPing.textContent = `${data.stats.ping} ms`;
+          if (pingValue) pingValue.textContent = `${data.stats.ping} ms`;
+          if (statUptime) statUptime.textContent = data.stats.uptimeFormatted;
         }
 
         if (data.music) {
           const m = data.music;
           if (m.isPlaying) {
-            musicCover.src = m.thumbnail;
-            musicBadgeText.textContent = m.isPaused ? 'Paused' : 'Playing Now';
-            musicGuildName.textContent = m.guildName;
-            musicSongName.textContent = m.songName;
-            musicArtistName.textContent = `${m.artist} • ${m.queueCount || 1} เพลงในคิว`;
-            musicCurrentTime.textContent = m.currentTime;
-            musicDuration.textContent = m.duration;
-            musicProgressFill.style.width = `${m.progressPercent}%`;
+            currentPlayingGuildId = m.guildId;
+            if (musicCover && m.thumbnail) musicCover.src = m.thumbnail;
+            if (musicBadgeText) musicBadgeText.textContent = m.isPaused ? 'Paused' : 'Playing Now';
+            if (musicGuildName) musicGuildName.textContent = m.guildName;
+            if (musicSongName) musicSongName.textContent = m.songName;
+            if (musicArtistName) musicArtistName.textContent = `${m.artist} • ${m.queueCount || 1} เพลงในคิว`;
+            if (musicCurrentTime) musicCurrentTime.textContent = m.currentTime;
+            if (musicDuration) musicDuration.textContent = m.duration;
+            if (musicProgressFill) musicProgressFill.style.width = `${m.progressPercent}%`;
 
-            if (!m.isPaused) {
-              visualizer.classList.add('active');
-              musicPlayBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
-            } else {
-              visualizer.classList.remove('active');
-              musicPlayBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
+            if (musicRequesterBox) musicRequesterBox.style.display = 'inline-flex';
+            if (musicRequesterName) musicRequesterName.textContent = m.requesterName || '-';
+            if (musicRequesterAvatar && m.requesterAvatar) musicRequesterAvatar.src = m.requesterAvatar;
+
+            if (visualizer) {
+              if (!m.isPaused) visualizer.classList.add('active');
+              else visualizer.classList.remove('active');
+            }
+
+            if (musicPlayBtn) {
+              if (!m.isPaused) {
+                musicPlayBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+                musicPlayBtn.title = 'พักเพลงชั่วคราว';
+              } else {
+                musicPlayBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
+                musicPlayBtn.title = 'เล่นต่อ';
+              }
+            }
+
+            if (musicVolText && m.volume !== undefined) {
+              musicVolText.textContent = `${m.volume}%`;
             }
           } else {
-            musicBadgeText.textContent = 'Standby';
-            musicGuildName.textContent = 'Discord Lounge';
-            musicSongName.textContent = 'ยังไม่มีเพลงที่กำลังเล่น';
-            musicArtistName.textContent = 'Uryu Music System • 48kHz Stereo';
-            musicCurrentTime.textContent = '00:00';
-            musicDuration.textContent = '00:00';
-            musicProgressFill.style.width = '0%';
-            visualizer.classList.remove('active');
-            musicPlayBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
+            currentPlayingGuildId = null;
+            if (musicCover) musicCover.src = 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnZzaGhhNTRrNXkxbndxczI4cnpna2tzYnR4cTN6enhrNHpzNWg5ZCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/26AHG5KGFxSkUWw1i/giphy.gif';
+            if (musicBadgeText) musicBadgeText.textContent = 'Standby';
+            if (musicGuildName) musicGuildName.textContent = 'Discord Lounge';
+            if (musicSongName) musicSongName.textContent = 'ยังไม่มีเพลงที่กำลังเล่น';
+            if (musicArtistName) musicArtistName.textContent = 'Uryu Music System • 48kHz Stereo';
+            if (musicCurrentTime) musicCurrentTime.textContent = '00:00';
+            if (musicDuration) musicDuration.textContent = '00:00';
+            if (musicProgressFill) musicProgressFill.style.width = '0%';
+            if (visualizer) visualizer.classList.remove('active');
+            if (musicPlayBtn) {
+              musicPlayBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
+              musicPlayBtn.title = 'ยังไม่มีเพลงเล่น';
+            }
+            if (musicVolText) musicVolText.textContent = '100%';
+            if (musicRequesterBox) musicRequesterBox.style.display = 'none';
           }
         }
       }
@@ -243,12 +276,104 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // ปุ่มกดเล่น/พักเพลงบน Web Widget
+  if (musicPlayBtn) {
+    musicPlayBtn.addEventListener('click', async () => {
+      try {
+        const res = await fetch('/api/actions/music-toggle', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ guildId: currentPlayingGuildId || currentGuildId })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(data.message, 'success');
+          fetchLiveStats();
+        } else {
+          showToast(data.error || 'ไม่สามารถควบคุมเพลงได้', 'error');
+        }
+      } catch (err) {
+        showToast('เกิดข้อผิดพลาดในการเชื่อมต่อ', 'error');
+      }
+    });
+  }
+
+  // ปุ่มกดข้ามเพลง (Next Song)
+  if (musicNextBtn) {
+    musicNextBtn.addEventListener('click', async () => {
+      try {
+        const res = await fetch('/api/actions/music-skip', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ guildId: currentPlayingGuildId || currentGuildId })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(data.message, 'success');
+          fetchLiveStats();
+        } else {
+          showToast(data.error || 'ไม่สามารถข้ามเพลงได้', 'error');
+        }
+      } catch (err) {
+        showToast('เกิดข้อผิดพลาดในการเชื่อมต่อ', 'error');
+      }
+    });
+  }
+
+  // ปุ่มกดเล่นเพลงก่อนหน้า (Previous Song)
+  if (musicPrevBtn) {
+    musicPrevBtn.addEventListener('click', async () => {
+      try {
+        const res = await fetch('/api/actions/music-previous', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ guildId: currentPlayingGuildId || currentGuildId })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(data.message, 'success');
+          fetchLiveStats();
+        } else {
+          showToast(data.error || 'ไม่มีประวัติเพลงก่อนหน้า', 'error');
+        }
+      } catch (err) {
+        showToast('เกิดข้อผิดพลาดในการเชื่อมต่อ', 'error');
+      }
+    });
+  }
+
+  // ปุ่มกดหยุดเล่นเพลง (Stop Music)
+  if (musicStopBtn) {
+    musicStopBtn.addEventListener('click', async () => {
+      try {
+        const res = await fetch('/api/actions/music-stop', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ guildId: currentPlayingGuildId || currentGuildId })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(data.message, 'success');
+          fetchLiveStats();
+        } else {
+          showToast(data.error || 'ไม่สามารถหยุดเล่นเพลงได้', 'error');
+        }
+      } catch (err) {
+        showToast('เกิดข้อผิดพลาดในการเชื่อมต่อ', 'error');
+      }
+    });
+  }
+
   /**
-   * ดึงรายชื่อเซิร์ฟเวอร์ที่ User เป็นเจ้าของ (/api/guilds)
+   * ดึงรายชื่อเซิร์ฟเวอร์ที่ User เป็นเจ้าของหรือดูแล (/api/guilds)
    */
   async function fetchGuilds() {
     try {
-      const res = await fetch('/api/guilds');
+      const res = await fetch('/api/guilds', { credentials: 'include' });
       if (!res.ok) return;
       const data = await res.json();
 
@@ -263,7 +388,7 @@ document.addEventListener('DOMContentLoaded', () => {
         populateGuildOptions(allGuilds[0]);
         await loadGuildSettings(currentGuildId);
       } else {
-        guildSelector.innerHTML = '<option value="">ไม่พบเซิร์ฟเวอร์ที่คุณเป็นเจ้าของ</option>';
+        guildSelector.innerHTML = '<option value="">ไม่พบเซิร์ฟเวอร์ที่บอทประจำการอยู่</option>';
       }
     } catch (err) {
       console.error('ไม่สามารถโหลดข้อมูลเซิร์ฟเวอร์ได้:', err);
@@ -310,11 +435,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /**
-   * ดึงการตั้งค่าของเซิร์ฟเวอร์จาก SQLite (/api/settings/:guildId)
+   * ดึงการตั้งค่าของเซิร์ฟเวอร์จาก MySQL (/api/settings/:guildId)
    */
   async function loadGuildSettings(guildId) {
     try {
-      const res = await fetch(`/api/settings/${guildId}`);
+      const res = await fetch(`/api/settings/${guildId}`, { credentials: 'include' });
       if (!res.ok) return;
       const data = await res.json();
 
@@ -343,203 +468,221 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Event: เปลี่ยนเซิร์ฟเวอร์ที่เลือก
-  guildSelector.addEventListener('change', async (e) => {
-    currentGuildId = e.target.value;
-    const selectedGuild = allGuilds.find(g => g.id === currentGuildId);
-    if (selectedGuild) {
-      populateGuildOptions(selectedGuild);
-      await loadGuildSettings(currentGuildId);
-      showToast(`เปลี่ยนเซิร์ฟเวอร์เป็น: ${selectedGuild.name}`);
-    }
-  });
-
-  // Event: บันทึกการตั้งค่าลงฐานข้อมูล SQLite
-  btnSaveSettings.addEventListener('click', async () => {
-    if (!currentGuildId) {
-      showToast('กรุณาเลือกเซิร์ฟเวอร์ก่อน', 'error');
-      return;
-    }
-
-    btnSaveSettings.disabled = true;
-    btnSaveSettings.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> กำลังบันทึกลง SQLite...';
-
-    const payload = {
-      verifiedRoleId: cfgVerifiedRole.value,
-      leaderRoleId: cfgLeaderRole.value,
-      adminRoleId: cfgAdminRole.value,
-      moderatorRoleId: cfgModeratorRole.value,
-      verifyChannelId: cfgVerifyChannel.value,
-      welcomeChannelId: cfgWelcomeChannel.value,
-      goodbyeChannelId: cfgGoodbyeChannel.value,
-      logChannelId: cfgLogChannel.value,
-      musicChannelId: cfgMusicChannel.value,
-      ticketCategoryId: cfgTicketCategory.value,
-      enableWelcomeSystem: cfgEnableWelcome.checked,
-      enableLogSystem: cfgEnableLogs.checked
-    };
-
-    try {
-      const res = await fetch(`/api/settings/${currentGuildId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        showToast('บันทึกการตั้งค่าลงฐานข้อมูล SQLite เรียบร้อยแล้ว! ✅');
-        saveStatus.textContent = `บันทึกแล้วเมื่อ ${new Date().toLocaleTimeString()}`;
-      } else {
-        showToast(`เกิดข้อผิดพลาด: ${data.error}`, 'error');
+  if (guildSelector) {
+    guildSelector.addEventListener('change', async (e) => {
+      currentGuildId = e.target.value;
+      const selectedGuild = allGuilds.find(g => g.id === currentGuildId);
+      if (selectedGuild) {
+        populateGuildOptions(selectedGuild);
+        await loadGuildSettings(currentGuildId);
+        showToast(`เปลี่ยนเซิร์ฟเวอร์เป็น: ${selectedGuild.name}`);
       }
-    } catch (err) {
-      showToast('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error');
-    } finally {
-      btnSaveSettings.disabled = false;
-      btnSaveSettings.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> บันทึกการตั้งค่าลง SQLite';
-    }
-  });
+    });
+  }
+
+  // Event: บันทึกการตั้งค่าลงฐานข้อมูล MySQL
+  if (btnSaveSettings) {
+    btnSaveSettings.addEventListener('click', async () => {
+      if (!currentGuildId) {
+        showToast('กรุณาเลือกเซิร์ฟเวอร์ก่อน', 'error');
+        return;
+      }
+
+      btnSaveSettings.disabled = true;
+      btnSaveSettings.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> กำลังบันทึกลง MySQL...';
+
+      const payload = {
+        verifiedRoleId: cfgVerifiedRole ? cfgVerifiedRole.value : null,
+        leaderRoleId: cfgLeaderRole ? cfgLeaderRole.value : null,
+        adminRoleId: cfgAdminRole ? cfgAdminRole.value : null,
+        moderatorRoleId: cfgModeratorRole ? cfgModeratorRole.value : null,
+        verifyChannelId: cfgVerifyChannel ? cfgVerifyChannel.value : null,
+        welcomeChannelId: cfgWelcomeChannel ? cfgWelcomeChannel.value : null,
+        goodbyeChannelId: cfgGoodbyeChannel ? cfgGoodbyeChannel.value : null,
+        logChannelId: cfgLogChannel ? cfgLogChannel.value : null,
+        musicChannelId: cfgMusicChannel ? cfgMusicChannel.value : null,
+        ticketCategoryId: cfgTicketCategory ? cfgTicketCategory.value : null,
+        enableWelcomeSystem: cfgEnableWelcome ? cfgEnableWelcome.checked : false,
+        enableLogSystem: cfgEnableLogs ? cfgEnableLogs.checked : false
+      };
+
+      try {
+        const res = await fetch(`/api/settings/${currentGuildId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          showToast('บันทึกการตั้งค่าลงฐานข้อมูล MySQL เรียบร้อยแล้ว! ✅');
+          if (saveStatus) saveStatus.textContent = `บันทึกแล้วเมื่อ ${new Date().toLocaleTimeString()}`;
+        } else {
+          showToast(`เกิดข้อผิดพลาด: ${data.error}`, 'error');
+        }
+      } catch (err) {
+        showToast('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error');
+      } finally {
+        btnSaveSettings.disabled = false;
+        btnSaveSettings.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> บันทึกการตั้งค่าลง MySQL';
+      }
+    });
+  }
 
   // Remote Action: ส่งแผงยืนยันตัวตน
-  btnActionVerify.addEventListener('click', async () => {
-    const channelId = cfgVerifyChannel.value || cfgWelcomeChannel.value || cfgLogChannel.value;
-    if (!channelId) {
-      showToast('กรุณาเลือกช่องในส่วนการตั้งค่าก่อน', 'error');
-      return;
-    }
+  if (btnActionVerify) {
+    btnActionVerify.addEventListener('click', async () => {
+      const channelId = (cfgVerifyChannel && cfgVerifyChannel.value) || (cfgWelcomeChannel && cfgWelcomeChannel.value) || (cfgLogChannel && cfgLogChannel.value);
+      if (!channelId) {
+        showToast('กรุณาเลือกช่องในส่วนการตั้งค่าก่อน', 'error');
+        return;
+      }
 
-    try {
-      const res = await fetch('/api/actions/send-verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ guildId: currentGuildId, channelId })
-      });
-      const data = await res.json();
-      if (data.success) showToast(data.message);
-      else showToast(data.error, 'error');
-    } catch (err) {
-      showToast('เกิดข้อผิดพลาดในการส่ง', 'error');
-    }
-  });
+      try {
+        const res = await fetch('/api/actions/send-verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ guildId: currentGuildId, channelId })
+        });
+        const data = await res.json();
+        if (data.success) showToast(data.message);
+        else showToast(data.error, 'error');
+      } catch (err) {
+        showToast('เกิดข้อผิดพลาดในการส่ง', 'error');
+      }
+    });
+  }
 
   // Remote Action: ส่งแผงเปิดทิกเก็ต
-  btnActionTicket.addEventListener('click', async () => {
-    const channelId = cfgLogChannel.value || cfgWelcomeChannel.value;
-    if (!channelId) {
-      showToast('กรุณาเลือกช่องสำหรับส่งทิกเก็ตก่อน', 'error');
-      return;
-    }
+  if (btnActionTicket) {
+    btnActionTicket.addEventListener('click', async () => {
+      const channelId = (cfgLogChannel && cfgLogChannel.value) || (cfgWelcomeChannel && cfgWelcomeChannel.value);
+      if (!channelId) {
+        showToast('กรุณาเลือกช่องสำหรับส่งทิกเก็ตก่อน', 'error');
+        return;
+      }
 
-    try {
-      const res = await fetch('/api/actions/send-ticket', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ guildId: currentGuildId, channelId })
-      });
-      const data = await res.json();
-      if (data.success) showToast(data.message);
-      else showToast(data.error, 'error');
-    } catch (err) {
-      showToast('เกิดข้อผิดพลาดในการส่ง', 'error');
-    }
-  });
+      try {
+        const res = await fetch('/api/actions/send-ticket', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ guildId: currentGuildId, channelId })
+        });
+        const data = await res.json();
+        if (data.success) showToast(data.message);
+        else showToast(data.error, 'error');
+      } catch (err) {
+        showToast('เกิดข้อผิดพลาดในการส่ง', 'error');
+      }
+    });
+  }
 
   // Remote Action: ติดตั้งห้องขอเพลง
-  btnActionMusic.addEventListener('click', async () => {
-    const channelId = cfgMusicChannel.value;
-    if (!channelId) {
-      showToast('กรุณาเลือกช่องขอเพลงก่อน', 'error');
-      return;
-    }
+  if (btnActionMusic) {
+    btnActionMusic.addEventListener('click', async () => {
+      const channelId = cfgMusicChannel ? cfgMusicChannel.value : null;
+      if (!channelId) {
+        showToast('กรุณาเลือกช่องสำหรับห้องขอเพลงก่อน', 'error');
+        return;
+      }
 
-    try {
-      const res = await fetch('/api/actions/setup-music', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ guildId: currentGuildId, channelId })
-      });
-      const data = await res.json();
-      if (data.success) showToast(data.message);
-      else showToast(data.error, 'error');
-    } catch (err) {
-      showToast('เกิดข้อผิดพลาดในการติดตั้ง', 'error');
-    }
-  });
+      try {
+        const res = await fetch('/api/actions/setup-music', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ guildId: currentGuildId, channelId })
+        });
+        const data = await res.json();
+        if (data.success) showToast(data.message);
+        else showToast(data.error, 'error');
+      } catch (err) {
+        showToast('เกิดข้อผิดพลาดในการติดตั้ง', 'error');
+      }
+    });
+  }
 
   // Remote Action: ล็อกดาวน์ฉุกเฉิน
-  btnActionLockdown.addEventListener('click', async () => {
-    isLockdownActive = !isLockdownActive;
+  if (btnActionLockdown) {
+    btnActionLockdown.addEventListener('click', async () => {
+      isLockdownActive = !isLockdownActive;
 
-    try {
-      const res = await fetch('/api/actions/lockdown', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          guildId: currentGuildId,
-          channelId: 'all',
-          enable: isLockdownActive
-        })
-      });
-      const data = await res.json();
-      if (data.success) {
-        showToast(data.message, isLockdownActive ? 'error' : 'success');
-        btnActionLockdown.innerHTML = isLockdownActive 
-          ? '<i class="fa-solid fa-lock-open"></i> ปลดล็อกดาวน์'
-          : '<i class="fa-solid fa-triangle-exclamation"></i> สลับสถานะ Lockdown';
+      try {
+        const res = await fetch('/api/actions/lockdown', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            guildId: currentGuildId,
+            channelId: 'all',
+            enable: isLockdownActive
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(data.message, isLockdownActive ? 'error' : 'success');
+          btnActionLockdown.innerHTML = isLockdownActive 
+            ? '<i class="fa-solid fa-lock-open"></i> ปลดล็อกดาวน์'
+            : '<i class="fa-solid fa-triangle-exclamation"></i> สลับสถานะ Lockdown';
+        }
+      } catch (err) {
+        showToast('เกิดข้อผิดพลาดในการเปลี่ยนสถานะล็อกดาวน์', 'error');
       }
-    } catch (err) {
-      showToast('เกิดข้อผิดพลาดในการเปลี่ยนสถานะล็อกดาวน์', 'error');
-    }
-  });
+    });
+  }
 
   // Remote Action: ส่งประกาศข่าวสาร
-  btnSendAnnouncement.addEventListener('click', async () => {
-    const channelId = annChannel.value;
-    const title = annTitle.value.trim();
-    const description = annDesc.value.trim();
+  if (btnSendAnnouncement) {
+    btnSendAnnouncement.addEventListener('click', async () => {
+      const channelId = annChannel ? annChannel.value : null;
+      const title = annTitle ? annTitle.value.trim() : '';
+      const description = annDesc ? annDesc.value.trim() : '';
 
-    if (!channelId) {
-      showToast('กรุณาเลือกช่องสำหรับส่งประกาศ', 'error');
-      return;
-    }
-    if (!title || !description) {
-      showToast('กรุณากรอกหัวข้อและเนื้อหาประกาศ', 'error');
-      return;
-    }
-
-    btnSendAnnouncement.disabled = true;
-    btnSendAnnouncement.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> กำลังส่งประกาศ...';
-
-    try {
-      const res = await fetch('/api/actions/announce', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          guildId: currentGuildId,
-          channelId,
-          title,
-          description,
-          color: annColor.value,
-          image: annImage.value.trim()
-        })
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        showToast('ส่งประกาศเข้าเซิร์ฟเวอร์เรียบร้อยแล้ว! 📢');
-        annTitle.value = '';
-        annDesc.value = '';
-        annImage.value = '';
-      } else {
-        showToast(`เกิดข้อผิดพลาด: ${data.error}`, 'error');
+      if (!channelId) {
+        showToast('กรุณาเลือกช่องสำหรับส่งประกาศ', 'error');
+        return;
       }
-    } catch (err) {
-      showToast('ไม่สามารถส่งประกาศได้', 'error');
-    } finally {
-      btnSendAnnouncement.disabled = false;
-      btnSendAnnouncement.innerHTML = '<i class="fa-solid fa-paper-plane"></i> ส่งประกาศเข้าเซิร์ฟเวอร์ทันที';
-    }
-  });
+      if (!title || !description) {
+        showToast('กรุณากรอกหัวข้อและเนื้อหาประกาศ', 'error');
+        return;
+      }
+
+      btnSendAnnouncement.disabled = true;
+      btnSendAnnouncement.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> กำลังส่งประกาศ...';
+
+      try {
+        const res = await fetch('/api/actions/announce', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            guildId: currentGuildId,
+            channelId,
+            title,
+            description,
+            color: annColor ? annColor.value : '#00F0FF',
+            image: annImage ? annImage.value.trim() : ''
+          })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          showToast('ส่งประกาศเข้าเซิร์ฟเวอร์เรียบร้อยแล้ว! 📢');
+          if (annTitle) annTitle.value = '';
+          if (annDesc) annDesc.value = '';
+          if (annImage) annImage.value = '';
+        } else {
+          showToast(`เกิดข้อผิดพลาด: ${data.error}`, 'error');
+        }
+      } catch (err) {
+        showToast('ไม่สามารถส่งประกาศได้', 'error');
+      } finally {
+        btnSendAnnouncement.disabled = false;
+        btnSendAnnouncement.innerHTML = '<i class="fa-solid fa-paper-plane"></i> ส่งประกาศเข้าเซิร์ฟเวอร์ทันที';
+      }
+    });
+  }
 
   /**
    * ดึงรายชื่อคำสั่งทั้งหมดจาก API (/api/commands)
@@ -555,11 +698,13 @@ document.addEventListener('DOMContentLoaded', () => {
         renderCommands();
       }
     } catch (err) {
-      commandsContainer.innerHTML = `
-        <div class="loading-spinner" style="color: var(--accent-red);">
-          <i class="fa-solid fa-triangle-exclamation"></i> ไม่สามารถโหลดรายการคำสั่งได้
-        </div>
-      `;
+      if (commandsContainer) {
+        commandsContainer.innerHTML = `
+          <div class="loading-spinner" style="color: var(--accent-red);">
+            <i class="fa-solid fa-triangle-exclamation"></i> ไม่สามารถโหลดรายการคำสั่งได้
+          </div>
+        `;
+      }
     }
   }
 
@@ -567,7 +712,8 @@ document.addEventListener('DOMContentLoaded', () => {
    * แสดงผลการ์ดคำสั่งตามเงื่อนไขการค้นหาและหมวดหมู่
    */
   function renderCommands() {
-    const query = cmdSearchInput.value.toLowerCase().trim();
+    if (!commandsContainer) return;
+    const query = cmdSearchInput ? cmdSearchInput.value.toLowerCase().trim() : '';
 
     const filtered = allCommands.filter(cmd => {
       const matchCategory = (currentCategory === 'all' || cmd.category === currentCategory);
@@ -600,19 +746,23 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Event Listeners สำหรับตัวกรองหมวดหมู่
-  filterBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      filterBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      currentCategory = btn.getAttribute('data-category');
-      renderCommands();
+  if (filterBtns) {
+    filterBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentCategory = btn.getAttribute('data-category');
+        renderCommands();
+      });
     });
-  });
+  }
 
   // Event Listener สำหรับช่องค้นหาคำสั่ง
-  cmdSearchInput.addEventListener('input', () => {
-    renderCommands();
-  });
+  if (cmdSearchInput) {
+    cmdSearchInput.addEventListener('input', () => {
+      renderCommands();
+    });
+  }
 
   // เริ่มต้นทำงาน
   checkUrlErrors();
@@ -620,6 +770,6 @@ document.addEventListener('DOMContentLoaded', () => {
   fetchLiveStats();
   fetchCommands();
 
-  // Polling สถิติสดทุกๆ 4 วินาที
-  setInterval(fetchLiveStats, 4000);
+  // Polling สถิติสดและสถานะเพลงแบบ Realtime ทุกๆ 1.5 วินาที
+  setInterval(fetchLiveStats, 1500);
 });

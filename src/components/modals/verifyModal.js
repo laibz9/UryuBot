@@ -44,12 +44,14 @@ module.exports = {
       // 4. หาก CAPTCHA ถูกต้อง ดำเนินการตรวจสอบ Defensive Checks ก่อนแจกยศ
       const guild = interaction.guild;
       const member = interaction.member;
-      const verifiedRoleId = config.bot.verifiedRoleId;
+      const { getGuildSettings } = require('../../database/db');
+      const settings = getGuildSettings(guild.id);
+      const verifiedRoleId = settings.verifiedRoleId || config.bot.verifiedRoleId;
 
       // 4.1 ตรวจสอบการตั้งค่า VERIFIED_ROLE_ID
       if (!verifiedRoleId) {
-        logger.error('ยังไม่ได้ตั้งค่า VERIFIED_ROLE_ID ในไฟล์ .env');
-        const errEmbed = createErrorEmbed('ข้อผิดพลาดระบบ', config.messages.roleNotFound);
+        logger.error('ยังไม่ได้ตั้งค่า VERIFIED_ROLE_ID ใน MySQL หรือ .env');
+        const errEmbed = createErrorEmbed('ข้อผิดพลาดระบบ', 'ยังไม่ได้ตั้งค่ายศยืนยันตัวตนในระบบ (กรุณาตั้งค่าผ่าน Web Dashboard หรือ /setup-roles)');
         return await interaction.reply({ embeds: [errEmbed], flags: MessageFlags.Ephemeral });
       }
 

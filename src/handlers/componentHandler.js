@@ -25,6 +25,9 @@ function loadComponents(client) {
       const button = require(filePath);
       if (button && button.customId && typeof button.execute === 'function') {
         client.buttons.set(button.customId, button);
+        if (button.customId === 'btn_open_ticket') {
+          client.buttons.set('btn_ticket_open', button);
+        }
         logger.info(`โหลด Button Handler: customId [${button.customId}] สำเร็จ`);
       }
     }

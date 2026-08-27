@@ -18,7 +18,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="index.css">
+  <link rel="stylesheet" href="index.css?v=3.0">
 </head>
 <body>
 
@@ -90,7 +90,7 @@
         <div class="hero-trust">
           <div class="trust-item"><i class="fa-solid fa-shield-check"></i> Discord OAuth2 100% ปลอดภัย</div>
           <div class="trust-item"><i class="fa-solid fa-lock"></i> ล็อกสิทธิ์เฉพาะ Server Owner</div>
-          <div class="trust-item"><i class="fa-solid fa-database"></i> SQLite Realtime Sync</div>
+          <div class="trust-item"><i class="fa-solid fa-database"></i> MySQL Cloud Realtime Sync</div>
         </div>
       </div>
 
@@ -304,7 +304,7 @@
 
             <div class="save-box">
               <button id="btn-save-settings" class="btn btn-primary btn-lg btn-glow btn-block">
-                <i class="fa-solid fa-floppy-disk"></i> บันทึกการตั้งค่าลง SQLite
+                <i class="fa-solid fa-floppy-disk"></i> บันทึกการตั้งค่าลง MySQL
               </button>
               <span id="save-status" class="save-status-text"></span>
             </div>
@@ -416,6 +416,10 @@
               <span class="server-label" id="music-guild-name">Discord Lounge</span>
               <h3 id="music-song-name" class="song-title">ยังไม่มีเพลงที่กำลังเล่น</h3>
               <p id="music-artist-name" class="song-artist">Uryu Music System • 48kHz Stereo</p>
+              <div class="requester-badge" id="music-requester-box">
+                <img id="music-requester-avatar" src="https://cdn-icons-png.flaticon.com/512/1069/1069210.png" alt="Requester" class="requester-avatar">
+                <span>เปิดโดย: <strong id="music-requester-name">-</strong></span>
+              </div>
             </div>
             <div class="visualizer" id="visualizer">
               <span class="v-bar"></span>
@@ -438,13 +442,13 @@
             </div>
           </div>
 
-          <!-- Player Controls Mock -->
+          <!-- Player Controls -->
           <div class="player-mock-controls">
-            <div class="mock-btn"><i class="fa-solid fa-backward-step"></i></div>
-            <div class="mock-btn play-btn" id="music-play-btn"><i class="fa-solid fa-play"></i></div>
-            <div class="mock-btn"><i class="fa-solid fa-forward-step"></i></div>
-            <div class="mock-btn"><i class="fa-solid fa-repeat"></i></div>
-            <div class="mock-btn volume-box"><i class="fa-solid fa-volume-high"></i> <span>100%</span></div>
+            <div class="mock-btn" id="music-prev-btn" title="เล่นเพลงก่อนหน้า"><i class="fa-solid fa-backward-step"></i></div>
+            <div class="mock-btn play-btn" id="music-play-btn" title="เล่น/พักเพลง"><i class="fa-solid fa-play"></i></div>
+            <div class="mock-btn" id="music-next-btn" title="ข้ามเพลง"><i class="fa-solid fa-forward-step"></i></div>
+            <div class="mock-btn" id="music-stop-btn" title="หยุดเล่นเพลง"><i class="fa-solid fa-stop"></i></div>
+            <div class="mock-btn volume-box" id="music-vol-badge" title="ระดับเสียงปัจจุบัน"><i class="fa-solid fa-volume-high"></i> <span id="music-vol-text">100%</span></div>
           </div>
         </div>
       </div>
@@ -557,12 +561,12 @@
         </div>
       </div>
       <div class="footer-bottom">
-        <p>&copy; 2026 UryuBot Suite. Protected by Discord OAuth2 & SQLite Storage.</p>
+        <p>&copy; 2026 UryuBot Suite. Protected by Discord OAuth2 & MySQL Cloud Database.</p>
       </div>
     </div>
   </footer>
 
   <!-- Scripts -->
-  <script src="app.js"></script>
+  <script src="app.js?v=3.0"></script>
 </body>
 </html>

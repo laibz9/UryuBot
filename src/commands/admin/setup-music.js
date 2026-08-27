@@ -73,11 +73,12 @@ module.exports = {
         embeds: [standbyEmbed]
       });
 
-      // บันทึก Message ID และ Channel ID ใน Memory/Config
+      // บันทึก Message ID และ Channel ID ใน Memory และ MySQL
       panelMessages.set(guild.id, panelMessage.id);
-      config.bot.musicChannelId = targetChannel.id;
+      const { updateGuildSettings } = require('../../database/db');
+      await updateGuildSettings(guild.id, { musicChannelId: targetChannel.id });
 
-      logger.success(`ตั้งค่าห้องขอเพลง #${targetChannel.name} สำเร็จโดย ${interaction.user.tag}`);
+      logger.success(`ตั้งค่าห้องขอเพลง #${targetChannel.name} และบันทึกลง MySQL สำเร็จ`);
 
       await sendModActionLog(guild, {
         action: '🎵 ตั้งค่าห้องขอเพลง (Music Setup)',
