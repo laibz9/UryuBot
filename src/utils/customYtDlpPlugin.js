@@ -6,6 +6,18 @@
 const { ExtractorPlugin, Song, Playlist, DisTubeError } = require('distube');
 const { spawn } = require('child_process');
 
+function getBestAudioStreamUrl(info) {
+  if (!info) return null;
+  if (info.url && !info.url.includes('youtube.com/watch') && !info.url.includes('youtu.be/')) {
+    return info.url;
+  }
+  const formats = info.formats || [];
+  const audioFormat = formats
+    .filter(f => f.acodec !== 'none' && f.url)
+    .sort((a, b) => (b.abr || 0) - (a.abr || 0))[0];
+  return audioFormat ? audioFormat.url : (info.url || null);
+}
+
 function runYtDlp(target) {
   return new Promise((resolve, reject) => {
     const isWindows = process.platform === 'win32';
@@ -15,8 +27,6 @@ function runYtDlp(target) {
       '--dump-single-json',
       '--no-warnings',
       '--skip-download',
-      '--prefer-free-formats',
-      '--format', 'ba/ba*',
       target
     ];
 
@@ -71,7 +81,7 @@ class CustomYtDlpPlugin extends ExtractorPlugin {
 
       if (entries.length === 1) {
         const s = new Song(this.mapSongInfo(entries[0]), options);
-        s.streamURL = entries[0].url;
+        s.streamURL = getBestAudioStreamUrl(entries[0]);
         return s;
       }
 
@@ -80,7 +90,7 @@ class CustomYtDlpPlugin extends ExtractorPlugin {
           source: info.extractor || 'youtube',
           songs: entries.map(item => {
             const s = new Song(this.mapSongInfo(item), options);
-            s.streamURL = item.url;
+            s.streamURL = getBestAudioStreamUrl(item);
             return s;
           }),
           id: info.id ? info.id.toString() : 'playlist',
@@ -93,7 +103,7 @@ class CustomYtDlpPlugin extends ExtractorPlugin {
     }
 
     const song = new Song(this.mapSongInfo(info), options);
-    song.streamURL = info.url;
+    song.streamURL = getBestAudioStreamUrl(info);
     return song;
   }
 
@@ -103,21 +113,25 @@ class CustomYtDlpPlugin extends ExtractorPlugin {
     if (!item || (!item.title && !item.fulltitle)) return null;
 
     const song = new Song(this.mapSongInfo(item), options);
-    song.streamURL = item.url;
+    song.streamURL = getBestAudioStreamUrl(item);
     return song;
   }
 
   async search(query, options = {}) {
     const data = await runYtDlp('ytsearch10:' + query);
     const entries = (data.entries || []).filter(Boolean);
-    return entries.map(item => new Song(this.mapSongInfo(item), options));
+    return entries.map(item => {
+      const s = new Song(this.mapSongInfo(item), options);
+      s.streamURL = getBestAudioStreamUrl(item);
+      return s;
+    });
   }
 
   async getStreamURL(song) {
     if (song.streamURL) return song.streamURL;
     if (!song.url) throw new DisTubeError('YTDLP_INVALID_SONG', 'Song URL is missing');
     const info = await runYtDlp(song.url);
-    const streamUrl = info.url || (info.entries && info.entries[0] && info.entries[0].url);
+    const streamUrl = getBestAudioStreamUrl(info);
     if (!streamUrl) throw new DisTubeError('YTDLP_NO_STREAM_URL', 'Failed to retrieve audio stream URL');
     song.streamURL = streamUrl;
     return streamUrl;
@@ -130,7 +144,7 @@ class CustomYtDlpPlugin extends ExtractorPlugin {
       playFromSource: true,
       id: info.id,
       name: info.title || info.fulltitle || 'Unknown Song',
-      url: info.webpage_url || info.original_url || `https://youtu.be/${info.id}`,
+      url: info.webpage_url || info.original_url || info.url || `https://youtu.be/${info.id}`,
       isLive: Boolean(info.is_live),
       thumbnail: info.thumbnail || info.thumbnails?.[0]?.url,
       duration: info.is_live ? 0 : (info.duration || 0),
