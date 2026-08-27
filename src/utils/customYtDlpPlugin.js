@@ -1,20 +1,15 @@
 /**
  * @file src/utils/customYtDlpPlugin.js
- * @description Custom Resilient DisTube Plugin using yt-dlp to bypass YouTube format and warning blocks
+ * @description Custom Resilient DisTube Extractor Plugin using yt-dlp to bypass YouTube format and warning blocks
  */
 
-const { PlayableExtractorPlugin, Song, Playlist, DisTubeError } = require('distube');
+const { ExtractorPlugin, Song, Playlist, DisTubeError } = require('distube');
 const { spawn } = require('child_process');
 
-function runYtDlpExtract(queryOrUrl) {
+function runYtDlp(target) {
   return new Promise((resolve, reject) => {
     const isWindows = process.platform === 'win32';
     const command = isWindows ? 'yt-dlp' : (require('fs').existsSync('/usr/local/bin/yt-dlp') ? '/usr/local/bin/yt-dlp' : 'yt-dlp');
-
-    let target = queryOrUrl;
-    if (!target.startsWith('http://') && !target.startsWith('https://') && !target.startsWith('ytsearch')) {
-      target = `ytsearch1:${queryOrUrl}`;
-    }
 
     const args = [
       '--dump-single-json',
@@ -59,23 +54,22 @@ function runYtDlpExtract(queryOrUrl) {
   });
 }
 
-class CustomYtDlpPlugin extends PlayableExtractorPlugin {
+class CustomYtDlpPlugin extends ExtractorPlugin {
   validate(url) {
     if (typeof url !== 'string') return false;
-    return true;
+    return url.startsWith('http://') || url.startsWith('https://');
   }
 
   async resolve(url, options = {}) {
-    const info = await runYtDlpExtract(url);
+    const info = await runYtDlp(url);
 
     if (info._type === 'playlist' || Array.isArray(info.entries)) {
       const entries = (info.entries || []).filter(Boolean);
       if (entries.length === 0) {
-        throw new DisTubeError('YTDLP_EMPTY_PLAYLIST', 'ไม่พบเพลงที่ค้นหา');
+        throw new DisTubeError('YTDLP_EMPTY_PLAYLIST', 'ไม่พบเพลงในเพลย์ลิสต์');
       }
 
-      // If search result or single track
-      if (entries.length === 1 || url.startsWith('ytsearch') || !url.startsWith('http')) {
+      if (entries.length === 1) {
         const s = new Song(this.mapSongInfo(entries[0]), options);
         s.streamURL = entries[0].url;
         return s;
@@ -103,10 +97,26 @@ class CustomYtDlpPlugin extends PlayableExtractorPlugin {
     return song;
   }
 
+  async searchSong(query, options = {}) {
+    const data = await runYtDlp('ytsearch1:' + query);
+    const item = (data.entries && data.entries[0]) ? data.entries[0] : data;
+    if (!item || (!item.title && !item.fulltitle)) return null;
+
+    const song = new Song(this.mapSongInfo(item), options);
+    song.streamURL = item.url;
+    return song;
+  }
+
+  async search(query, options = {}) {
+    const data = await runYtDlp('ytsearch10:' + query);
+    const entries = (data.entries || []).filter(Boolean);
+    return entries.map(item => new Song(this.mapSongInfo(item), options));
+  }
+
   async getStreamURL(song) {
     if (song.streamURL) return song.streamURL;
     if (!song.url) throw new DisTubeError('YTDLP_INVALID_SONG', 'Song URL is missing');
-    const info = await runYtDlpExtract(song.url);
+    const info = await runYtDlp(song.url);
     const streamUrl = info.url || (info.entries && info.entries[0] && info.entries[0].url);
     if (!streamUrl) throw new DisTubeError('YTDLP_NO_STREAM_URL', 'Failed to retrieve audio stream URL');
     song.streamURL = streamUrl;
