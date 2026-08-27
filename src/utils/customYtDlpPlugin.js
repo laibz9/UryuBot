@@ -81,7 +81,9 @@ class CustomYtDlpPlugin extends ExtractorPlugin {
 
       if (entries.length === 1) {
         const s = new Song(this.mapSongInfo(entries[0]), options);
-        s.streamURL = getBestAudioStreamUrl(entries[0]);
+        const streamUrl = getBestAudioStreamUrl(entries[0]);
+        s.streamURL = streamUrl;
+        if (s.stream) s.stream.url = streamUrl;
         return s;
       }
 
@@ -90,7 +92,9 @@ class CustomYtDlpPlugin extends ExtractorPlugin {
           source: info.extractor || 'youtube',
           songs: entries.map(item => {
             const s = new Song(this.mapSongInfo(item), options);
-            s.streamURL = getBestAudioStreamUrl(item);
+            const streamUrl = getBestAudioStreamUrl(item);
+            s.streamURL = streamUrl;
+            if (s.stream) s.stream.url = streamUrl;
             return s;
           }),
           id: info.id ? info.id.toString() : 'playlist',
@@ -103,7 +107,9 @@ class CustomYtDlpPlugin extends ExtractorPlugin {
     }
 
     const song = new Song(this.mapSongInfo(info), options);
-    song.streamURL = getBestAudioStreamUrl(info);
+    const streamUrl = getBestAudioStreamUrl(info);
+    song.streamURL = streamUrl;
+    if (song.stream) song.stream.url = streamUrl;
     return song;
   }
 
@@ -113,7 +119,9 @@ class CustomYtDlpPlugin extends ExtractorPlugin {
     if (!item || (!item.title && !item.fulltitle)) return null;
 
     const song = new Song(this.mapSongInfo(item), options);
-    song.streamURL = getBestAudioStreamUrl(item);
+    const streamUrl = getBestAudioStreamUrl(item);
+    song.streamURL = streamUrl;
+    if (song.stream) song.stream.url = streamUrl;
     return song;
   }
 
@@ -122,18 +130,22 @@ class CustomYtDlpPlugin extends ExtractorPlugin {
     const entries = (data.entries || []).filter(Boolean);
     return entries.map(item => {
       const s = new Song(this.mapSongInfo(item), options);
-      s.streamURL = getBestAudioStreamUrl(item);
+      const streamUrl = getBestAudioStreamUrl(item);
+      s.streamURL = streamUrl;
+      if (s.stream) s.stream.url = streamUrl;
       return s;
     });
   }
 
   async getStreamURL(song) {
+    if (song.stream?.url) return song.stream.url;
     if (song.streamURL) return song.streamURL;
     if (!song.url) throw new DisTubeError('YTDLP_INVALID_SONG', 'Song URL is missing');
     const info = await runYtDlp(song.url);
     const streamUrl = getBestAudioStreamUrl(info);
     if (!streamUrl) throw new DisTubeError('YTDLP_NO_STREAM_URL', 'Failed to retrieve audio stream URL');
     song.streamURL = streamUrl;
+    if (song.stream) song.stream.url = streamUrl;
     return streamUrl;
   }
 

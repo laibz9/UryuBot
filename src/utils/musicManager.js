@@ -241,7 +241,7 @@ function initDisTube(client) {
     emitAddSongWhenCreatingQueue: false,
     emitAddListWhenCreatingQueue: false,
     ffmpeg: {
-      path: require('ffmpeg-static')
+      path: process.platform === 'win32' ? require('ffmpeg-static') : (require('fs').existsSync('/usr/bin/ffmpeg') ? '/usr/bin/ffmpeg' : require('ffmpeg-static'))
     },
     plugins: [
       new SpotifyPlugin(),
