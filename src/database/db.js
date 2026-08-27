@@ -110,6 +110,7 @@ async function initDatabase() {
         enable_moderation_commands TINYINT(1) DEFAULT 1,
         ticket_channel_id VARCHAR(32) DEFAULT NULL,
         ticket_category_id VARCHAR(32) DEFAULT NULL,
+        ticket_counter INT DEFAULT 0,
         music_channel_id VARCHAR(32) DEFAULT NULL,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -124,6 +125,9 @@ async function initDatabase() {
     } catch {}
     try {
       await pool.query(`ALTER TABLE guild_settings ADD COLUMN ticket_channel_id VARCHAR(32) DEFAULT NULL`);
+    } catch {}
+    try {
+      await pool.query(`ALTER TABLE guild_settings ADD COLUMN ticket_counter INT DEFAULT 0`);
     } catch {}
 
     // 4. โหลดข้อมูลทั้งหมดขึ้น In-Memory Cache
@@ -311,7 +315,39 @@ async function updateGuildSettings(guildId, newSettings) {
   return updated;
 }
 
+/**
+ * เพิ่มและดึงลำดับหมายเลข Ticket ของเซิร์ฟเวอร์แบบ Atomic
+ * @param {string} guildId 
+ * @returns {Promise<number>} หมายเลข Ticket ถัดไป (1, 2, 3, ...)
+ */
+async function getNextTicketNumber(guildId) {
+  if (!guildId) return 1;
+
+  if (isConnected && pool) {
+    try {
+      await pool.query(
+        'INSERT INTO guild_settings (guild_id, ticket_counter) VALUES (?, 1) ON DUPLICATE KEY UPDATE ticket_counter = ticket_counter + 1',
+        [guildId]
+      );
+      const [rows] = await pool.query('SELECT ticket_counter FROM guild_settings WHERE guild_id = ?', [guildId]);
+      if (rows && rows.length > 0 && rows[0].ticket_counter) {
+        return Number(rows[0].ticket_counter);
+      }
+    } catch (err) {
+      logger.error(`[MySQL Ticket Counter Error]: ${err.message}`);
+    }
+  }
+
+  // Fallback: In-memory counter
+  if (!global._ticketCounters) global._ticketCounters = new Map();
+  const current = global._ticketCounters.get(guildId) || 0;
+  const next = current + 1;
+  global._ticketCounters.set(guildId, next);
+  return next;
+}
+
 module.exports = {
+  getNextTicketNumber,
   fetchGuildSettingsFresh,
   initDatabase,
   getGuildSettings,

@@ -13,7 +13,7 @@ const {
   MessageFlags
 } = require('discord.js');
 const { createErrorEmbed } = require('../../utils/embeds');
-const { getGuildSettings } = require('../../database/db');
+const { getGuildSettings, getNextTicketNumber } = require('../../database/db');
 const config = require('../../config/config');
 const logger = require('../../utils/logger');
 
@@ -109,27 +109,31 @@ module.exports = {
         }
       }
 
-      // 3. กำหนดชื่อห้อง (Clean name)
-      const cleanUsername = user.username.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 15) || user.id.slice(-4);
-      const channelName = `ticket-${cleanUsername}`;
+      // 3. หาเลขลำดับ Ticket ถัดไป (เช่น 1, 2, 3, ...)
+      const ticketNum = typeof getNextTicketNumber === 'function' ? await getNextTicketNumber(guild.id) : 1;
 
-      // 4. ตรวจสอบ Category ถ้ามี
+      // 4. กำหนดชื่อห้องรูปแบบ ticket-<username>-<ticketNumber> (เช่น ticket-laibz9-1, ticket-ggerg-2)
+      const cleanUsername = user.username.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 15) || 'user';
+      const channelName = `ticket-${cleanUsername}-${ticketNum}`;
+
+      // 5. ตรวจสอบ Category จากการตั้งค่า Ticket Category
       let parentCategoryId = null;
       if (settings.ticketCategoryId) {
-        const categoryChannel = guild.channels.cache.get(settings.ticketCategoryId);
+        const categoryChannel = guild.channels.cache.get(settings.ticketCategoryId) || 
+                                await guild.channels.fetch(settings.ticketCategoryId).catch(() => null);
         if (categoryChannel && categoryChannel.type === ChannelType.GuildCategory) {
           parentCategoryId = categoryChannel.id;
         }
       }
 
-      // 5. สร้างห้องทิกเก็ต
+      // 6. สร้างห้องทิกเก็ตใน Category
       const ticketChannel = await guild.channels.create({
         name: channelName,
         type: ChannelType.GuildText,
         parent: parentCategoryId,
-        topic: `Ticket Opener: ${user.id} | Created by ${user.tag}`,
+        topic: `Ticket Opener: ${user.id} | Ticket #${ticketNum} | Created by ${user.tag}`,
         permissionOverwrites: permissionOverwrites,
-        reason: `เปิด Ticket โดย ${user.tag}`
+        reason: `เปิด Ticket #${ticketNum} โดย ${user.tag}`
       });
 
       // 6. ส่งข้อความต้อนรับในห้องทิกเก็ต
