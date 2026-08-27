@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node src/index.js",
     "deploy": "node deploy-commands.js",
+    "sync": "node scripts/sync_to_vps.js",
     "pm2:start": "pm2 start ecosystem.config.js",
     "pm2:stop": "pm2 stop ecosystem.config.js",
     "pm2:restart": "pm2 restart ecosystem.config.js",
@@ -39,6 +40,7 @@
     "libsodium-wrappers": "^0.8.4",
     "mysql2": "^3.24.2",
     "opusscript": "^0.0.8",
-    "play-dl": "^1.9.7"
+    "play-dl": "^1.9.7",
+    "ssh2": "^1.17.0"
   }
 }
