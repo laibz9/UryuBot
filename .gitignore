@@ -11,14 +11,6 @@ package-lock.json.bak
 .env.*
 !.env.example
 
-# SQLite Database & Data Storage
-data/*.sqlite
-data/*.sqlite-wal
-data/*.sqlite-shm
-data/*.sqlite-journal
-data/*.db
-data/*.db-journal
-
 # Temporary Transcripts & Cache
 transcripts/*.html
 temp/

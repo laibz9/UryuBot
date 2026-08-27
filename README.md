@@ -1,111 +1,169 @@
-# 🤖 UryuBot • Discord Multi-Purpose Suite
+# 🤖 UryuBot • Discord Multi-Purpose Suite & Web Dashboard
 
-โปรเจกต์ Discord Bot อเนกประสงค์ระดับ Production สร้างด้วยภาษา JavaScript (Node.js) บนสถาปัตยกรรม **Discord.js v14** พร้อมระบบความปลอดภัย, การจัดการคอมมูนิตี้, ระบบทิกเก็ตพร้อม HTML Transcript, ระบบดนตรีคุณภาพสูง 2-in-1, ระบบโพลสด และระบบล็อกดาวน์เซิร์ฟเวอร์ฉุกเฉิน
+โปรเจกต์ Discord Bot อเนกประสงค์ระดับ Production สร้างด้วย **Node.js (Discord.js v14)** เชื่อมต่อฐานข้อมูล **MySQL (`mysql2`)** พร้อมหน้าเว็บ **Web Setup Dashboard & Remote Actions** ปลอดภัยสูงสุดด้วยระบบ **Discord OAuth2 Login (Server Owner Only)**
 
 ---
 
-## 🌟 ฟีเจอร์หลักทั้งหมด (Key Features)
+## 🌟 ฟีเจอร์หลักทั้งหมด (Key Modules)
 
-### 1. 🔐 ระบบยืนยันตัวตน (Dynamic CAPTCHA Verification)
-- **CAPTCHA Modal**: สุ่มรหัสตัวอักษรและตัวเลข 6 หลักแบบไดนามิก ป้องกันบอทและผู้ไม่หวังดี
-- **Role Hierarchy & Defensive Checks**: ตรวจสอบลำดับยศและสิทธิ์ของบอทอย่างปลอดภัย
-- **คำสั่ง**: `/send-verify`
+### 1. 🌐 แผงตั้งค่าผ่านเว็บ & สั่งการบอทสด (Web Setup Dashboard)
+- **🏰 เลือกลำดับเซิร์ฟเวอร์**: สลับเซิร์ฟเวอร์ที่บอทอยู่ได้แบบไดนามิก
+- **🎛️ จัดการยศ (Roles Management)**: กำหนดยศ `Verified`, `Leader`, `Admin`, และ `Moderator`
+- **📺 จัดการช่องระบบ (Channels Management)**: กำหนด `ช่องยืนยันตัวตน (Verify)`, `ช่องต้อนรับ (Welcome)`, `ช่องบอกลา (Goodbye)`, `ช่องบันทึกความปลอดภัย (Logs)`, `ช่องขอเพลง (Music)`, และ `หมวดหมู่ทิกเก็ต (Ticket Category)`
+- **🔘 สวิตช์ฟังก์ชัน (Feature Toggles)**: เปิด/ปิดระบบต้อนรับ และระบบ Audit Logs
+- **⚡ ศูนย์สั่งการด่วน (Remote Action Center)**:
+  - 🔐 ส่งแผงยืนยันตัวตน CAPTCHA
+  - 🎫 ส่งแผงเปิดทิกเก็ตช่วยเหลือ
+  - 🎵 รีเซ็ตและติดตั้งห้องขอเพลง
+  - 🚨 สวิตช์ล็อกดาวน์เซิร์ฟเวอร์ฉุกเฉิน (Lockdown Toggle)
+- **📢 ส่งประกาศข่าวสารสด (Live Embed Announcer)**: พิมพ์หัวข้อ เนื้อหา เลือกสีแถบ และแปะรูปภาพ ยิงเข้า Discord ทันที
 
-### 2. 👑 ระบบจัดการยศและบทบาททีมงาน (Role Management System)
-- ตั้งค่ายศ **👑 Leader**, **🛡️ Admin**, **⚔️ Moderator**, และ **✅ Verified Member**
-- **คำสั่ง**: `/setup-roles`
+---
 
-### 3. 👋 ระบบต้อนรับและบอกลาสมาชิก (Welcome & Goodbye System)
-- แจ้งเตือนเมื่อมีสมาชิกใหม่เข้าเซิร์ฟเวอร์ และสมาชิกออกจากเซิร์ฟเวอร์
-- ดึงข้อมูลสมาชิก รูปโปรไฟล์, จำนวนสมาชิกปัจจุบัน และวันสมัครบัญชี
-- **คำสั่ง**: `/setup-welcome`
+### 2. 🔑 ระบบความปลอดภัย Discord OAuth2 (Server Owner Guard)
+- **Authorize App Login**: เข้าสู่ระบบผ่าน Discord OAuth2 ปลอดภัย 100%
+- **👑 Server Owner Protection**: ตรวจสอบ `guild.ownerId === user.id` เฉพาะเจ้าของเซิร์ฟเวอร์เท่านั้นที่สามารถเข้าถึงแผงตั้งค่าและสั่งการบอทได้
+- **🛡️ Protected REST APIs**: บล็อกการแก้ไขข้อมูลและคำสั่งควบคุมบอทจากผู้ไม่มีสิทธิ์ (`403 Forbidden`)
 
-### 4. 🛡️ ระบบบันทึกประวัติความปลอดภัย (Audit Logger & Mod Tracker)
-- บันทึกประวัติการลบข้อความ (Message Delete) พร้อมระบุตัวผู้ลบ
-- บันทึกประวัติการแก้ไขข้อความ (Message Edit)
-- บันทึกการลงโทษของแอดมิน (Kick, Ban, Timeout, Clear)
-- **ระบบคัดกรองอัจฉริยะ**: ไม่บันทึกการกระทำของบอทด้วยกันเอง และข้ามห้องขอเพลงเพื่อความสะอาดตา
-- **คำสั่ง**: `/setup-logs`
+---
 
-### 5. 🚨 ระบบล็อกดาวน์เซิร์ฟเวอร์ฉุกเฉิน (Server Lockdown / Panic Mode)
-- **Lockdown ON**: ปิดสิทธิ์การพิมพ์ของสมาชิก (`@everyone` และ Verified Role) ทันที เมื่อมีเหตุด่วน
-- **Lockdown OFF**: ปลดล็อกดาวน์คืนสิทธิ์การส่งข้อความกลับสู่สภาวะปกติในคลิกเดียว
-- เลือกขอบเขตได้ทั้ง **เฉพาะช่องปัจจุบัน** หรือ **ทั้งเซิร์ฟเวอร์ทุกช่อง**
-- **คำสั่ง**: `/lockdown`
+### 3. 🐬 ฐานข้อมูล MySQL (`mysql2/promise`) + In-Memory Cache
+- **Auto Creation**: สร้าง Database `uryubot_db` และตาราง `guild_settings` อัตโนมัติเมื่อเริ่มระบบ
+- **⚡ 0ms Latency Cache**: โหลดข้อมูลขึ้น Memory Cache ตอนสตาร์ทบอท ทำให้ทุก Event และคำสั่งตอบสนองได้ทันที
+- **🛡️ Fail-Safe 100%**: หากไม่ได้เปิด MySQL บอทจะสลับไปใช้โหมด In-Memory + `.env` ชั่วคราว ป้องกันบอทแครช
 
-### 6. 🎫 ระบบทิกเก็ตแจ้งปัญหาพร้อม HTML Transcript (Ticket Support)
-- สมาชิกกดปุ่มเปิดห้องทิกเก็ตส่วนตัว `#ticket-<username>`
-- มีระบบสิทธิ์ความปลอดภัย: เฉพาะผู้เปิดและทีมงานเท่านั้นที่มองเห็น
-- **HTML Transcript**: เมื่อปิดทิกเก็ต บอทจะสร้างไฟล์บทสนทนา `.html` สไตล์ **Discord Dark Theme** พร้อมรูป Avatar และเวลาส่ง ส่งตรงเข้า DM ผู้ใช้และช่อง `#logs`
-- **คำสั่ง**: `/send-ticket`
+---
 
-### 7. 📊 ระบบโพลสดและประกาศข่าวสาร (Live Polls & Announcements)
-- **/poll**: สร้างโพลสำรวจความคิดเห็น 2-5 ตัวเลือก พร้อม **Progress Bar แบบสดๆ `[████████░░] 80%`** (มี Cooldown 60s สร้างโพล และ 10s ต่อการกดโหวต)
-- **/announce**: ส่งประกาศทางการพร้อมแถบสี, รูปแบนเนอร์, แท็ก `@everyone` หรือ `@here`
-
-### 8. 🎵 ระบบเครื่องเล่นเพลง 2-in-1 (DisTube High-Quality Music Suite)
-- **Dedicated Request Channel (`#ขอเพลง-music`)**: พิมพ์ชื่อเพลงหรือแปะลิงก์ในห้อง บอทจะลบข้อความอัตโนมัติและเล่นเพลงทันที
-- **Single Persistent Panel**: แผงควบคุมเพลงจะแก้ไขข้อความเดิม (In-Place Edit) ไม่ส่งข้อความใหม่ซ้ำซ้อน
-- **Interactive Button Controls**:
+### 4. 🎵 ระบบเครื่องเล่นเพลงคุณภาพสูง (DisTube 48kHz Stereo)
+- **Dedicated Music Channel (`#ขอเพลง-music`)**: พิมพ์ชื่อเพลงหรือลิงก์ บอทจะลบข้อความและเริ่มเล่นเพลงทันที
+- **Persistent In-Place Panel**: แผงควบคุมเพลง Standby แก้ไขข้อความเดิมในห้อง ไม่ส่งซ้ำซ้อน
+- **Interactive Buttons**:
   - `⏮️ ก่อนหน้า`, `⏯️ พัก/เล่นต่อ`, `⏭️ ข้าม`, `⏹️ หยุด`
   - `🔉 -10%` / `🔊 +10%` ปุ่มปรับระดับเสียงแบบสดๆ
   - `🔁 วนซ้ำ` (ปิด / วนเพลง / วนทั้งคิว) และ `📜 ดูคิวเพลง`
 - **รองรับแหล่งเพลง**: YouTube, Spotify, SoundCloud, และ Direct Audio Links
-- **Slash Commands**: `/play`, `/skip`, `/pause`, `/resume`, `/stop`, `/queue`, `/volume`, `/loop`, `/setup-music`
-
-### 9. 🔨 ระบบจัดการความสงบเรียบร้อย (Moderation Suite)
-- **/ban & /unban**: แบนและปลดแบนสมาชิก พร้อมระบุเหตุผลและลบข้อความย้อนหลัง
-- **/kick**: เตะสมาชิกออกจากเซิร์ฟเวอร์
-- **/timeout & /untimeout**: ปิดการส่งข้อความชั่วคราว (1 นาที - 28 วัน)
-- **/clear**: ลบข้อความจำนวนมากแบบ Bulk Delete (1 - 100 ข้อความ) พร้อมกรองเฉพาะข้อความบอทหรือเฉพาะบุคคล
-- **/serverinfo & /userinfo**: เช็คข้อมูลเชิงลึกของเซิร์ฟเวอร์และสมาชิก
-
-### 10. 🎉 ระบบความบันเทิงและมินิเกม (Fun Suite)
-- **/8ball**: ลูกแก้วพยากรณ์คำตอบ
-- **/coinflip**: เสี่ยงทายหัว-ก้อย
-- **/dice**: ทอยลูกเต๋า
-- **/fortune**: เซียมซีทำนายดวงชะตา
-- **/hug**: ส่งการ์ดกอดเพื่อน
-- **/joke**: สุ่มมุกตลกกวนๆ
-- **/ping**: เช็คค่าความหน่วง Latency ของบอทและ WebSocket พร้อมสถานะ Streaming
 
 ---
 
-## 📋 ตารางคำสั่งทั้งหมด 32 Slash Commands
+### 5. 🔐 ระบบยืนยันตัวตน CAPTCHA Modal
+- สุ่มรหัสตัวอักษรและตัวเลข 6 หลักแบบไดนามิก ป้องกันบอทและไอดีป่วน
+- แจกยศ Verified อัตโนมัติเมื่อกรอกรหัสถูกต้อง
+- คำสั่ง: `/send-verify`
+
+---
+
+### 6. 🎫 ระบบทิกเก็ตแจ้งปัญหาพร้อม HTML Transcript
+- สมาชิกกดปุ่มเปิดห้องทิกเก็ตส่วนตัว `#ticket-<username>`
+- **HTML Transcript**: เมื่อปิดทิกเก็ต บอทจะสร้างไฟล์บทสนทนา `.html` สไตล์ Discord Dark Theme พร้อมรูป Avatar และเวลาส่ง ส่งตรงเข้า DM ผู้ใช้และช่องบันทึก Logs
+- คำสั่ง: `/send-ticket`
+
+---
+
+### 7. 🚨 ล็อกดาวน์เซิร์ฟเวอร์ฉุกเฉิน (Emergency Lockdown)
+- **Lockdown ON**: ปิดสิทธิ์การพิมพ์ของสมาชิกทั้งเซิร์ฟเวอร์หรือเฉพาะห้องได้ทันทีเมื่อเกิดเหตุ
+- **Lockdown OFF**: ปลดล็อกดาวน์คืนสิทธิ์การส่งข้อความกลับสู่สภาวะปกติในคลิกเดียว
+- คำสั่ง: `/lockdown on/off`
+
+---
+
+### 8. 📊 โพลสำรวจความคิดเห็นสด & มินิเกมบันเทิง
+- **/poll**: สร้างโพลสำรวจความคิดเห็น 2-5 ตัวเลือก พร้อม **Progress Bar สด `[████████░░] 80%`**
+- **/fortune**: เขย่าเซียมซีทำนายดวงประจำวัน พร้อมเลขเด็ดและสีมงคล
+- **/hug**: ส่งอ้อมกอดอุ่นๆ มอบกำลังใจให้เพื่อนพร้อมภาพ GIF น่ารัก
+- **/joke**, **/8ball**, **/coinflip**, **/dice**
+
+---
+
+## 📜 สารบัญคำสั่งทั้งหมด (Slash Commands Directory - 33 คำสั่ง)
 
 | หมวดหมู่ | คำสั่ง | คำอธิบาย | สิทธิ์ขั้นต่ำ |
 | :--- | :--- | :--- | :--- |
-| **Admin** | `/setup-roles` | ตั้งค่ายศ Leader, Admin, Mod และ Member | Server Owner / Leader |
-| **Admin** | `/setup-welcome` | ตั้งค่าช่องต้อนรับและบอกลาสมาชิก | Server Owner / Leader |
-| **Admin** | `/setup-logs` | ตั้งค่าช่องบันทึกประวัติความปลอดภัย Audit Logs | Server Owner / Leader |
-| **Admin** | `/setup-music` | ติดตั้งห้องขอเพลงประจำเซิร์ฟเวอร์พร้อมแผงควบคุมถาวร | Administrator |
-| **Admin** | `/send-verify` | ส่งแผงยืนยันตัวตน CAPTCHA Modal | Administrator |
-| **Admin** | `/send-ticket` | ส่งแผงเปิดทิกเก็ตแจ้งปัญหาและติดต่อทีมงาน | Administrator |
-| **Admin** | `/announce` | ส่งข้อความประกาศทางการพร้อมสีและรูปภาพ | Manage Messages |
-| **Moderation**| `/lockdown` | ระบบล็อกดาวน์เซิร์ฟเวอร์ฉุกเฉิน (เปิด/ปิด) | Manage Channels |
-| **Moderation**| `/ban` | แบนสมาชิกออกจากเซิร์ฟเวอร์ | Ban Members |
-| **Moderation**| `/unban` | ปลดแบนสมาชิก | Ban Members |
-| **Moderation**| `/kick` | เตะสมาชิกออกจากเซิร์ฟเวอร์ | Kick Members |
-| **Moderation**| `/timeout` | ปิดการส่งข้อความของสมาชิกชั่วคราว | Moderate Members |
-| **Moderation**| `/untimeout`| ยกเลิกการปิดแชทชั่วคราว | Moderate Members |
-| **Moderation**| `/clear` | ลบข้อความจำนวนมากในช่อง (1-100) | Manage Messages |
-| **Moderation**| `/serverinfo` | แสดงข้อมูลสถิติของเซิร์ฟเวอร์ | ทุกคน |
-| **Moderation**| `/userinfo` | แสดงข้อมูลส่วนตัวและยศของสมาชิก | ทุกคน |
-| **Music** | `/play` | ค้นหาและเล่นเพลงจาก YouTube, Spotify, SoundCloud | ทุกคน |
-| **Music** | `/skip` | ข้ามไปยังเพลงถัดไปในคิว | ทุกคน |
-| **Music** | `/pause` | พักการเล่นเพลงชั่วคราว | ทุกคน |
-| **Music** | `/resume` | เล่นเพลงต่อจากที่พักไว้ | ทุกคน |
-| **Music** | `/stop` | หยุดเล่นเพลง ล้างคิว และออกจากห้องเสียง | ทุกคน |
-| **Music** | `/queue` | แสดงรายชื่อเพลงที่รอเล่นในคิว | ทุกคน |
-| **General** | `/help` | เปิดเมนูสารบัญคำสั่งและคู่มือระบบ (คัดกรองตามสิทธิ์อัตโนมัติ) | ทุกคน |
-| **General** | `/poll` | สร้างโพลสำรวจความคิดเห็นแบบเรียลไทม์ | ทุกคน |
-| **General** | `/ping` | เช็คค่า Latency และสถานะของบอท | ทุกคน |
-| **Fun** | `/8ball` | ลูกแก้วพยากรณ์คำตอบ | ทุกคน |
-| **Fun** | `/coinflip` | สุ่มโยนเหรียญหัวหรือก้อย | ทุกคน |
-| **Fun** | `/dice` | ทอยลูกเต๋า 6 หน้า | ทุกคน |
-| **Fun** | `/fortune` | เสี่ยงเซียมซีทำนายดวงประจำวัน | ทุกคน |
-| **Fun** | `/hug` | ส่งการ์ดกอดมอบกำลังใจให้เพื่อน | ทุกคน |
-| **Fun** | `/joke` | สุ่มเล่ามุกตลกคลายเครียด | ทุกคน |
+| **🎵 ดนตรี (8)** | `/play <เพลง>` | ค้นหาและเริ่มเล่นเพลงจาก YouTube / Spotify | Everyone |
+| | `/skip` | ข้ามไปยังเพลงถัดไปในคิว | Everyone |
+| | `/pause` | พักการเล่นเพลงชั่วคราว | Everyone |
+| | `/resume` | เล่นเพลงต่อจากที่หยุดไว้ | Everyone |
+| | `/stop` | หยุดเล่น ล้างคิว และออกจากห้องเสียง | Everyone |
+| | `/queue` | ดูรายการคิวเพลงที่กำลังรอเล่น | Everyone |
+| | `/volume <ระดับ>` | ปรับระดับความดังเสียง (1 - 100%) | Everyone |
+| | `/loop <โหมด>` | ตั้งค่าโหมดเล่นวนซ้ำ (ปิด/เพลงนี้/ทั้งคิว) | Everyone |
+| **🎉 บันเทิง (6)** | `/fortune` | เขย่าเซียมซีทำนายดวงประจำวัน พร้อมเลขเด็ด | Everyone |
+| | `/hug <สมาชิก>` | ส่งอ้อมกอดอุ่นๆ ให้เพื่อนพร้อม GIF | Everyone |
+| | `/joke` | สุ่มเล่ามุกตลกฮาๆ | Everyone |
+| | `/8ball <คำถาม>` | ถามลูกแก้ววิเศษ 8-Ball ทำนายคำตอบ | Everyone |
+| | `/coinflip` | สุ่มเสี่ยงทายโยนเหรียญ หัว หรือ ก้อย | Everyone |
+| | `/dice [หน้า]` | ทอยลูกเต๋าสุ่มแต้ม | Everyone |
+| **💬 ทั่วไป (3)** | `/help` | ดูคู่มือคำสั่งแบบ Dropdown สวยงาม | Everyone |
+| | `/poll <คำถาม> <ตัวเลือก>` | สร้างโพลสำรวจความคิดเห็นสดพร้อมปุ่มโหวต | Everyone |
+| | `/ping` | ตรวจสอบความเร็ว Latency และ WebSocket Ping | Everyone |
+| **🛡️ ดูแลความสงบ (9)** | `/lockdown <สถานะ>` | 🚨 ล็อกดาวน์เซิร์ฟเวอร์ฉุกเฉิน (เปิด/ปิด) | Manage Channels |
+| | `/kick <สมาชิก> [เหตุผล]` | เตะสมาชิกออกจากเซิร์ฟเวอร์ | Kick Members |
+| | `/ban <สมาชิก> [เหตุผล]` | แบนสมาชิกออกจากเซิร์ฟเวอร์ถาวร | Ban Members |
+| | `/unban <user_id>` | ปลดแบนผู้ใช้งานด้วย User ID | Ban Members |
+| | `/timeout <สมาชิก> <เวลา>` | ปิดการใช้งานแชทชั่วคราว | Moderate Members |
+| | `/untimeout <สมาชิก>` | ยกเลิกการปิดแชทชั่วคราว | Moderate Members |
+| | `/clear <จำนวน>` | ลบข้อความจำนวนมากในช่องแชท (1-100) | Manage Messages |
+| | `/userinfo [สมาชิก]` | ตรวจสอบประวัติ วันสมัครบัญชี และยศ | Everyone |
+| | `/serverinfo` | ตรวจสอบสถิติและข้อมูลของเซิร์ฟเวอร์ | Everyone |
+| **👑 ผู้ดูแลระบบ (7)** | `/setup-roles` | 👑 สร้างยศ Leader, Admin, Mod, Verified อัตโนมัติ | Leader / Owner |
+| | `/setup-welcome` | 👋 ตั้งค่าช่องต้อนรับและบอกลาสมาชิก | Administrator |
+| | `/setup-logs` | 🛡️ ตั้งค่าช่องบันทึกประวัติ Audit Logs | Administrator |
+| | `/setup-music` | 🎵 ติดตั้งห้องขอเพลงเฉพาะพร้อมแผง Standby | Administrator |
+| | `/send-verify` | 🔐 ส่งแผงยืนยันตัวตน CAPTCHA Modal | Administrator |
+| | `/send-ticket` | 🎫 ส่งแผงเปิดทิกเก็ตขอความช่วยเหลือ | Administrator |
+| | `/announce` | 📢 ส่งประกาศข่าวสารทางการแบบ Embed หรูหรา | Manage Messages |
+
+---
+
+## 🛠️ ความต้องการของระบบ (Requirements)
+
+- **Node.js**: เวอร์ชั่น `v18.0.0` หรือใหม่กว่า
+- **MySQL Database**: เช่น **XAMPP**, **Laragon**, หรือ **MySQL Community Server 8.0+**
+- **FFmpeg**: จำเป็นสำหรับระบบเพลง (ติดตั้งมาในตัวผ่าน `ffmpeg-static`)
+
+---
+
+## ⚙️ ขั้นตอนการติดตั้งและเริ่มต้นใช้งาน (Installation)
+
+### 1. ติดตั้ง Dependencies
+```bash
+npm install
+```
+
+### 2. กำหนดค่าในไฟล์ `.env`
+คัดลอกไฟล์ `.env.example` เป็น `.env` แล้วกรอกข้อมูล:
+```env
+# Discord Bot Credentials
+DISCORD_TOKEN=YOUR_BOT_TOKEN
+CLIENT_ID=YOUR_CLIENT_ID
+GUILD_ID=YOUR_GUILD_ID
+
+# Web Dashboard & Discord OAuth2
+PORT=3000
+CLIENT_SECRET=YOUR_DISCORD_CLIENT_SECRET
+REDIRECT_URI=http://localhost:3000/api/auth/callback
+SESSION_SECRET=uryu_secure_session_key_2026
+
+# MySQL Database Configuration
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=YOUR_DB_PASSWORD
+DB_NAME=uryubot_db
+```
+
+### 3. ตั้งค่า Discord Developer Portal
+1. ไปที่ [Discord Developer Portal](https://discord.com/developers/applications) > Application ของคุณ
+2. เมนู **Bot**: เปิดใช้งาน **Privileged Gateway Intents** ทั้ง 3 ข้อ (`Presence`, `Server Members`, `Message Content`)
+3. เมนู **OAuth2**: 
+   - คัดลอก `Client Secret` ไปใส่ใน `.env`
+   - ในหัวข้อ **Redirects** ให้กด `Add Redirect` แล้วใส่ `http://localhost:3000/api/auth/callback` จากนั้นกด `Save Changes`
+
+### 4. สตาร์ทบอทและเปิดใช้งาน Web Dashboard
+```bash
+npm start
+```
+- บอทจะออนไลน์ใน Discord
+- เข้าใช้งาน Web Dashboard ได้ที่: 👉 **[http://localhost:3000](http://localhost:3000)**
 
 ---
 
@@ -113,132 +171,34 @@
 
 ```text
 UryuBot/
-├── .env                      # ไฟล์ตัวแปรสภาพแวดล้อมจริง
-├── .env.example              # ตัวอย่างการตั้งค่าตัวแปรสภาพแวดล้อม
-├── .gitignore                # รายการไฟล์ที่ไม่ต้องนำขึ้น Git
-├── package.json              # โมดูล Dependencies และ Scripts
-├── README.md                 # เอกสารคู่มือการใช้งานบอท
-├── deploy-commands.js        # สคริปต์ลงทะเบียน 33 Slash Commands
-└── src/
-    ├── index.js              # จุดเริ่มต้นบอท Client Initialization
-    ├── config/
-    │   └── config.js         # การตั้งค่าระบบ ธีมสี และข้อความ
-    ├── handlers/
-    │   ├── commandHandler.js # ตัวโหลด Slash Commands อัตโนมัติ
-    │   ├── eventHandler.js   # ตัวโหลด Event Listeners อัตโนมัติ
-    │   └── componentHandler.js # ตัวจัดการ Button, Modal & SelectMenu
-    ├── events/
-    │   ├── client/
-    │   │   └── ready.js      # แจ้งเตือนเมื่อบอทออนไลน์และตั้ง Streaming Presence
-    │   ├── guild/
-    │   │   ├── guildMemberAdd.js    # ระบบต้อนรับสมาชิกใหม่
-    │   │   ├── guildMemberRemove.js # ระบบบอกลาสมาชิก
-    │   │   ├── guildMemberUpdate.js # บันทึก Log การ Timeout และเปลี่ยนยศ
-    │   │   ├── guildBanAdd.js       # บันทึก Log สมาชิกโดนแบน
-    │   │   ├── guildBanRemove.js    # บันทึก Log สมาชิกถูกปลดแบน
-    │   │   └── voiceStateUpdate.js  # ออกจากห้องเสียงอัตโนมัติเมื่อไม่มีสมาชิก
-    │   ├── messages/
-    │   │   ├── musicRequest.js      # ตรวจจับข้อความในห้องขอเพลงอัตโนมัติ
-    │   │   ├── messageDelete.js     # บันทึก Log ข้อความถูกลบ
-    │   │   └── messageUpdate.js     # บันทึก Log ข้อความถูกแก้ไข
-    │   └── interactions/
-    │       └── interactionCreate.js # ประมวลผลคำสั่ง ปุ่มกด และเมนู Dropdown
-    ├── commands/
-    │   ├── admin/            # คำสั่งตั้งค่าเซิร์ฟเวอร์ (/setup-*, /announce, /send-*)
-    │   ├── moderation/       # คำสั่งผู้ดูแล (/lockdown, /ban, /kick, /timeout, /clear...)
-    │   ├── music/            # คำสั่งเล่นเพลง (/play, /skip, /queue, /volume...)
-    │   ├── general/          # คำสั่งทั่วไป (/help, /poll, /ping)
-    │   └── fun/              # คำสั่งบันเทิง (/8ball, /dice, /fortune, /joke...)
-    ├── components/
-    │   ├── buttons/
-    │   │   ├── verifyButton.js      # ปุ่มยืนยันตัวตน
-    │   │   ├── ticketOpen.js        # ปุ่มเปิดทิกเก็ต
-    │   │   ├── ticketClose.js       # ปุ่มปิดทิกเก็ต & สร้าง HTML Transcript
-    │   │   ├── pollVote.js          # ปุ่มโหวตโพลสำรวจความคิดเห็น
-    │   │   └── musicButtons.js      # ปุ่มควบคุมแผงเครื่องเล่นเพลง
-    │   ├── modals/
-    │   │   └── verifyModal.js       # โมดอลกรอกรหัส CAPTCHA
-    │   └── selectMenus/
-    │       └── helpSelect.js        # เมนู Dropdown เลือกหมวดหมู่คำสั่ง /help
-    └── utils/
-        ├── logger.js         # ระบบ Log ใน Console แบบมี Timestamp
-        ├── captcha.js        # ตัวสุ่มรหัส CAPTCHA ป้องกันบอท
-        ├── embeds.js         # แม่แบบสร้าง Embed สวยหรู
-        ├── permissions.js    # ระบบตรวจสอบสิทธิ์และ Role Hierarchy
-        ├── auditLogger.js    # ฟังก์ชันส่งบันทึกกิจกรรม Mod Action Logs
-        ├── transcript.js     # ตัวสร้าง HTML Transcript Discord Dark Theme
-        ├── pollStore.js      # จัดเก็บผลโหวตและสร้าง Progress Bar
-        ├── helpGenerator.js  # ตัวสร้าง Help Embed และ Select Menu แยกตามสิทธิ์
-        └── musicManager.js   # DisTube Engine, แผงควบคุมเพลง และ Extractor Plugins
+├── src/
+│   ├── commands/             # คำสั่ง Slash Commands แยก 5 หมวดหมู่
+│   │   ├── admin/            # คำสั่งสำหรับผู้ดูแลระบบ
+│   │   ├── fun/              # คำสั่งมินิเกมและบันเทิง
+│   │   ├── general/          # คำสั่งทั่วไป (help, poll, ping)
+│   │   ├── moderation/       # คำสั่งดูแลความสงบ (ban, kick, timeout, lockdown)
+│   │   └── music/            # คำสั่งระบบดนตรี (play, skip, queue, volume)
+│   ├── components/           # ตัวจัดการ Interaction Components
+│   │   ├── buttons/          # ปุ่มกด (Verify, Ticket, Music Controls, Poll Vote)
+│   │   ├── modals/           # หน้าต่าง Modal (CAPTCHA, Ticket Reason)
+│   │   └── selectMenus/      # Dropdown เมนู (Help Menu)
+│   ├── config/               # ค่าคงที่ ธีมสี และตัวแปรระบบ (config.js)
+│   ├── database/             # ตัวจัดการฐานข้อมูล MySQL (db.js)
+│   ├── events/               # ตัวดักจับ Discord Events (guild, client, message)
+│   ├── handlers/             # ตัวโหลด Commands, Events, Components อัตโนมัติ
+│   ├── utils/                # ยูทิลิตี้เสริม (Embeds, MusicManager, Permissions, Logger)
+│   ├── web/                  # Express Web Server & Web Dashboard
+│   │   ├── public/           # Frontend SPA (index.html, index.css, app.js)
+│   │   └── server.js         # REST API & Discord OAuth2 Handler
+│   └── index.js              # Entry Point เริ่มต้นระบบ
+├── .env.example              # ตัวอย่างไฟล์ Environment Variables
+├── .gitignore                # การตั้งค่า Git Ignore
+├── package.json              # รายการ Dependencies และ Scripts
+└── README.md                 # คู่มือและเอกสารประกอบโปรเจกต์
 ```
 
 ---
 
-## ⚙️ ขั้นตอนการติดตั้งและการเปิดใช้งาน (Setup Guide)
+## 📄 ใบอนุญาต (License)
 
-### 1. ติดตั้ง Node.js
-ตรวจสอบว่าเครื่องของคุณติดตั้ง Node.js v18.x, v20.x หรือ v22+ LTS:
-```bash
-node -v
-```
-
-### 2. ติดตั้ง Dependencies
-เปิด Terminal ในโฟลเดอร์โปรเจกต์แล้วรันคำสั่ง:
-```bash
-npm install
-```
-
-### 3. ตั้งค่าไฟล์สภาพแวดล้อม (.env)
-คัดลอกไฟล์ `.env.example` เป็น `.env` และกรอกข้อมูลให้ครบถ้วน:
-```env
-# Token และ App ID จาก Discord Developer Portal
-DISCORD_TOKEN=YOUR_BOT_TOKEN_HERE
-CLIENT_ID=YOUR_CLIENT_ID_HERE
-GUILD_ID=YOUR_GUILD_ID_HERE
-
-# ID ยศต่างๆ ในเซิร์ฟเวอร์
-VERIFIED_ROLE_ID=
-LEADER_ROLE_ID=
-ADMIN_ROLE_ID=
-MODERATOR_ROLE_ID=
-
-# ช่องแจ้งเตือนและระบบต่างๆ
-WELCOME_CHANNEL_ID=
-GOODBYE_CHANNEL_ID=
-ENABLE_WELCOME_SYSTEM=true
-
-LOG_CHANNEL_ID=
-ENABLE_LOG_SYSTEM=true
-
-TICKET_CATEGORY_ID=
-MUSIC_CHANNEL_ID=
-```
-
-### 4. ลงทะเบียน Slash Commands ทั้งหมด (32 คำสั่ง)
-รันคำสั่งลงทะเบียนคำสั่งเข้าสู่ Discord API:
-```bash
-npm run deploy
-```
-
-### 5. เริ่มต้นรันบอท
-รันบอทเพื่อพร้อมให้บริการในเซิร์ฟเวอร์:
-```bash
-npm start
-```
-
----
-
-## 🛡️ การตั้งค่าสิทธิ์ใน Discord Developer Portal
-
-1. ไปที่ [Discord Developer Portal](https://discord.com/developers/applications) -> เลือก Application ของคุณ
-2. เมนู **Bot** -> หัวข้อ **Privileged Gateway Intents**:
-   - ✅ **Presence Intent**
-   - ✅ **Server Members Intent** *(จำเป็นสำหรับการจัดการยศและระบบต้อนรับ)*
-   - ✅ **Message Content Intent** *(จำเป็นสำหรับระบบขอเพลงและการตรวจจับข้อความ)*
-3. **Role Hierarchy ใน Discord Server**:
-   - ลากยศของ **บอท** ให้อยู่ **สูงกว่า** ยศของสมาชิกทั่วไป เพื่อให้สามารถมอบยศและแบน/เตะได้
-
----
-
-## 📝 License
-MIT License
+โปรเจกต์นี้เผยแพร่ภายใต้ใบอนุญาต **MIT License** &copy; 2026 UryuBot Suite.
