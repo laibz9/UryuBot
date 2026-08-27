@@ -80,6 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const cfgGoodbyeChannel = document.getElementById('cfg-goodbye-channel');
   const cfgLogChannel = document.getElementById('cfg-log-channel');
   const cfgMusicChannel = document.getElementById('cfg-music-channel');
+  const cfgTicketChannel = document.getElementById('cfg-ticket-channel');
   const cfgTicketCategory = document.getElementById('cfg-ticket-category');
 
   const cfgEnableWelcome = document.getElementById('cfg-enable-welcome');
@@ -453,6 +454,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (cfgLogChannel) cfgLogChannel.value = '';
     if (cfgLogChannel) cfgLogChannel.innerHTML = channelOptions;
     if (cfgMusicChannel) cfgMusicChannel.innerHTML = channelOptions;
+    if (cfgTicketChannel) cfgTicketChannel.innerHTML = channelOptions;
     if (annChannel) annChannel.innerHTML = channelOptions;
 
     const categoryChannels = channels.filter(c => c.type === 4);
@@ -492,6 +494,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (cfgGoodbyeChannel) cfgGoodbyeChannel.value = s.goodbyeChannelId || '';
         if (cfgLogChannel) cfgLogChannel.value = s.logChannelId || '';
         if (cfgMusicChannel) cfgMusicChannel.value = s.musicChannelId || '';
+        if (cfgTicketChannel) cfgTicketChannel.value = s.ticketChannelId || '';
         if (cfgTicketCategory) cfgTicketCategory.value = s.ticketCategoryId || '';
 
         // Toggles State Update
@@ -550,7 +553,8 @@ document.addEventListener('DOMContentLoaded', () => {
         goodbyeChannelId: cfgGoodbyeChannel ? cfgGoodbyeChannel.value : null,
         logChannelId: cfgLogChannel ? cfgLogChannel.value : null,
         musicChannelId: cfgMusicChannel ? cfgMusicChannel.value : null,
-        ticketCategoryId: cfgTicketCategory ? cfgTicketCategory.value : null,
+        ticketChannelId: cfgTicketChannel ? cfgTicketChannel.value : '',
+        ticketCategoryId: cfgTicketCategory ? cfgTicketCategory.value : '',
         enableWelcomeSystem: cfgEnableWelcome ? cfgEnableWelcome.checked : false,
         enableLogSystem: cfgEnableLogs ? cfgEnableLogs.checked : false,
         enableAdminCommands: cfgEnableAdminCmds ? cfgEnableAdminCmds.checked : true,
@@ -609,9 +613,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Remote Action: ส่งแผงเปิดทิกเก็ต
   if (btnActionTicket) {
     btnActionTicket.addEventListener('click', async () => {
-      const channelId = (cfgLogChannel && cfgLogChannel.value) || (cfgWelcomeChannel && cfgWelcomeChannel.value);
+      const channelId = (cfgTicketChannel && cfgTicketChannel.value) || (cfgVerifyChannel && cfgVerifyChannel.value);
       if (!channelId) {
-        showToast('กรุณาเลือกช่องสำหรับส่งทิกเก็ตก่อน', 'error');
+        showToast('กรุณาเลือก "ช่องส่งแผงทิกเก็ต (Ticket Channel)" ในส่วนตั้งค่าก่อนกดส่ง', 'error');
         return;
       }
 
@@ -626,7 +630,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (data.success) showToast(data.message);
         else showToast(data.error, 'error');
       } catch (err) {
-        showToast('เกิดข้อผิดพลาดในการส่ง', 'error');
+        showToast('เกิดข้อผิดพลาดในการส่งแผงทิกเก็ต', 'error');
       }
     });
   }

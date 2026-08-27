@@ -31,6 +31,7 @@ function formatSettings(guildId, row = null) {
       enableLogSystem: true,
       enableAdminCommands: true,
       enableModerationCommands: true,
+      ticketChannelId: '',
       ticketCategoryId: '',
       musicChannelId: '',
       updatedAt: new Date().toISOString()
@@ -51,6 +52,7 @@ function formatSettings(guildId, row = null) {
     enableLogSystem: row.enable_logs === 1 || row.enable_logs === true || row.enable_logs === '1',
     enableAdminCommands: row.enable_admin_commands === 1 || row.enable_admin_commands === true || row.enable_admin_commands === '1' || row.enable_admin_commands === undefined,
     enableModerationCommands: row.enable_moderation_commands === 1 || row.enable_moderation_commands === true || row.enable_moderation_commands === '1' || row.enable_moderation_commands === undefined,
+    ticketChannelId: row.ticket_channel_id || '',
     ticketCategoryId: row.ticket_category_id || '',
     musicChannelId: row.music_channel_id || '',
     updatedAt: row.updated_at ? new Date(row.updated_at).toISOString() : new Date().toISOString()
@@ -106,6 +108,7 @@ async function initDatabase() {
         enable_logs TINYINT(1) DEFAULT 1,
         enable_admin_commands TINYINT(1) DEFAULT 1,
         enable_moderation_commands TINYINT(1) DEFAULT 1,
+        ticket_channel_id VARCHAR(32) DEFAULT NULL,
         ticket_category_id VARCHAR(32) DEFAULT NULL,
         music_channel_id VARCHAR(32) DEFAULT NULL,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -118,6 +121,9 @@ async function initDatabase() {
     } catch {}
     try {
       await pool.query(`ALTER TABLE guild_settings ADD COLUMN enable_moderation_commands TINYINT(1) DEFAULT 1`);
+    } catch {}
+    try {
+      await pool.query(`ALTER TABLE guild_settings ADD COLUMN ticket_channel_id VARCHAR(32) DEFAULT NULL`);
     } catch {}
 
     // 4. โหลดข้อมูลทั้งหมดขึ้น In-Memory Cache
@@ -240,6 +246,7 @@ async function updateGuildSettings(guildId, newSettings) {
     enableLogSystem: newSettings.enableLogSystem !== undefined ? Boolean(newSettings.enableLogSystem) : current.enableLogSystem,
     enableAdminCommands: newSettings.enableAdminCommands !== undefined ? Boolean(newSettings.enableAdminCommands) : current.enableAdminCommands,
     enableModerationCommands: newSettings.enableModerationCommands !== undefined ? Boolean(newSettings.enableModerationCommands) : current.enableModerationCommands,
+    ticketChannelId: newSettings.ticketChannelId !== undefined ? newSettings.ticketChannelId : current.ticketChannelId,
     ticketCategoryId: newSettings.ticketCategoryId !== undefined ? newSettings.ticketCategoryId : current.ticketCategoryId,
     musicChannelId: newSettings.musicChannelId !== undefined ? newSettings.musicChannelId : current.musicChannelId,
     updatedAt: new Date().toISOString()
@@ -257,8 +264,8 @@ async function updateGuildSettings(guildId, newSettings) {
           moderator_role_id, verify_channel_id, welcome_channel_id,
           goodbye_channel_id, enable_welcome, log_channel_id,
           enable_logs, enable_admin_commands, enable_moderation_commands,
-          ticket_category_id, music_channel_id
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          ticket_channel_id, ticket_category_id, music_channel_id
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON DUPLICATE KEY UPDATE
           verified_role_id = VALUES(verified_role_id),
           leader_role_id = VALUES(leader_role_id),
@@ -272,6 +279,7 @@ async function updateGuildSettings(guildId, newSettings) {
           enable_logs = VALUES(enable_logs),
           enable_admin_commands = VALUES(enable_admin_commands),
           enable_moderation_commands = VALUES(enable_moderation_commands),
+          ticket_channel_id = VALUES(ticket_channel_id),
           ticket_category_id = VALUES(ticket_category_id),
           music_channel_id = VALUES(music_channel_id),
           updated_at = CURRENT_TIMESTAMP
@@ -289,8 +297,9 @@ async function updateGuildSettings(guildId, newSettings) {
         updated.enableLogSystem ? 1 : 0,
         updated.enableAdminCommands ? 1 : 0,
         updated.enableModerationCommands ? 1 : 0,
-        updated.ticketCategoryId,
-        updated.musicChannelId
+        updated.ticketChannelId || null,
+        updated.ticketCategoryId || null,
+        updated.musicChannelId || null
       ]);
 
       logger.success(`[MySQL] บันทึกการตั้งค่าเซิร์ฟเวอร์ ${guildId} เรียบร้อยแล้ว`);
