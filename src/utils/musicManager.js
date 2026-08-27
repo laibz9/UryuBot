@@ -305,13 +305,28 @@ function initDisTube(client) {
 
   // Event: เล่นเพลงในคิวหมดแล้ว
   distube.on('finish', (queue) => {
+    logger.info(`[DisTube] เล่นเพลงในคิวหมดแล้วสำหรับเซิร์ฟเวอร์ ${queue.textChannel?.guild?.name}`);
     if (queue.textChannel?.guild) {
       updateDedicatedMusicPanel(queue.textChannel.guild, null, null);
     }
   });
 
+  // Event: จบเพลงหนึ่งเพลง
+  distube.on('finishSong', (queue, song) => {
+    logger.info(`[DisTube] เล่นจบเพลง: ${song.name}`);
+  });
+
   // Event: ออกจากห้องเสียงเมื่อไม่มีคน
   distube.on('empty', (queue) => {
+    logger.info(`[DisTube] ห้องเสียงว่างเปล่า ออกจากห้องในเซิร์ฟเวอร์ ${queue.textChannel?.guild?.name}`);
+    if (queue.textChannel?.guild) {
+      updateDedicatedMusicPanel(queue.textChannel.guild, null, null);
+    }
+  });
+
+  // Event: หลุดการเชื่อมต่อ
+  distube.on('disconnect', (queue) => {
+    logger.warn(`[DisTube] ตัดการเชื่อมต่อจากห้องเสียงใน ${queue.textChannel?.guild?.name}`);
     if (queue.textChannel?.guild) {
       updateDedicatedMusicPanel(queue.textChannel.guild, null, null);
     }
@@ -320,6 +335,7 @@ function initDisTube(client) {
   // Event: เกิดข้อผิดพลาด
   distube.on('error', (error, queue, song) => {
     logger.error('เกิดข้อผิดพลาดในระบบ DisTube:', error?.message || error);
+    if (error?.stack) logger.error(error.stack);
     const targetChannel = queue?.textChannel;
     if (targetChannel && targetChannel.send) {
       const errEmbed = new EmbedBuilder()

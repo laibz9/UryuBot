@@ -76,13 +76,19 @@ class CustomYtDlpPlugin extends PlayableExtractorPlugin {
 
       // If search result or single track
       if (entries.length === 1 || url.startsWith('ytsearch') || !url.startsWith('http')) {
-        return new Song(this.mapSongInfo(entries[0]), options);
+        const s = new Song(this.mapSongInfo(entries[0]), options);
+        s.streamURL = entries[0].url;
+        return s;
       }
 
       return new Playlist(
         {
           source: info.extractor || 'youtube',
-          songs: entries.map(item => new Song(this.mapSongInfo(item), options)),
+          songs: entries.map(item => {
+            const s = new Song(this.mapSongInfo(item), options);
+            s.streamURL = item.url;
+            return s;
+          }),
           id: info.id ? info.id.toString() : 'playlist',
           name: info.title || 'Playlist',
           url: info.webpage_url || url,
@@ -92,14 +98,18 @@ class CustomYtDlpPlugin extends PlayableExtractorPlugin {
       );
     }
 
-    return new Song(this.mapSongInfo(info), options);
+    const song = new Song(this.mapSongInfo(info), options);
+    song.streamURL = info.url;
+    return song;
   }
 
   async getStreamURL(song) {
+    if (song.streamURL) return song.streamURL;
     if (!song.url) throw new DisTubeError('YTDLP_INVALID_SONG', 'Song URL is missing');
     const info = await runYtDlpExtract(song.url);
     const streamUrl = info.url || (info.entries && info.entries[0] && info.entries[0].url);
     if (!streamUrl) throw new DisTubeError('YTDLP_NO_STREAM_URL', 'Failed to retrieve audio stream URL');
+    song.streamURL = streamUrl;
     return streamUrl;
   }
 
