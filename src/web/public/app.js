@@ -429,52 +429,59 @@ document.addEventListener('DOMContentLoaded', () => {
   function populateGuildOptions(guild) {
     if (!guild) return;
 
+    const roles = guild.roles || [];
     const roleOptions = [
       '<option value="">-- ไม่กำหนดยศ (None) --</option>',
-      ...guild.roles.map(r => `<option value="${r.id}">🛡️ ${r.name}</option>`)
+      ...roles.map(r => `<option value="${r.id}">🛡️ ${r.name}</option>`)
     ].join('');
 
-    cfgVerifiedRole.innerHTML = roleOptions;
-    cfgLeaderRole.innerHTML = roleOptions;
-    cfgAdminRole.innerHTML = roleOptions;
-    cfgModeratorRole.innerHTML = roleOptions;
+    if (cfgVerifiedRole) cfgVerifiedRole.innerHTML = roleOptions;
+    if (cfgLeaderRole) cfgLeaderRole.innerHTML = roleOptions;
+    if (cfgAdminRole) cfgAdminRole.innerHTML = roleOptions;
+    if (cfgModeratorRole) cfgModeratorRole.innerHTML = roleOptions;
 
-    const textChannels = (guild.channels || []).filter(c => c.isText || c.type === 0 || c.type === 5 || (!c.isVoice && c.type !== 4 && c.type !== 2 && c.type !== 13));
+    const channels = guild.channels || [];
+    const textChannels = channels.filter(c => c.isText || c.type === 0 || c.type === 5 || (!c.isVoice && c.type !== 4 && c.type !== 2 && c.type !== 13));
     const channelOptions = [
       '<option value="">-- ไม่กำหนดช่อง (None) --</option>',
       ...textChannels.map(c => `<option value="${c.id}"># ${c.name}</option>`)
     ].join('');
 
-    cfgVerifyChannel.innerHTML = channelOptions;
-    cfgWelcomeChannel.innerHTML = channelOptions;
-    cfgGoodbyeChannel.innerHTML = channelOptions;
-    cfgLogChannel.innerHTML = channelOptions;
-    cfgMusicChannel.innerHTML = channelOptions;
-    annChannel.innerHTML = channelOptions;
+    if (cfgVerifyChannel) cfgVerifyChannel.innerHTML = channelOptions;
+    if (cfgWelcomeChannel) cfgWelcomeChannel.innerHTML = channelOptions;
+    if (cfgGoodbyeChannel) cfgGoodbyeChannel.innerHTML = channelOptions;
+    if (cfgLogChannel) cfgLogChannel.value = '';
+    if (cfgLogChannel) cfgLogChannel.innerHTML = channelOptions;
+    if (cfgMusicChannel) cfgMusicChannel.innerHTML = channelOptions;
+    if (annChannel) annChannel.innerHTML = channelOptions;
 
-    const categoryChannels = guild.channels.filter(c => c.type === 4);
+    const categoryChannels = channels.filter(c => c.type === 4);
     const categoryOptions = [
       '<option value="">-- ไม่กำหนดหมวดหมู่ (None) --</option>',
       ...categoryChannels.map(c => `<option value="${c.id}">📁 ${c.name}</option>`),
       ...textChannels.map(c => `<option value="${c.id}"># ${c.name}</option>`)
     ].join('');
 
-    cfgTicketCategory.innerHTML = categoryOptions;
-    updateStudioChannelDropdowns(guild);
+    if (cfgTicketCategory) cfgTicketCategory.innerHTML = categoryOptions;
   }
 
   /**
-   * ดึงการตั้งค่าของเซิร์ฟเวอร์จาก MySQL (/api/settings/:guildId)
+   * ดึงการตั้งค่าของเซิร์ฟเวอร์จาก MySQL (/api/settings/:guildId) แบบ Realtime
    */
   async function loadGuildSettings(guildId) {
+    if (!guildId) return;
     try {
       const res = await fetch(`/api/settings/${guildId}?t=${Date.now()}`, { credentials: 'include' });
-      if (!res.ok) return;
+      if (!res.ok) {
+        console.warn(`[Settings] HTTP ${res.status} when loading settings for ${guildId}`);
+        return;
+      }
       const data = await res.json();
+      console.log(`[Settings] Loaded for ${guildId}:`, data);
 
       if (data.success && data.settings) {
         const s = data.settings;
-        // Explicitly set each value (clearing if empty)
+
         if (cfgVerifiedRole) cfgVerifiedRole.value = s.verifiedRoleId || '';
         if (cfgLeaderRole) cfgLeaderRole.value = s.leaderRoleId || '';
         if (cfgAdminRole) cfgAdminRole.value = s.adminRoleId || '';
@@ -487,31 +494,39 @@ document.addEventListener('DOMContentLoaded', () => {
         if (cfgMusicChannel) cfgMusicChannel.value = s.musicChannelId || '';
         if (cfgTicketCategory) cfgTicketCategory.value = s.ticketCategoryId || '';
 
-        if (cfgEnableWelcome) cfgEnableWelcome.checked = Boolean(s.enableWelcomeSystem);
-        if (cfgEnableLogs) cfgEnableLogs.checked = Boolean(s.enableLogSystem);
-        if (cfgEnableAdminCmds) cfgEnableAdminCmds.checked = Boolean(s.enableAdminCommands !== false);
-        if (cfgEnableModCmds) cfgEnableModCmds.checked = Boolean(s.enableModerationCommands !== false);
+        // Toggles State Update
+        const isWelcomeOn = (s.enableWelcomeSystem === 1 || s.enableWelcomeSystem === true || s.enableWelcomeSystem === '1');
+        const isLogsOn = (s.enableLogSystem === 1 || s.enableLogSystem === true || s.enableLogSystem === '1');
+        const isAdminCmdsOn = (s.enableAdminCommands === 1 || s.enableAdminCommands === true || s.enableAdminCommands === '1' || s.enableAdminCommands === undefined);
+        const isModCmdsOn = (s.enableModerationCommands === 1 || s.enableModerationCommands === true || s.enableModerationCommands === '1' || s.enableModerationCommands === undefined);
+
+        if (cfgEnableWelcome) cfgEnableWelcome.checked = isWelcomeOn;
+        if (cfgEnableLogs) cfgEnableLogs.checked = isLogsOn;
+        if (cfgEnableAdminCmds) cfgEnableAdminCmds.checked = isAdminCmdsOn;
+        if (cfgEnableModCmds) cfgEnableModCmds.checked = isModCmdsOn;
 
         if (saveStatus) {
           saveStatus.textContent = `อัปเดตล่าสุด: ${s.updatedAt ? new Date(s.updatedAt).toLocaleTimeString() : 'ค่าเริ่มต้น'}`;
         }
       }
     } catch (err) {
-      console.error('ไม่สามารถโหลดการตั้งค่าได้:', err);
+      console.error('[Settings Error]:', err);
     }
   }
 
-  // Event: เปลี่ยนเซิร์ฟเวอร์ที่เลือก
+  // Event: เปลี่ยนเซิร์ฟเวอร์ที่เลือก (Single Unified Handler)
   if (guildSelector) {
-    guildSelector.addEventListener('change', async (e) => {
+    guildSelector.onchange = async (e) => {
       currentGuildId = e.target.value;
       const selectedGuild = allGuilds.find(g => g.id === currentGuildId);
       if (selectedGuild) {
         populateGuildOptions(selectedGuild);
         await loadGuildSettings(currentGuildId);
+        await updateStudioChannelDropdowns(selectedGuild);
+        fetchDjQueue();
         showToast(`เปลี่ยนเซิร์ฟเวอร์เป็น: ${selectedGuild.name}`);
       }
-    });
+    };
   }
 
   // Event: บันทึกการตั้งค่าลงฐานข้อมูล MySQL
@@ -1591,14 +1606,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Hook into guild select event to update dropdowns
-  const oldGuildSelectorListener = guildSelector?.onchange;
-  if (guildSelector) {
-    guildSelector.addEventListener('change', () => {
-      const selectedGuild = allGuilds.find(g => g.id === currentGuildId);
-      if (selectedGuild) updateStudioChannelDropdowns(selectedGuild);
-      fetchDjQueue();
-    });
-  }
+  
 
 
   // เริ่มต้นทำงาน

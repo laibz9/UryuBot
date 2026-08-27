@@ -151,6 +151,28 @@ async function initDatabase() {
  * @param {string} guildId - Discord Guild ID
  * @returns {object} การตั้งค่าเซิร์ฟเวอร์
  */
+/**
+ * ดึงการตั้งค่าของเซิร์ฟเวอร์โดยตรงจาก MySQL แบบ Realtime และอัปเดต Cache
+ */
+async function fetchGuildSettingsFresh(guildId) {
+  if (!guildId) return formatSettings('default');
+
+  if (isConnected && pool) {
+    try {
+      const [rows] = await pool.query('SELECT * FROM guild_settings WHERE guild_id = ?', [guildId]);
+      if (rows && rows.length > 0) {
+        const fresh = formatSettings(guildId, rows[0]);
+        settingsCache.set(guildId, fresh);
+        return fresh;
+      }
+    } catch (err) {
+      logger.error(`[MySQL Fetch Error]: ${err.message}`);
+    }
+  }
+
+  return getGuildSettings(guildId);
+}
+
 function getGuildSettings(guildId) {
   if (!guildId) return formatSettings('default');
 
@@ -281,6 +303,7 @@ async function updateGuildSettings(guildId, newSettings) {
 }
 
 module.exports = {
+  fetchGuildSettingsFresh,
   initDatabase,
   getGuildSettings,
   updateGuildSettings

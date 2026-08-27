@@ -15,7 +15,7 @@ const {
 } = require('discord.js');
 const config = require('../config/config');
 const logger = require('../utils/logger');
-const { getGuildSettings, updateGuildSettings } = require('../database/db');
+const { getGuildSettings, fetchGuildSettingsFresh, updateGuildSettings } = require('../database/db');
 const { createVerificationEmbed, createTicketPanelEmbed } = require('../utils/embeds');
 const { cleanupMusicChannelOnStartup } = require('../utils/musicManager');
 
@@ -513,10 +513,12 @@ function startWebServer(client) {
     }
   });
 
-  app.get('/api/settings/:guildId', requireServerOwner, (req, res) => {
+  app.get('/api/settings/:guildId', requireServerOwner, async (req, res) => {
     try {
       const { guildId } = req.params;
-      const settings = getGuildSettings(guildId);
+      const settings = typeof fetchGuildSettingsFresh === 'function' 
+        ? await fetchGuildSettingsFresh(guildId) 
+        : getGuildSettings(guildId);
       res.json({ success: true, settings });
     } catch (error) {
       res.status(500).json({ success: false, error: error.message });
