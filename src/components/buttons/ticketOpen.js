@@ -91,7 +91,8 @@ module.exports = {
       const staffRoleIds = [
         settings.leaderRoleId,
         settings.adminRoleId,
-        settings.moderatorRoleId
+        settings.moderatorRoleId,
+        settings.supportRoleId
       ].filter(Boolean);
 
       for (const roleId of staffRoleIds) {
@@ -211,8 +212,18 @@ module.exports = {
 
       const actionRow = new ActionRowBuilder().addComponents(closeButton);
 
+      // สร้างแท็กแจ้งเตือนทีมงานทั้งหมด (Support, Admin, Leader, Mod)
+      const mentionList = [
+        settings.supportRoleId ? `<@&${settings.supportRoleId}>` : null,
+        settings.adminRoleId ? `<@&${settings.adminRoleId}>` : null,
+        settings.leaderRoleId ? `<@&${settings.leaderRoleId}>` : null,
+        settings.moderatorRoleId ? `<@&${settings.moderatorRoleId}>` : null
+      ].filter(Boolean);
+
+      const staffTags = mentionList.length > 0 ? mentionList.join(' ') : 'ทีมงาน Support & Admin';
+
       await ticketChannel.send({
-        content: `👋 ยินดีต้อนรับ ${user} | ทีมงานจะเข้ามาให้บริการในไม่ช้า`,
+        content: `👋 ยินดีต้อนรับ ${user} | 🔔 แจ้งเตือนทีมงาน: ${staffTags}`,
         embeds: [welcomeEmbed],
         components: [actionRow]
       });

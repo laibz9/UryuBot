@@ -74,6 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const cfgLeaderRole = document.getElementById('cfg-leader-role');
   const cfgAdminRole = document.getElementById('cfg-admin-role');
   const cfgModeratorRole = document.getElementById('cfg-moderator-role');
+  const cfgSupportRole = document.getElementById('cfg-support-role');
 
   const cfgVerifyChannel = document.getElementById('cfg-verify-channel');
   const cfgWelcomeChannel = document.getElementById('cfg-welcome-channel');
@@ -440,6 +441,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (cfgLeaderRole) cfgLeaderRole.innerHTML = roleOptions;
     if (cfgAdminRole) cfgAdminRole.innerHTML = roleOptions;
     if (cfgModeratorRole) cfgModeratorRole.innerHTML = roleOptions;
+    if (cfgSupportRole) cfgSupportRole.innerHTML = roleOptions;
 
     const channels = guild.channels || [];
     const textChannels = channels.filter(c => c.isText || c.type === 0 || c.type === 5 || (!c.isVoice && c.type !== 4 && c.type !== 2 && c.type !== 13));
@@ -488,6 +490,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (cfgLeaderRole) cfgLeaderRole.value = s.leaderRoleId || '';
         if (cfgAdminRole) cfgAdminRole.value = s.adminRoleId || '';
         if (cfgModeratorRole) cfgModeratorRole.value = s.moderatorRoleId || '';
+        if (cfgSupportRole) cfgSupportRole.value = s.supportRoleId || '';
 
         if (cfgVerifyChannel) cfgVerifyChannel.value = s.verifyChannelId || '';
         if (cfgWelcomeChannel) cfgWelcomeChannel.value = s.welcomeChannelId || '';
@@ -547,7 +550,8 @@ document.addEventListener('DOMContentLoaded', () => {
         verifiedRoleId: cfgVerifiedRole ? cfgVerifiedRole.value : null,
         leaderRoleId: cfgLeaderRole ? cfgLeaderRole.value : null,
         adminRoleId: cfgAdminRole ? cfgAdminRole.value : null,
-        moderatorRoleId: cfgModeratorRole ? cfgModeratorRole.value : null,
+        moderatorRoleId: cfgModeratorRole ? cfgModeratorRole.value : '',
+        supportRoleId: cfgSupportRole ? cfgSupportRole.value : '',
         verifyChannelId: cfgVerifyChannel ? cfgVerifyChannel.value : null,
         welcomeChannelId: cfgWelcomeChannel ? cfgWelcomeChannel.value : null,
         goodbyeChannelId: cfgGoodbyeChannel ? cfgGoodbyeChannel.value : null,

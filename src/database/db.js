@@ -23,6 +23,7 @@ function formatSettings(guildId, row = null) {
       leaderRoleId: '',
       adminRoleId: '',
       moderatorRoleId: '',
+      supportRoleId: '',
       verifyChannelId: '',
       welcomeChannelId: '',
       goodbyeChannelId: '',
@@ -44,6 +45,7 @@ function formatSettings(guildId, row = null) {
     leaderRoleId: row.leader_role_id || '',
     adminRoleId: row.admin_role_id || '',
     moderatorRoleId: row.moderator_role_id || '',
+    supportRoleId: row.support_role_id || '',
     verifyChannelId: row.verify_channel_id || '',
     welcomeChannelId: row.welcome_channel_id || '',
     goodbyeChannelId: row.goodbye_channel_id || '',
@@ -100,6 +102,7 @@ async function initDatabase() {
         leader_role_id VARCHAR(32) DEFAULT NULL,
         admin_role_id VARCHAR(32) DEFAULT NULL,
         moderator_role_id VARCHAR(32) DEFAULT NULL,
+        support_role_id VARCHAR(32) DEFAULT NULL,
         verify_channel_id VARCHAR(32) DEFAULT NULL,
         welcome_channel_id VARCHAR(32) DEFAULT NULL,
         goodbye_channel_id VARCHAR(32) DEFAULT NULL,
@@ -128,6 +131,9 @@ async function initDatabase() {
     } catch {}
     try {
       await pool.query(`ALTER TABLE guild_settings ADD COLUMN ticket_counter INT DEFAULT 0`);
+    } catch {}
+    try {
+      await pool.query(`ALTER TABLE guild_settings ADD COLUMN support_role_id VARCHAR(32) DEFAULT NULL`);
     } catch {}
 
     // 4. โหลดข้อมูลทั้งหมดขึ้น In-Memory Cache
@@ -198,7 +204,7 @@ function getGuildSettings(guildId) {
     pool.query(`
       INSERT IGNORE INTO guild_settings (
         guild_id, verified_role_id, leader_role_id, admin_role_id,
-        moderator_role_id, verify_channel_id, welcome_channel_id,
+        moderator_role_id, support_role_id, verify_channel_id, welcome_channel_id,
         goodbye_channel_id, enable_welcome, log_channel_id,
         enable_logs, enable_admin_commands, enable_moderation_commands,
         ticket_category_id, music_channel_id
@@ -242,6 +248,7 @@ async function updateGuildSettings(guildId, newSettings) {
     leaderRoleId: newSettings.leaderRoleId !== undefined ? newSettings.leaderRoleId : current.leaderRoleId,
     adminRoleId: newSettings.adminRoleId !== undefined ? newSettings.adminRoleId : current.adminRoleId,
     moderatorRoleId: newSettings.moderatorRoleId !== undefined ? newSettings.moderatorRoleId : current.moderatorRoleId,
+    supportRoleId: newSettings.supportRoleId !== undefined ? newSettings.supportRoleId : current.supportRoleId,
     verifyChannelId: newSettings.verifyChannelId !== undefined ? newSettings.verifyChannelId : current.verifyChannelId,
     welcomeChannelId: newSettings.welcomeChannelId !== undefined ? newSettings.welcomeChannelId : current.welcomeChannelId,
     goodbyeChannelId: newSettings.goodbyeChannelId !== undefined ? newSettings.goodbyeChannelId : current.goodbyeChannelId,
@@ -275,6 +282,7 @@ async function updateGuildSettings(guildId, newSettings) {
           leader_role_id = VALUES(leader_role_id),
           admin_role_id = VALUES(admin_role_id),
           moderator_role_id = VALUES(moderator_role_id),
+          support_role_id = VALUES(support_role_id),
           verify_channel_id = VALUES(verify_channel_id),
           welcome_channel_id = VALUES(welcome_channel_id),
           goodbye_channel_id = VALUES(goodbye_channel_id),

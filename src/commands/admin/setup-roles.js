@@ -111,7 +111,30 @@ module.exports = {
         createdRoles.push(`🛠️ **Moderator (มีอยู่แล้ว)**: \`${modRole.id}\``);
       }
 
-      // 4. ตรวจสอบและสร้างยศ ✅ Member (สำหรับระบบยืนยันตัวตน)
+      
+      // 4. ตรวจสอบและสร้างยศ 🎧 Support
+      let supportRole = guild.roles.cache.find(r => r.name.includes('Support') || r.name.includes('ซัพพอร์ต'));
+      if (!supportRole) {
+        supportRole = await guild.roles.create({
+          name: '🎧 Support',
+          colors: 0x1ABC9C, // สีฟ้าอมเขียวสดใส
+          permissions: [
+            PermissionFlagsBits.ViewChannel,
+            PermissionFlagsBits.SendMessages,
+            PermissionFlagsBits.EmbedLinks,
+            PermissionFlagsBits.AttachFiles,
+            PermissionFlagsBits.ReadMessageHistory,
+            PermissionFlagsBits.ManageMessages
+          ],
+          hoist: true,
+          reason: 'สร้างยศอัตโนมัติผ่านคำสั่ง /setup-roles'
+        });
+        createdRoles.push(`🎧 **Support**: \`${supportRole.id}\` (สิทธิ์: ดูแลตอบตั๋ว Ticket & จัดการข้อความ)`);
+      } else {
+        createdRoles.push(`🎧 **Support (มีอยู่แล้ว)**: \`${supportRole.id}\``);
+      }
+
+      // 5. ตรวจสอบและสร้างยศ ✅ Member (สำหรับระบบยืนยันตัวตน)
       let memberRole = guild.roles.cache.find(r => r.name.includes('Member') || r.name.includes('สมาชิก'));
       if (!memberRole) {
         memberRole = await guild.roles.create({
@@ -136,16 +159,17 @@ module.exports = {
         createdRoles.push(`✅ **Member (มีอยู่แล้ว)**: \`${memberRole.id}\``);
       }
 
-      // 5. บันทึก Role IDs ลงฐานข้อมูล MySQL อัตโนมัติทันที
+      // 6. บันทึก Role IDs ลงฐานข้อมูล MySQL อัตโนมัติทันที
       const { updateGuildSettings } = require('../../database/db');
       await updateGuildSettings(guild.id, {
         leaderRoleId: leaderRole.id,
         adminRoleId: adminRole.id,
         moderatorRoleId: modRole.id,
+        supportRoleId: supportRole ? supportRole.id : null,
         verifiedRoleId: memberRole.id
       });
 
-      // 6. มอบยศ Leader และ Admin ให้แก่คนที่รันคำสั่งทันที
+      // 7. มอบยศ Leader และ Admin ให้แก่คนที่รันคำสั่งทันที
       if (leaderRole && botMember.roles.highest.position > leaderRole.position) {
         await member.roles.add(leaderRole).catch(() => {});
       }
@@ -155,7 +179,7 @@ module.exports = {
 
       logger.success(`สร้างและตั้งค่ายศในเซิร์ฟเวอร์ ${guild.name} และบันทึกลง MySQL สำเร็จ`);
 
-      // 7. สร้าง Embed รายงานผลลัพธ์พร้อมแจ้งสถานะบันทึกสำเร็จ
+      // 8. สร้าง Embed รายงานผลลัพธ์พร้อมแจ้งสถานะบันทึกสำเร็จ
       const resultEmbed = new EmbedBuilder()
         .setTitle('🎉 สร้างยศและบันทึกลงฐานข้อมูล MySQL สำเร็จ!')
         .setDescription(

@@ -5,12 +5,13 @@
 
 const {
   EmbedBuilder,
-  MessageFlags
+  MessageFlags,
+  PermissionFlagsBits
 } = require('discord.js');
 const { generateHtmlTranscript } = require('../../utils/transcript');
 const { sendAuditLog } = require('../../utils/auditLogger');
 const { createErrorEmbed } = require('../../utils/embeds');
-const { updateGuildSettings } = require('../../database/db');
+const { getGuildSettings, updateGuildSettings } = require('../../database/db');
 const { ChannelType } = require('discord.js');
 const config = require('../../config/config');
 const logger = require('../../utils/logger');
@@ -40,6 +41,29 @@ module.exports = {
       let openerUser = null;
       if (openerId) {
         openerUser = await interaction.client.users.fetch(openerId).catch(() => null);
+      }
+
+      // ดึงการตั้งค่ายศทีมงานเพื่อตรวจสอบสิทธิ์การปิดตั๋ว
+      const settings = typeof getGuildSettings === 'function' ? getGuildSettings(guild.id) : {};
+      const isOpener = closer.id === openerId;
+      const isOwner = guild.ownerId === closer.id;
+      const isSystemAdmin = interaction.member.permissions.has(PermissionFlagsBits.Administrator) ||
+                            interaction.member.permissions.has(PermissionFlagsBits.ManageChannels);
+      
+      const isStaffRole = [
+        settings.leaderRoleId,
+        settings.adminRoleId,
+        settings.moderatorRoleId,
+        settings.supportRoleId
+      ].filter(Boolean).some(roleId => interaction.member.roles.cache.has(roleId));
+
+      // หากไม่ใช่คนเปิดตั๋ว และไม่ใช่ทีมงาน (Leader, Admin, Mod, Support, Owner) ปฏิเสธการปิด
+      if (!isOpener && !isOwner && !isSystemAdmin && !isStaffRole) {
+        const noPermEmbed = createErrorEmbed(
+          'สิทธิ์ไม่เพียงพอ',
+          'เฉพาะ **ผู้เปิดตั๋ว** หรือทีมงาน **Support / Moderator / Admin / Leader** เท่านั้นที่สามารถปิดตั๋วนี้ได้'
+        );
+        return await interaction.reply({ embeds: [noPermEmbed], flags: MessageFlags.Ephemeral });
       }
 
       // 1. แจ้งเตือนการปิดตั๋วในห้องทันที
