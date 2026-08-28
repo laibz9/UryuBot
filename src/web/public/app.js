@@ -1422,8 +1422,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Global Event Delegation for Logout
   document.addEventListener('click', (e) => {
-    if (e.target.closest('.user-nav-logout') || e.target.closest('#btn-user-logout')) {
-      try { localStorage.removeItem('uryu_auth_user'); } catch(err) {}
+    const logoutBtn = e.target.closest('.user-nav-logout') || e.target.closest('#btn-user-logout') || e.target.closest('[href="/api/auth/logout"]');
+    if (logoutBtn) {
+      e.preventDefault();
+      try {
+        localStorage.removeItem('uryu_auth_user');
+        sessionStorage.clear();
+      } catch(err) {}
+      window.location.href = '/api/auth/logout';
     }
   });
 
