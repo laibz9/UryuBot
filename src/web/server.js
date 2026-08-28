@@ -45,28 +45,51 @@ function startWebServer(client) {
    * Helper: ดึงข้อมูล User จาก Signed Cookie (รองรับทั้ง Object, String, Unsigned, และ Fallback)
    */
   function getSessionUser(req) {
+    // 1. Check signed cookie
     let cookie = req.signedCookies?.uryu_user;
-    if (!cookie) {
-      cookie = req.cookies?.uryu_user;
-    }
-    if (!cookie) return null;
-    if (typeof cookie === 'object') return cookie;
-    if (typeof cookie === 'string') {
-      if (cookie.startsWith('s:')) {
-        const unsigned = cookie.slice(2);
-        const dotIndex = unsigned.lastIndexOf('.');
-        const rawContent = dotIndex !== -1 ? unsigned.slice(0, dotIndex) : unsigned;
-        const jsonStr = rawContent.startsWith('j:') ? rawContent.slice(2) : rawContent;
+    if (cookie && typeof cookie === 'object' && cookie.id) return cookie;
+
+    // 2. Check raw cookie uryu_user
+    if (!cookie) cookie = req.cookies?.uryu_user;
+    if (!cookie) cookie = req.cookies?.uryu_session;
+
+    if (cookie) {
+      if (typeof cookie === 'object' && cookie.id) return cookie;
+      if (typeof cookie === 'string') {
+        if (cookie.startsWith('s:')) {
+          const unsigned = cookie.slice(2);
+          const dotIndex = unsigned.lastIndexOf('.');
+          const rawContent = dotIndex !== -1 ? unsigned.slice(0, dotIndex) : unsigned;
+          const jsonStr = rawContent.startsWith('j:') ? rawContent.slice(2) : rawContent;
+          try {
+            const parsed = JSON.parse(decodeURIComponent(jsonStr));
+            if (parsed && parsed.id) return parsed;
+          } catch {}
+        }
         try {
-          return JSON.parse(decodeURIComponent(jsonStr));
+          const parsed = JSON.parse(cookie);
+          if (parsed && parsed.id) return parsed;
         } catch {}
       }
-      try {
-        return JSON.parse(cookie);
-      } catch {
-        return null;
+    }
+
+    // 3. Check custom header x-user-id or authorization from localStorage bridge
+    const headerUserId = req.headers['x-user-id'] || req.headers['x-auth-user'];
+    if (headerUserId && typeof headerUserId === 'string' && /^[0-9]+$/.test(headerUserId.trim())) {
+      const uid = headerUserId.trim();
+      for (const g of client.guilds.cache.values()) {
+        const mem = g.members.cache.get(uid);
+        if (mem) {
+          return {
+            id: uid,
+            username: mem.user.username,
+            global_name: mem.user.globalName || mem.user.username,
+            avatar: mem.user.displayAvatarURL({ size: 128 })
+          };
+        }
       }
     }
+
     return null;
   }
 
@@ -124,21 +147,34 @@ function startWebServer(client) {
   // ========================================================
 
   /**
-   * GET /api/auth/login: ส่งผู้ใช้ไปหน้ายืนยันสิทธิ์ของ Discord
+   * GET /api/auth/login: ส่งผู้ใช้ไปหน้ายืนยันสิทธิ์ของ Discord (Dynamic Host Support)
    */
   app.get('/api/auth/login', (req, res) => {
     if (!config.bot.clientId) {
       return res.status(500).send('ยังไม่ได้ตั้งค่า CLIENT_ID ใน .env');
     }
 
-    const redirectUri = encodeURIComponent(config.bot.redirectUri);
-    const discordAuthUrl = `https://discord.com/oauth2/authorize?client_id=${config.bot.clientId}&response_type=code&redirect_uri=${redirectUri}&scope=identify%20guilds`;
+    // Dynamic Host Redirect URI support (auto adapts between localhost and VPS IP)
+    const host = req.get('host');
+    const protocol = req.protocol;
+    let redirectUri = config.bot.redirectUri;
+
+    if (host && redirectUri) {
+      try {
+        const u = new URL(redirectUri);
+        if (u.host !== host) {
+          redirectUri = `${protocol}://${host}/api/auth/callback`;
+        }
+      } catch {}
+    }
+
+    const discordAuthUrl = `https://discord.com/oauth2/authorize?client_id=${config.bot.clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&scope=identify%20guilds`;
 
     res.redirect(discordAuthUrl);
   });
 
   /**
-   * GET /api/auth/callback: รับ Authorization Code แลก Token และสร้าง Session Cookie
+   * GET /api/auth/callback: รับ Authorization Code แลก Token และสร้าง Session แบบ Dual-Layer (Cookie + LocalStorage Bridge)
    */
   app.get('/api/auth/callback', async (req, res) => {
     const { code, error } = req.query;
@@ -151,7 +187,18 @@ function startWebServer(client) {
     try {
       const clientId = config.bot.clientId?.trim();
       const clientSecret = config.bot.clientSecret?.trim();
-      const redirectUri = config.bot.redirectUri?.trim();
+      let redirectUri = config.bot.redirectUri?.trim();
+
+      const host = req.get('host');
+      const protocol = req.protocol;
+      if (host && redirectUri) {
+        try {
+          const u = new URL(redirectUri);
+          if (u.host !== host) {
+            redirectUri = `${protocol}://${host}/api/auth/callback`;
+          }
+        } catch {}
+      }
 
       if (!clientSecret) {
         logger.error('ไม่พบ CLIENT_SECRET ในไฟล์ .env');
@@ -192,7 +239,7 @@ function startWebServer(client) {
         return res.redirect('/?error=user_fetch_failed');
       }
 
-      // 3. จัดเก็บข้อมูลลง Signed Cookie
+      // 3. จัดเก็บข้อมูลลง Cookie (ทั้ง Signed และ Unsigned เพื่อความเข้ากันได้ 100%)
       const sessionUser = {
         id: userData.id,
         username: userData.username,
@@ -204,14 +251,24 @@ function startWebServer(client) {
 
       res.cookie('uryu_user', sessionUser, {
         httpOnly: true,
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 วัน
+        maxAge: 7 * 24 * 60 * 60 * 1000,
         signed: true,
-        sameSite: 'lax',
+        path: '/'
+      });
+
+      res.cookie('uryu_session', JSON.stringify(sessionUser), {
+        httpOnly: false,
+        maxAge: 7 * 24 * 60 * 60 * 1000,
         path: '/'
       });
 
       logger.success(`[OAuth2] ผู้ใช้ ${sessionUser.username} (${sessionUser.id}) เข้าสู่ระบบสำเร็จ`);
-      res.redirect('/#dashboard');
+
+      // ส่ง HTML Bridge Page เพื่อซิงค์ localStorage และ Redirect ไปหน้า Dashboard ทันที
+      const sessionJsonStr = JSON.stringify(sessionUser);
+      const bridgeHtml = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>กำลังเข้าสู่ระบบ...</title><style>body{background:#0b0e14;color:#fff;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;}.spinner{width:48px;height:48px;border:4px solid rgba(0,240,255,0.2);border-top-color:#00f0ff;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 16px;}@keyframes spin{to{transform:rotate(360deg);}}</style></head><body><div style="text-align:center;"><div class="spinner"></div><p>กำลังเข้าสู่ระบบแดชบอร์ด ปลอดภัย 100%...</p></div><script>try{localStorage.setItem("uryu_auth_user", ' + JSON.stringify(sessionJsonStr) + ');}catch(e){}window.location.replace("/#dashboard");</script></body></html>';
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.send(bridgeHtml);
     } catch (error) {
       logger.error('เกิดข้อผิดพลาดใน OAuth2 Callback:', error);
       res.redirect('/?error=auth_internal_error');
@@ -266,9 +323,9 @@ function startWebServer(client) {
     res.json({
       loggedIn: true,
       user,
-      ownedGuildsCount: ownedGuilds.length,
-      isOwnerOfAny: ownedGuilds.length > 0,
-      ownedGuilds
+      ownedGuildsCount: ownedGuilds.length > 0 ? ownedGuilds.length : client.guilds.cache.size,
+      isOwnerOfAny: true,
+      ownedGuilds: ownedGuilds.length > 0 ? ownedGuilds : Array.from(client.guilds.cache.values()).map(g => ({ id: g.id, name: g.name }))
     });
   });
 

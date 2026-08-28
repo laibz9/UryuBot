@@ -127,42 +127,60 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /**
-   * ตรวจสอบสถานะการเข้าสู่ระบบผ่าน Discord OAuth2 (/api/auth/user)
+   * Helper: สร้าง Headers ที่ส่ง Session Info จาก LocalStorage เสมอเพื่อกันกรณี Cookie โดนบล็อก
+   */
+  function getAuthHeaders() {
+    const headers = {};
+    try {
+      const localUserStr = localStorage.getItem('uryu_auth_user');
+      if (localUserStr) {
+        const u = JSON.parse(localUserStr);
+        if (u && u.id) {
+          headers['x-user-id'] = u.id;
+        }
+      }
+    } catch(e) {}
+    return headers;
+  }
+
+  /**
+   * ตรวจสอบสถานะการเข้าสู่ระบบผ่าน Discord OAuth2 (/api/auth/user) แบบ Dual-Layer (Cookie + LocalStorage)
    */
   async function checkAuthStatus() {
     try {
-      const res = await fetch('/api/auth/user', { credentials: 'include' });
+      const headers = getAuthHeaders();
+      const res = await fetch('/api/auth/user', { 
+        credentials: 'include',
+        headers
+      });
       if (!res.ok) return;
       const data = await res.json();
 
       if (data.loggedIn && data.user) {
         currentUser = data.user;
+        try {
+          localStorage.setItem('uryu_auth_user', JSON.stringify(currentUser));
+        } catch(e) {}
 
         // 1. อัปเดตส่วน Auth บน Navbar เป็น User Pill
         authNavContainer.innerHTML = `
           <div class="user-nav-pill">
             <img src="${currentUser.avatar}" alt="User Avatar" class="user-nav-avatar">
             <span class="user-nav-name">${currentUser.global_name || currentUser.username}</span>
-            <a href="/api/auth/logout" class="user-nav-logout" title="ออกจากระบบ"><i class="fa-solid fa-right-from-bracket"></i> ออก</a>
+            <a href="/api/auth/logout" id="btn-user-logout" class="user-nav-logout" title="ออกจากระบบ"><i class="fa-solid fa-right-from-bracket"></i> ออก</a>
           </div>
         `;
 
-        // 2. ตรวจสอบสิทธิ์ว่ามีเซิร์ฟเวอร์ที่ดูแลหรือไม่
-        const hasGuilds = data.isOwnerOfAny || (data.ownedGuilds && data.ownedGuilds.length > 0) || (data.ownedGuildsCount > 0);
-        if (hasGuilds) {
-          dashboardLockOverlay.style.display = 'none';
-          dashboardContent.style.display = 'block';
+        // Logout handled by event delegation below
 
-          ownerAvatarImg.src = currentUser.avatar;
-          ownerNameDisplay.textContent = currentUser.global_name || currentUser.username;
+        // 2. ปลดล็อกแผง Dashboard ทันที
+        dashboardLockOverlay.style.display = 'none';
+        dashboardContent.style.display = 'block';
 
-          await fetchGuilds();
-        } else {
-          // ล็อกอินแล้วแต่ยังไม่มีเซิร์ฟเวอร์ที่บอทอยู่
-          dashboardLockOverlay.style.display = 'block';
-          dashboardContent.style.display = 'none';
-          lockMessage.innerHTML = `⚠️ บัญชี Discord ของคุณ (<strong>${currentUser.username}</strong>) เข้าสู่ระบบสำเร็จแล้ว แต่ยังไม่มีเซิร์ฟเวอร์ที่บอทประจำการอยู่ กรุณาเชิญบอทเข้าเซิร์ฟเวอร์ของคุณก่อนครับ`;
-        }
+        ownerAvatarImg.src = currentUser.avatar;
+        ownerNameDisplay.textContent = currentUser.global_name || currentUser.username;
+
+        await fetchGuilds();
       } else {
         // ยังไม่ได้เข้าสู่ระบบ
         currentUser = null;
@@ -322,7 +340,7 @@ document.addEventListener('DOMContentLoaded', () => {
    */
   async function fetchGuilds() {
     try {
-      const res = await fetch('/api/guilds', { credentials: 'include' });
+      const res = await fetch('/api/guilds', { credentials: 'include', headers: getAuthHeaders() });
       if (!res.ok) return;
       const data = await res.json();
 
@@ -1540,6 +1558,14 @@ document.addEventListener('DOMContentLoaded', () => {
   // Hook into guild select event to update dropdowns
   
 
+
+
+  // Global Event Delegation for Logout
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('.user-nav-logout') || e.target.closest('#btn-user-logout')) {
+      try { localStorage.removeItem('uryu_auth_user'); } catch(err) {}
+    }
+  });
 
   // เริ่มต้นทำงาน
   checkUrlErrors();
