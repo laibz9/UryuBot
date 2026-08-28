@@ -171,11 +171,18 @@ module.exports = {
       }
 
       // 7. มอบยศ Leader และ Admin ให้แก่คนที่รันคำสั่งทันที
-      if (leaderRole && botMember.roles.highest.position > leaderRole.position) {
-        await member.roles.add(leaderRole).catch(() => {});
-      }
-      if (adminRole && botMember.roles.highest.position > adminRole.position) {
-        await member.roles.add(adminRole).catch(() => {});
+      try {
+        const executor = guild.members.cache.get(interaction.user.id) || await guild.members.fetch(interaction.user.id).catch(() => null);
+        if (executor && executor.roles && typeof executor.roles.add === 'function') {
+          if (leaderRole && botMember.roles.highest.position > leaderRole.position) {
+            await executor.roles.add(leaderRole).catch(() => {});
+          }
+          if (adminRole && botMember.roles.highest.position > adminRole.position) {
+            await executor.roles.add(adminRole).catch(() => {});
+          }
+        }
+      } catch (roleAssignErr) {
+        logger.warn('ไม่สามารถมอบยศเริ่มต้นให้ผู้ใช้ได้:', roleAssignErr.message);
       }
 
       logger.success(`สร้างและตั้งค่ายศในเซิร์ฟเวอร์ ${guild.name} และบันทึกลง MySQL สำเร็จ`);
