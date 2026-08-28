@@ -89,15 +89,22 @@ async function handleButton(interaction, client) {
   try {
     await button.execute(interaction, client);
   } catch (error) {
+    if (error.code === 10062 || error.code === 40060) return;
     logger.error(`เกิดข้อผิดพลาดขณะรัน Button Handler [${interaction.customId}]:`, error);
     
     // Defensive check เพื่อไม่ให้บอทค้าง
-    if (!interaction.replied && !interaction.deferred) {
-      await interaction.reply({
-        content: 'เกิดข้อผิดพลาดในการประมวลผลปุ่มนี้ กรุณาลองใหม่อีกครั้ง',
-        flags: MessageFlags.Ephemeral
-      }).catch(() => {});
-    }
+    try {
+      if (interaction.deferred || interaction.replied) {
+        await interaction.editReply({
+          content: 'เกิดข้อผิดพลาดในการประมวลผลปุ่มนี้ กรุณาลองใหม่อีกครั้ง'
+        }).catch(() => {});
+      } else {
+        await interaction.reply({
+          content: 'เกิดข้อผิดพลาดในการประมวลผลปุ่มนี้ กรุณาลองใหม่อีกครั้ง',
+          flags: MessageFlags.Ephemeral
+        }).catch(() => {});
+      }
+    } catch {}
   }
 }
 

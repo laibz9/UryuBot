@@ -17,6 +17,8 @@ module.exports = {
    */
   async execute(interaction) {
     try {
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
       const customId = interaction.customId;
       const guild = interaction.guild;
       const member = interaction.member;
@@ -24,18 +26,16 @@ module.exports = {
 
       // ตรวจสอบว่ามีคิวเพลงหรือไม่
       if (!queue || !queue.songs || queue.songs.length === 0) {
-        return await interaction.reply({
-          content: '❌ ขณะนี้ไม่มีเพลงที่กำลังเล่นอยู่ครับ',
-          flags: MessageFlags.Ephemeral
+        return await interaction.editReply({
+          content: '❌ ขณะนี้ไม่มีเพลงที่กำลังเล่นอยู่ครับ'
         });
       }
 
       // ตรวจสอบห้องเสียงของผู้กดปุ่ม
       const memberVoice = member?.voice?.channel;
       if (!memberVoice || (queue.voiceChannel && memberVoice.id !== queue.voiceChannel.id)) {
-        return await interaction.reply({
-          content: '❌ คุณต้องอยู่ในห้องเสียงเดียวกับบอทเพื่อกดควบคุมเพลงครับ',
-          flags: MessageFlags.Ephemeral
+        return await interaction.editReply({
+          content: '❌ คุณต้องอยู่ในห้องเสียงเดียวกับบอทเพื่อกดควบคุมเพลงครับ'
         });
       }
 
@@ -44,10 +44,10 @@ module.exports = {
         case 'music_play_pause': {
           if (queue.paused) {
             queue.resume();
-            await interaction.reply({ content: '▶️ เล่นเพลงต่อเรียบร้อย', flags: MessageFlags.Ephemeral });
+            await interaction.editReply({ content: '▶️ เล่นเพลงต่อเรียบร้อย' });
           } else {
             queue.pause();
-            await interaction.reply({ content: '⏸️ พักการเล่นเพลงชั่วคราว', flags: MessageFlags.Ephemeral });
+            await interaction.editReply({ content: '⏸️ พักการเล่นเพลงชั่วคราว' });
           }
           updateDedicatedMusicPanel(guild, queue, queue.songs[0]);
           break;
@@ -57,19 +57,19 @@ module.exports = {
           if (queue.songs.length <= 1 && !queue.autoplay) {
             await queue.stop();
             updateDedicatedMusicPanel(guild, null, null);
-            return await interaction.reply({ content: '⏹️ ข้ามเพลงสุดท้ายและหยุดเล่นเรียบร้อย', flags: MessageFlags.Ephemeral });
+            return await interaction.editReply({ content: '⏹️ ข้ามเพลงสุดท้ายและหยุดเล่นเรียบร้อย' });
           }
           const nextSong = await queue.skip();
-          await interaction.reply({ content: `⏭️ ข้ามเพลงเรียบร้อย! เพลงถัดไป: **${nextSong.name}**`, flags: MessageFlags.Ephemeral });
+          await interaction.editReply({ content: `⏭️ ข้ามเพลงเรียบร้อย! เพลงถัดไป: **${nextSong.name}**` });
           break;
         }
 
         case 'music_previous': {
           try {
             await queue.previous();
-            await interaction.reply({ content: '⏮️ เล่นเพลงก่อนหน้าเรียบร้อย', flags: MessageFlags.Ephemeral });
+            await interaction.editReply({ content: '⏮️ เล่นเพลงก่อนหน้าเรียบร้อย' });
           } catch {
-            await interaction.reply({ content: '⚠️ ไม่มีประวัติเพลงก่อนหน้าในคิวครับ', flags: MessageFlags.Ephemeral });
+            await interaction.editReply({ content: '⚠️ ไม่มีประวัติเพลงก่อนหน้าในคิวครับ' });
           }
           break;
         }
@@ -77,7 +77,7 @@ module.exports = {
         case 'music_stop': {
           await queue.stop();
           updateDedicatedMusicPanel(guild, null, null);
-          await interaction.reply({ content: '⏹️ หยุดเล่นเพลง ล้างคิว และออกจากห้องเสียงเรียบร้อย', flags: MessageFlags.Ephemeral });
+          await interaction.editReply({ content: '⏹️ หยุดเล่นเพลง ล้างคิว และออกจากห้องเสียงเรียบร้อย' });
           break;
         }
 
@@ -86,7 +86,7 @@ module.exports = {
           const newVol = Math.max(currentVol - 10, 1);
           queue.setVolume(newVol);
           updateDedicatedMusicPanel(guild, queue, queue.songs[0]);
-          await interaction.reply({ content: `🔉 ปรับลดระดับเสียงเป็น: **${newVol}%**`, flags: MessageFlags.Ephemeral });
+          await interaction.editReply({ content: `🔉 ปรับลดระดับเสียงเป็น: **${newVol}%**` });
           break;
         }
 
@@ -95,17 +95,16 @@ module.exports = {
           const newVol = Math.min(currentVol + 10, 100);
           queue.setVolume(newVol);
           updateDedicatedMusicPanel(guild, queue, queue.songs[0]);
-          await interaction.reply({ content: `🔊 ปรับเพิ่มระดับเสียงเป็น: **${newVol}%**`, flags: MessageFlags.Ephemeral });
+          await interaction.editReply({ content: `🔊 ปรับเพิ่มระดับเสียงเป็น: **${newVol}%**` });
           break;
         }
 
         case 'music_loop': {
-          // สลับโหมด 0 -> 1 -> 2 -> 0
           const nextMode = (queue.repeatMode + 1) % 3;
           queue.setRepeatMode(nextMode);
           const modeNames = ['❌ ปิดการวนซ้ำ', '🔂 วนซ้ำเพลงนี้', '🔁 วนซ้ำทั้งคิว'];
           updateDedicatedMusicPanel(guild, queue, queue.songs[0]);
-          await interaction.reply({ content: `🔁 โหมดวนซ้ำ: **${modeNames[nextMode]}**`, flags: MessageFlags.Ephemeral });
+          await interaction.editReply({ content: `🔁 โหมดวนซ้ำ: **${modeNames[nextMode]}**` });
           break;
         }
 
@@ -130,7 +129,7 @@ module.exports = {
             .setColor(config.colors.accent)
             .setFooter({ text: `ระดับเสียง: ${queue.volume}% | โหมดวนซ้ำ: ${queue.repeatMode}` });
 
-          await interaction.reply({ embeds: [qEmbed], flags: MessageFlags.Ephemeral });
+          await interaction.editReply({ embeds: [qEmbed] });
           break;
         }
 
@@ -138,12 +137,17 @@ module.exports = {
           break;
       }
     } catch (error) {
+      if (error.code === 10062 || error.code === 40060) return;
       logger.error('เกิดข้อผิดพลาดขณะประมวลผล Music Button:', error);
-      if (!interaction.replied && !interaction.deferred) {
+      if (interaction.deferred || interaction.replied) {
+        await interaction.editReply({
+          content: 'เกิดข้อผิดพลาดในการควบคุมเพลง กรุณาลองใหม่อีกครั้ง'
+        }).catch(() => {});
+      } else {
         await interaction.reply({
           content: 'เกิดข้อผิดพลาดในการควบคุมเพลง กรุณาลองใหม่อีกครั้ง',
           flags: MessageFlags.Ephemeral
-        });
+        }).catch(() => {});
       }
     }
   }
