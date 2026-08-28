@@ -90,6 +90,7 @@ module.exports = {
 
       await interaction.reply({ embeds: [embed] });
     } catch (error) {
+      if (error.code === 10062 || error.code === 40060) return;
       logger.error('เกิดข้อผิดพลาดขณะรันคำสั่ง /serverinfo:', error);
 
       if (!interaction.replied && !interaction.deferred) {

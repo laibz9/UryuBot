@@ -60,19 +60,26 @@ module.exports = {
         try {
           await command.execute(interaction, client);
         } catch (error) {
+          if (error.code === 10062 || error.code === 40060) {
+            logger.warn(`Interaction /${interaction.commandName} expired or was already acknowledged (${error.code})`);
+            return;
+          }
           logger.error(`เกิดข้อผิดพลาดในการรันคำสั่ง /${interaction.commandName}:`, error);
 
-          // Defensive Check: ป้องกันการ reply ซ้ำเมื่อระบุข้อความตอบกลับ
           const errorMessage = {
             content: 'เกิดข้อผิดพลาดในการประมวลผลคำสั่งนี้ กรุณาลองใหม่อีกครั้ง',
             flags: MessageFlags.Ephemeral
           };
 
-          if (interaction.replied || interaction.deferred) {
-            await interaction.followUp(errorMessage).catch(() => {});
-          } else {
-            await interaction.reply(errorMessage).catch(() => {});
-          }
+          try {
+            if (interaction.replied || interaction.deferred) {
+              await interaction.editReply(errorMessage).catch(async () => {
+                await interaction.followUp(errorMessage).catch(() => {});
+              });
+            } else {
+              await interaction.reply(errorMessage).catch(() => {});
+            }
+          } catch {}
         }
         return;
       }

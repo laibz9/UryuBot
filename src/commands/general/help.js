@@ -36,6 +36,7 @@ module.exports = {
 
       logger.info(`สมาชิก ${interaction.user.tag} เรียกใช้งานคำสั่ง /help ใน ${interaction.guild?.name}`);
     } catch (error) {
+      if (error.code === 10062 || error.code === 40060) return;
       logger.error('เกิดข้อผิดพลาดในการประมวลผลคำสั่ง /help:', error);
       
       const errMsg = { content: 'เกิดข้อผิดพลาดในการเปิดเมนูช่วยเหลือ กรุณาลองใหม่อีกครั้ง', flags: MessageFlags.Ephemeral };

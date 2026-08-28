@@ -67,6 +67,7 @@ module.exports = {
 
       await interaction.reply({ embeds: [successEmbed], flags: MessageFlags.Ephemeral });
     } catch (error) {
+      if (error.code === 10062 || error.code === 40060) return;
       logger.error('เกิดข้อผิดพลาดขณะรันคำสั่ง /clear:', error);
 
       if (!interaction.replied && !interaction.deferred) {

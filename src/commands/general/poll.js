@@ -159,6 +159,7 @@ module.exports = {
         flags: MessageFlags.Ephemeral
       });
     } catch (error) {
+      if (error.code === 10062 || error.code === 40060) return;
       logger.error('เกิดข้อผิดพลาดขณะรันคำสั่ง /poll:', error);
       if (!interaction.replied && !interaction.deferred) {
         const errEmbed = createErrorEmbed('ข้อผิดพลาดระบบ', config.messages.genericError);

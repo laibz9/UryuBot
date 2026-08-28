@@ -37,6 +37,7 @@ module.exports = {
       logger.info(`ข้ามเพลงสำเร็จในเซิร์ฟเวอร์ ${interaction.guild.name}`);
       await interaction.reply({ content: `⏭️ ข้ามเพลงเรียบร้อย! กำลังเล่นเพลงถัดไป: **${song.name}**` });
     } catch (error) {
+      if (error.code === 10062 || error.code === 40060) return;
       logger.error('เกิดข้อผิดพลาดขณะรันคำสั่ง /skip:', error);
       const errEmbed = createErrorEmbed('ข้อผิดพลาดระบบ', `ไม่สามารถข้ามเพลงได้: \`${error.message}\``);
       await interaction.reply({ embeds: [errEmbed], flags: MessageFlags.Ephemeral });

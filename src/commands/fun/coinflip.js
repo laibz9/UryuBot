@@ -47,6 +47,7 @@ module.exports = {
 
       await interaction.reply({ embeds: [embed] });
     } catch (error) {
+      if (error.code === 10062 || error.code === 40060) return;
       logger.error('เกิดข้อผิดพลาดขณะรันคำสั่ง /coinflip:', error);
       if (!interaction.replied && !interaction.deferred) {
         await interaction.reply({ content: 'เกิดข้อผิดพลาดในการทอยเหรียญ', flags: MessageFlags.Ephemeral });

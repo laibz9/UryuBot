@@ -84,6 +84,7 @@ module.exports = {
 
       logger.success(`ส่งแผงยืนยันตัวตนไปยังช่อง #${targetChannel.name} โดย ${interaction.user.tag}`);
     } catch (error) {
+      if (error.code === 10062 || error.code === 40060) return;
       logger.error('เกิดข้อผิดพลาดขณะรันคำสั่ง /send-verify:', error);
 
       if (!interaction.replied && !interaction.deferred) {

@@ -51,6 +51,7 @@ module.exports = {
         content: `🔍 กำลังค้นหาและดึงเพลง: **"${songQuery}"** เข้าคิว...`
       });
     } catch (error) {
+      if (error.code === 10062 || error.code === 40060) return;
       logger.error('เกิดข้อผิดพลาดขณะรันคำสั่ง /play:', error);
       if (interaction.deferred || interaction.replied) {
         const errEmbed = createErrorEmbed('ข้อผิดพลาดระบบ', `ไม่สามารถเล่นเพลงได้: \`${error.message || 'Error'}\``);

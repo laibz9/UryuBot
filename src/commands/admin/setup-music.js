@@ -105,6 +105,7 @@ module.exports = {
 
       await interaction.editReply({ embeds: [summaryEmbed] });
     } catch (error) {
+      if (error.code === 10062 || error.code === 40060) return;
       logger.error('เกิดข้อผิดพลาดขณะรันคำสั่ง /setup-music:', error);
       if (interaction.deferred || interaction.replied) {
         const errEmbed = createErrorEmbed('ข้อผิดพลาดระบบ', config.messages.genericError);
