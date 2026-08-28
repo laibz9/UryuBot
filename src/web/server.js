@@ -595,6 +595,58 @@ function startWebServer(client) {
   /**
    * API: ติดตั้งห้องขอเพลง (Protected)
    */
+  
+  /**
+   * API: สลับสถานะล็อกดาวน์ฉุกเฉิน (Protected)
+   */
+  app.post('/api/actions/lockdown', requireServerOwner, async (req, res) => {
+    try {
+      const { guildId, mode } = req.body;
+      const guild = client.guilds.cache.get(guildId);
+      if (!guild) return res.status(404).json({ success: false, error: 'ไม่พบเซิร์ฟเวอร์' });
+
+      const botMember = guild.members.me;
+      if (!botMember.permissions.has(PermissionFlagsBits.ManageChannels) && !botMember.permissions.has(PermissionFlagsBits.Administrator)) {
+        return res.status(400).json({ success: false, error: 'บอทไม่มีสิทธิ์ Manage Channels ในการล็อกดาวน์' });
+      }
+
+      const isLock = mode === 'on';
+      const everyoneRole = guild.roles.everyone;
+      const textChannels = guild.channels.cache.filter(c => c.type === ChannelType.GuildText);
+      let count = 0;
+
+      for (const [_, channel] of textChannels) {
+        try {
+          if (isLock) {
+            await channel.permissionOverwrites.edit(everyoneRole, {
+              SendMessages: false,
+              AddReactions: false,
+              CreatePublicThreads: false,
+              CreatePrivateThreads: false
+            }, { reason: `Emergency Lockdown ON by Web Owner: ${req.user.username}` });
+          } else {
+            await channel.permissionOverwrites.edit(everyoneRole, {
+              SendMessages: null,
+              AddReactions: null,
+              CreatePublicThreads: null,
+              CreatePrivateThreads: null
+            }, { reason: `Emergency Lockdown OFF by Web Owner: ${req.user.username}` });
+          }
+          count++;
+        } catch {}
+      }
+
+      logger.success(`[Web Action] ${req.user.username} สลับสถานะ Lockdown เป็น ${isLock ? 'ON' : 'OFF'} (${count} ช่อง)`);
+      res.json({
+        success: true,
+        isLockdown: isLock,
+        message: isLock ? `🚨 เปิดโหมดล็อกดาวน์สำเร็จ (${count} ช่องถูกปิดการพิมพ์)` : `🔓 ปลดล็อกดาวน์สำเร็จ (${count} ช่องกลับสู่สภาวะปกติ)`
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
   app.post('/api/actions/setup-music', requireServerOwner, async (req, res) => {
     try {
       const { guildId, channelId } = req.body;
@@ -932,10 +984,11 @@ function startWebServer(client) {
     }
   });
 
+
   /**
-   * API: ส่ง Custom Embed Studio ไปยังช่อง Discord (Interactive Embed Builder)
+   * Handler: ส่งข้อความ Embed Announcement / Custom Embed
    */
-  app.post('/api/embeds/send', requireServerOwner, async (req, res) => {
+  async function handleSendEmbed(req, res) {
     try {
       const {
         guildId,
@@ -998,7 +1051,11 @@ function startWebServer(client) {
       logger.error('[Embed Studio Error]:', error);
       res.status(500).json({ success: false, error: error.message || 'ส่งข้อความไม่สำเร็จ' });
     }
-  });
+  }
+
+  app.post('/api/embeds/send', requireServerOwner, handleSendEmbed);
+  app.post('/api/actions/announce', requireServerOwner, handleSendEmbed);
+
 
   /**
    * API: ดึงรายชื่อสมาชิกในเซิร์ฟเวอร์สำหรับ Quick Moderation
