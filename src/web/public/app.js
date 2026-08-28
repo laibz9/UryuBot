@@ -134,6 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const localUserStr = localStorage.getItem('uryu_auth_user');
       if (localUserStr) {
+        headers['x-user-data'] = encodeURIComponent(localUserStr);
         const u = JSON.parse(localUserStr);
         if (u && u.id) {
           headers['x-user-id'] = u.id;

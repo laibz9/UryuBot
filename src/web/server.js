@@ -45,11 +45,20 @@ function startWebServer(client) {
    * Helper: ดึงข้อมูล User จาก Signed Cookie (รองรับทั้ง Object, String, Unsigned, และ Fallback)
    */
   function getSessionUser(req) {
-    // 1. Check signed cookie
+    // 1. Check custom header x-user-data (LocalStorage Bridge)
+    const headerUserData = req.headers['x-user-data'];
+    if (headerUserData) {
+      try {
+        const parsed = JSON.parse(decodeURIComponent(headerUserData));
+        if (parsed && parsed.id) return parsed;
+      } catch {}
+    }
+
+    // 2. Check signed cookie
     let cookie = req.signedCookies?.uryu_user;
     if (cookie && typeof cookie === 'object' && cookie.id) return cookie;
 
-    // 2. Check raw cookie uryu_user
+    // 3. Check raw cookies (uryu_user or uryu_session)
     if (!cookie) cookie = req.cookies?.uryu_user;
     if (!cookie) cookie = req.cookies?.uryu_session;
 
@@ -73,18 +82,17 @@ function startWebServer(client) {
       }
     }
 
-    // 3. Check custom header x-user-id or authorization from localStorage bridge
+    // 4. Check x-user-id against guild owners
     const headerUserId = req.headers['x-user-id'] || req.headers['x-auth-user'];
     if (headerUserId && typeof headerUserId === 'string' && /^[0-9]+$/.test(headerUserId.trim())) {
       const uid = headerUserId.trim();
       for (const g of client.guilds.cache.values()) {
-        const mem = g.members.cache.get(uid);
-        if (mem) {
+        if (g.ownerId === uid) {
           return {
             id: uid,
-            username: mem.user.username,
-            global_name: mem.user.globalName || mem.user.username,
-            avatar: mem.user.displayAvatarURL({ size: 128 })
+            username: 'Server Owner',
+            global_name: 'Server Owner',
+            avatar: 'https://cdn-icons-png.flaticon.com/512/1069/1069210.png'
           };
         }
       }
