@@ -36,6 +36,8 @@ module.exports = {
    */
   async execute(interaction) {
     try {
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
       // 0. ตรวจสอบสิทธิ์ผู้ใช้งาน (Role Permission Guard)
       const hasPerm = await checkCommandPermission(interaction, 'admin');
       if (!hasPerm) return;
@@ -50,7 +52,7 @@ module.exports = {
       // ตรวจสอบสิทธิ์การส่งข้อความของบอทในช่องเป้าหมาย
       const permissions = targetChannel.permissionsFor(interaction.guild.members.me);
       if (!permissions.has(PermissionFlagsBits.SendMessages) || !permissions.has(PermissionFlagsBits.EmbedLinks)) {
-        return await interaction.reply({
+        return await interaction.editReply({
           content: `บอทไม่มีสิทธิ์ส่งข้อความหรือ Embed ในช่อง ${targetChannel}`,
           flags: MessageFlags.Ephemeral
         });
@@ -75,7 +77,7 @@ module.exports = {
       });
 
       // ตอบกลับผู้ใช้งานคำสั่งแบบ Ephemeral
-      await interaction.reply({
+      await interaction.editReply({
         content: `ส่งแผงยืนยันตัวตนไปยังช่อง ${targetChannel} เรียบร้อยแล้ว`,
         flags: MessageFlags.Ephemeral
       });

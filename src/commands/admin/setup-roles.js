@@ -27,6 +27,8 @@ module.exports = {
    */
   async execute(interaction) {
     try {
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
       const guild = interaction.guild;
       const member = interaction.member;
 
@@ -40,17 +42,15 @@ module.exports = {
           'สิทธิ์ไม่เพียงพอ (Access Denied)',
           'คำสั่ง **/setup-roles** อนุญาตให้ใช้งานได้เฉพาะ **Server Owner** หรือผู้มียศ **👑 Leader** เท่านั้น'
         );
-        return await interaction.reply({ embeds: [errEmbed], flags: MessageFlags.Ephemeral });
+        return await interaction.editReply({ embeds: [errEmbed] });
       }
 
       // ตรวจสอบสิทธิ์ของบอท (ต้องมี ManageRoles และ Administrator)
       const botMember = guild.members.me;
       if (!botMember.permissions.has(PermissionFlagsBits.ManageRoles)) {
         const errEmbed = createErrorEmbed('สิทธิ์ไม่เพียงพอ', 'บอทจำเป็นต้องมีสิทธิ์ Manage Roles เพื่อสร้างและตั้งค่ายศในเซิร์ฟเวอร์');
-        return await interaction.reply({ embeds: [errEmbed], flags: MessageFlags.Ephemeral });
+        return await interaction.editReply({ embeds: [errEmbed] });
       }
-
-      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
       const createdRoles = [];
 

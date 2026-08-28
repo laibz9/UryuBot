@@ -37,6 +37,8 @@ module.exports = {
    */
   async execute(interaction) {
     try {
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
       const guild = interaction.guild;
       const member = interaction.member;
 
@@ -50,7 +52,7 @@ module.exports = {
           'สิทธิ์ไม่เพียงพอ',
           'คำสั่ง **/send-ticket** อนุญาตให้ใช้งานได้เฉพาะ **Server Owner** หรือผู้มียศ **👑 Leader** เท่านั้น'
         );
-        return await interaction.reply({ embeds: [errEmbed], flags: MessageFlags.Ephemeral });
+        return await interaction.editReply({ embeds: [errEmbed] });
       }
 
       const targetChannel = interaction.options.getChannel('channel') || interaction.channel;
@@ -60,7 +62,7 @@ module.exports = {
       const permissions = targetChannel.permissionsFor(botMember);
       if (!permissions || !permissions.has(PermissionFlagsBits.SendMessages) || !permissions.has(PermissionFlagsBits.EmbedLinks)) {
         const errEmbed = createErrorEmbed('สิทธิ์ไม่เพียงพอ', `บอทไม่มีสิทธิ์ส่งข้อความหรือ Embed ในช่อง ${targetChannel}`);
-        return await interaction.reply({ embeds: [errEmbed], flags: MessageFlags.Ephemeral });
+        return await interaction.editReply({ embeds: [errEmbed] });
       }
 
       // สร้าง Ticket Panel Embed
@@ -100,7 +102,7 @@ module.exports = {
 
       logger.success(`ส่งแผง Ticket ไปยังช่อง #${targetChannel.name} สำเร็จโดย ${interaction.user.tag}`);
 
-      await interaction.reply({
+      await interaction.editReply({
         content: `✅ ส่งแผง Ticket ไปยังช่อง ${targetChannel} เรียบร้อยแล้วครับ`,
         flags: MessageFlags.Ephemeral
       });
