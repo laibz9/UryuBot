@@ -218,7 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
           if (data.bot.name && botNameDisplay) botNameDisplay.textContent = data.bot.name;
           if (data.bot.tag && botTagDisplay) botTagDisplay.textContent = data.bot.tag;
           if (data.bot.inviteUrl) {
-            if (btnInvite) btnInvite.href = data.bot.inviteUrl;
+            
             if (btnHeroInvite) btnHeroInvite.href = data.bot.inviteUrl;
           }
         }
@@ -244,97 +244,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // ปุ่มกดเล่น/พักเพลงบน Web Widget
-  if (musicPlayBtn) {
-    musicPlayBtn.addEventListener('click', async () => {
-      try {
-        const res = await fetch('/api/actions/music-toggle', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ guildId: currentPlayingGuildId || currentGuildId })
-        });
-        const data = await res.json();
-        if (data.success) {
-          showToast(data.message, 'success');
-          fetchLiveStats();
-        } else {
-          showToast(data.error || 'ไม่สามารถควบคุมเพลงได้', 'error');
-        }
-      } catch (err) {
-        showToast('เกิดข้อผิดพลาดในการเชื่อมต่อ', 'error');
-      }
-    });
-  }
 
-  // ปุ่มกดข้ามเพลง (Next Song)
-  if (musicNextBtn) {
-    musicNextBtn.addEventListener('click', async () => {
-      try {
-        const res = await fetch('/api/actions/music-skip', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ guildId: currentPlayingGuildId || currentGuildId })
-        });
-        const data = await res.json();
-        if (data.success) {
-          showToast(data.message, 'success');
-          fetchLiveStats();
-        } else {
-          showToast(data.error || 'ไม่สามารถข้ามเพลงได้', 'error');
-        }
-      } catch (err) {
-        showToast('เกิดข้อผิดพลาดในการเชื่อมต่อ', 'error');
-      }
-    });
-  }
-
-  // ปุ่มกดเล่นเพลงก่อนหน้า (Previous Song)
-  if (musicPrevBtn) {
-    musicPrevBtn.addEventListener('click', async () => {
-      try {
-        const res = await fetch('/api/actions/music-previous', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ guildId: currentPlayingGuildId || currentGuildId })
-        });
-        const data = await res.json();
-        if (data.success) {
-          showToast(data.message, 'success');
-          fetchLiveStats();
-        } else {
-          showToast(data.error || 'ไม่มีประวัติเพลงก่อนหน้า', 'error');
-        }
-      } catch (err) {
-        showToast('เกิดข้อผิดพลาดในการเชื่อมต่อ', 'error');
-      }
-    });
-  }
-
-  // ปุ่มกดหยุดเล่นเพลง (Stop Music)
-  if (musicStopBtn) {
-    musicStopBtn.addEventListener('click', async () => {
-      try {
-        const res = await fetch('/api/actions/music-stop', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ guildId: currentPlayingGuildId || currentGuildId })
-        });
-        const data = await res.json();
-        if (data.success) {
-          showToast(data.message, 'success');
-          fetchLiveStats();
-        } else {
-          showToast(data.error || 'ไม่สามารถหยุดเล่นเพลงได้', 'error');
-        }
-      } catch (err) {
-        showToast('เกิดข้อผิดพลาดในการเชื่อมต่อ', 'error');
-      }
-    });
-  }
 
   /**
    * ดึงรายชื่อเซิร์ฟเวอร์ที่ User เป็นเจ้าของหรือดูแล (/api/guilds)
@@ -400,7 +310,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (cfgLogChannel) cfgLogChannel.innerHTML = channelOptions;
     if (cfgMusicChannel) cfgMusicChannel.innerHTML = channelOptions;
     if (cfgTicketChannel) cfgTicketChannel.innerHTML = channelOptions;
-    if (annChannel) annChannel.innerHTML = channelOptions;
+    
 
     const categoryChannels = channels.filter(c => c.type === 4);
     const categoryOptions = [
@@ -631,57 +541,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       } catch (err) {
         showToast('เกิดข้อผิดพลาดในการเปลี่ยนสถานะล็อกดาวน์', 'error');
-      }
-    });
-  }
-
-  // Remote Action: ส่งประกาศข่าวสาร
-  if (btnSendAnnouncement) {
-    btnSendAnnouncement.addEventListener('click', async () => {
-      const channelId = annChannel ? annChannel.value : null;
-      const title = annTitle ? annTitle.value.trim() : '';
-      const description = annDesc ? annDesc.value.trim() : '';
-
-      if (!channelId) {
-        showToast('กรุณาเลือกช่องสำหรับส่งประกาศ', 'error');
-        return;
-      }
-      if (!title || !description) {
-        showToast('กรุณากรอกหัวข้อและเนื้อหาประกาศ', 'error');
-        return;
-      }
-
-      btnSendAnnouncement.disabled = true;
-      btnSendAnnouncement.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> กำลังส่งประกาศ...';
-
-      try {
-        const res = await fetch('/api/actions/announce', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            guildId: currentGuildId,
-            channelId,
-            title,
-            description,
-            color: annColor ? annColor.value : '#00F0FF',
-            image: annImage ? annImage.value.trim() : ''
-          })
-        });
-
-        const data = await res.json();
-        if (data.success) {
-          showToast('ส่งประกาศเข้าเซิร์ฟเวอร์เรียบร้อยแล้ว! 📢');
-          if (annTitle) annTitle.value = '';
-          if (annDesc) annDesc.value = '';
-          if (annImage) annImage.value = '';
-        } else {
-          showToast(`เกิดข้อผิดพลาด: ${data.error}`, 'error');
-        }
-      } catch (err) {
-        showToast('ไม่สามารถส่งประกาศได้', 'error');
-      } finally {
-        btnSendAnnouncement.disabled = false;
-        btnSendAnnouncement.innerHTML = '<i class="fa-solid fa-paper-plane"></i> ส่งประกาศเข้าเซิร์ฟเวอร์ทันที';
       }
     });
   }
@@ -1220,7 +1079,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Bind live typing events
-  const embedInputFields = [embedTitle, embedTitleUrl, embedDesc, embedColor, embedAuthorName, embedAuthorIcon, embedAuthorUrl, embedThumbnail, embedImage, embedFooterText, embedFooterIcon, embedShowTimestamp];
+  const embedInputFields = [embedTitle, embedTitleUrl, embedDesc, embedColor, embedAuthorName, embedAuthorIcon, embedThumbnail, embedImage, embedFooterText, embedFooterIcon, embedShowTimestamp];
   embedInputFields.forEach(field => {
     if (field) {
       field.addEventListener('input', updateEmbedPreview);
@@ -1566,6 +1425,76 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.target.closest('.user-nav-logout') || e.target.closest('#btn-user-logout')) {
       try { localStorage.removeItem('uryu_auth_user'); } catch(err) {}
     }
+  });
+
+
+  /**
+   * ดึงรายการคำสั่งทั้งหมดจาก API (/api/commands)
+   */
+  async function fetchCommands() {
+    try {
+      const res = await fetch('/api/commands');
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.success && data.commands) {
+        allCommands = data.commands;
+        renderCommands();
+      }
+    } catch (err) {
+      if (commandsContainer) {
+        commandsContainer.innerHTML = '<div class="error-msg">ไม่สามารถโหลดรายการคำสั่งได้</div>';
+      }
+    }
+  }
+
+  /**
+   * เรนเดอร์การ์ดคำสั่งตามหมวดหมู่และข้อความค้นหา
+   */
+  function renderCommands() {
+    if (!commandsContainer) return;
+
+    const query = cmdSearchInput ? cmdSearchInput.value.toLowerCase().trim() : '';
+    const filtered = allCommands.filter(cmd => {
+      const matchCat = (currentCategory === 'all' || cmd.category === currentCategory);
+      const matchSearch = (!query || cmd.name.toLowerCase().includes(query) || cmd.description.toLowerCase().includes(query));
+      return matchCat && matchSearch;
+    });
+
+    if (filtered.length === 0) {
+      commandsContainer.innerHTML = '<div class="no-commands">ไม่พบคำสั่งที่ตรงกับการค้นหา</div>';
+      return;
+    }
+
+    commandsContainer.innerHTML = filtered.map(cmd => `
+      <div class="command-card glass-panel">
+        <div class="cmd-header">
+          <span class="cmd-name">/${cmd.name}</span>
+          <span class="cmd-category-tag ${cmd.category}">${cmd.category}</span>
+        </div>
+        <p class="cmd-desc">${cmd.description}</p>
+        ${cmd.options && cmd.options.length > 0 ? `
+          <div class="cmd-options">
+            <strong>ตัวเลือก:</strong>
+            ${cmd.options.map(opt => `<span class="opt-pill">${opt.name}${opt.required ? '*' : ''}</span>`).join(' ')}
+          </div>
+        ` : ''}
+      </div>
+    `).join('');
+  }
+
+  // Bind command search input
+  if (cmdSearchInput) {
+    cmdSearchInput.addEventListener('input', renderCommands);
+  }
+
+  // Bind command category filters
+  filterBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      filterBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentCategory = btn.getAttribute('data-category');
+      renderCommands();
+    });
   });
 
   // เริ่มต้นทำงาน
