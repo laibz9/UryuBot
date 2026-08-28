@@ -1,6 +1,6 @@
 /**
  * @file src/commands/admin/setup-roles.js
- * @description Slash Command สำหรับสร้างยศ Admin, Moderator และ Member พร้อมตั้งค่า สิทธิ์ (Permissions) อัตโนมัติ (/setup-roles)
+ * @description Slash Command สำหรับสร้างยศ Admin, Moderator, Support และ Member พร้อมตั้งค่าสิทธิ์ (Permissions) อัตโนมัติ (/setup-roles)
  */
 
 const {
@@ -12,11 +12,12 @@ const {
 const config = require('../../config/config');
 const { createErrorEmbed } = require('../../utils/embeds');
 const logger = require('../../utils/logger');
+const { updateGuildSettings } = require('../../database/db');
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('setup-roles')
-    .setDescription('สร้างยศ Admin, Moderator และ Member พร้อมตั้งค่าสิทธิ์ให้อัตโนมัติ (เฉพาะเจ้าของเซิร์ฟเวอร์)')
+    .setDescription('สร้างยศ Leader, Admin, Moderator, Support และ Member พร้อมตั้งค่าสิทธิ์ให้อัตโนมัติ (เฉพาะเจ้าของเซิร์ฟเวอร์)')
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
     .setDMPermission(false),
 
@@ -58,9 +59,9 @@ module.exports = {
       if (!leaderRole) {
         leaderRole = await guild.roles.create({
           name: '👑 Leader',
-          colors: 0xF1C40F, // สีทองอร่ามพรีเมียม
+          color: '#F1C40F', // สีทองอร่ามพรีเมียม
           permissions: [PermissionFlagsBits.Administrator],
-          hoist: true, // แสดงแยกกลุ่มสมาชิก
+          hoist: true,
           reason: 'สร้างยศอัตโนมัติผ่านคำสั่ง /setup-roles'
         });
         createdRoles.push(`👑 **Leader (Owner)**: \`${leaderRole.id}\` (สิทธิ์: Administrator ครบถ้วน)`);
@@ -73,7 +74,7 @@ module.exports = {
       if (!adminRole) {
         adminRole = await guild.roles.create({
           name: '👑 Admin',
-          colors: 0xE74C3C, // สีแดงพรีเมียม
+          color: '#E74C3C', // สีแดงพรีเมียม
           permissions: [PermissionFlagsBits.Administrator],
           hoist: true,
           reason: 'สร้างยศอัตโนมัติผ่านคำสั่ง /setup-roles'
@@ -88,7 +89,7 @@ module.exports = {
       if (!modRole) {
         modRole = await guild.roles.create({
           name: '🛠️ Moderator',
-          colors: 0x3498DB, // สีฟ้าสดใส
+          color: '#3498DB', // สีฟ้าสดใส
           permissions: [
             PermissionFlagsBits.ViewChannel,
             PermissionFlagsBits.SendMessages,
@@ -111,13 +112,12 @@ module.exports = {
         createdRoles.push(`🛠️ **Moderator (มีอยู่แล้ว)**: \`${modRole.id}\``);
       }
 
-      
       // 4. ตรวจสอบและสร้างยศ 🎧 Support
       let supportRole = guild.roles.cache.find(r => r.name.includes('Support') || r.name.includes('ซัพพอร์ต'));
       if (!supportRole) {
         supportRole = await guild.roles.create({
           name: '🎧 Support',
-          colors: 0x1ABC9C, // สีฟ้าอมเขียวสดใส
+          color: '#1ABC9C', // สีฟ้าอมเขียวสดใส
           permissions: [
             PermissionFlagsBits.ViewChannel,
             PermissionFlagsBits.SendMessages,
@@ -139,7 +139,7 @@ module.exports = {
       if (!memberRole) {
         memberRole = await guild.roles.create({
           name: '✅ Member',
-          colors: 0x2ECC71, // สีเขียวสดใส
+          color: '#2ECC71', // สีเขียวสดใส
           permissions: [
             PermissionFlagsBits.ViewChannel,
             PermissionFlagsBits.SendMessages,
@@ -160,14 +160,15 @@ module.exports = {
       }
 
       // 6. บันทึก Role IDs ลงฐานข้อมูล MySQL อัตโนมัติทันที
-      const { updateGuildSettings } = require('../../database/db');
-      await updateGuildSettings(guild.id, {
-        leaderRoleId: leaderRole.id,
-        adminRoleId: adminRole.id,
-        moderatorRoleId: modRole.id,
-        supportRoleId: supportRole ? supportRole.id : null,
-        verifiedRoleId: memberRole.id
-      });
+      if (typeof updateGuildSettings === 'function') {
+        await updateGuildSettings(guild.id, {
+          leaderRoleId: leaderRole.id,
+          adminRoleId: adminRole.id,
+          moderatorRoleId: modRole.id,
+          supportRoleId: supportRole ? supportRole.id : null,
+          verifiedRoleId: memberRole.id
+        });
+      }
 
       // 7. มอบยศ Leader และ Admin ให้แก่คนที่รันคำสั่งทันที
       if (leaderRole && botMember.roles.highest.position > leaderRole.position) {
@@ -186,11 +187,11 @@ module.exports = {
           'บอทได้ทำการสร้างยศ กำหนดสิทธิ์ และ **บันทึกการตั้งค่าลงฐานข้อมูล MySQL เรียบร้อยแล้ว** (ไม่ต้องไปแก้ .env เอง)\n\n' +
           '📋 **รายการยศที่บันทึกแล้ว:**\n' +
           createdRoles.join('\n') + '\n\n' +
-          '💡 **คุณสามารถปรับเปลี่ยนยศเพิ่มเติมได้ตลอดเวลาผ่าน [Web Dashboard](http://localhost:3000/#dashboard)**\n\n' +
+          '💡 **คุณสามารถปรับเปลี่ยนยศเพิ่มเติมได้ตลอดเวลาผ่าน [Web Dashboard](http://119.10.137.245:3000/#dashboard)**\n\n' +
           '⚠️ **ข้อควรระวังสำคัญ:**\n' +
           'อย่าลืมไปที่ **Server Settings ➡️ Roles** แล้วลาก **ยศของบอท** ขึ้นไปอยู่ **"สูงกว่า"** ยศทั้งหมดนี้ด้วยนะครับ!'
         )
-        .setColor(config.colors.success)
+        .setColor(config.colors.success || '#2ECC71')
         .setFooter({
           text: `${guild.name} • Auto Role Setup`,
           iconURL: guild.iconURL({ dynamic: true })
@@ -202,7 +203,7 @@ module.exports = {
       logger.error('เกิดข้อผิดพลาดขณะรันคำสั่ง /setup-roles:', error);
 
       if (interaction.deferred || interaction.replied) {
-        const errEmbed = createErrorEmbed('ข้อผิดพลาดระบบ', config.messages.genericError);
+        const errEmbed = createErrorEmbed('ข้อผิดพลาดระบบ', `ไม่สามารถสร้างยศได้: ${error.message}`);
         await interaction.editReply({ embeds: [errEmbed] });
       }
     }
