@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const heroBotAvatar = document.getElementById('hero-bot-avatar');
   const botNameDisplay = document.getElementById('bot-name-display');
   const botTagDisplay = document.getElementById('bot-tag-display');
-  const btnInvite = document.getElementById('btn-invite');
+  
   const btnHeroInvite = document.getElementById('btn-hero-invite');
   const authNavContainer = document.getElementById('auth-nav-container');
 
@@ -42,24 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const statPing = document.getElementById('stat-ping');
   const statUptime = document.getElementById('stat-uptime');
 
-  // Music Widget Elements
-  const musicCover = document.getElementById('music-cover');
-  const musicBadgeText = document.getElementById('music-badge-text');
-  const musicGuildName = document.getElementById('music-guild-name');
-  const musicSongName = document.getElementById('music-song-name');
-  const musicArtistName = document.getElementById('music-artist-name');
-  const visualizer = document.getElementById('visualizer');
-  const musicProgressFill = document.getElementById('music-progress-fill');
-  const musicCurrentTime = document.getElementById('music-current-time');
-  const musicDuration = document.getElementById('music-duration');
-  const musicPlayBtn = document.getElementById('music-play-btn');
-  const musicPrevBtn = document.getElementById('music-prev-btn');
-  const musicNextBtn = document.getElementById('music-next-btn');
-  const musicStopBtn = document.getElementById('music-stop-btn');
-  const musicVolText = document.getElementById('music-vol-text');
-  const musicRequesterBox = document.getElementById('music-requester-box');
-  const musicRequesterAvatar = document.getElementById('music-requester-avatar');
-  const musicRequesterName = document.getElementById('music-requester-name');
+
 
   // Dashboard & Auth State Elements
   const dashboardLockOverlay = document.getElementById('dashboard-lock-overlay');
@@ -97,13 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnActionMusic = document.getElementById('btn-action-music');
   const btnActionLockdown = document.getElementById('btn-action-lockdown');
 
-  // Announcement Elements
-  const annChannel = document.getElementById('ann-channel');
-  const annTitle = document.getElementById('ann-title');
-  const annDesc = document.getElementById('ann-desc');
-  const annColor = document.getElementById('ann-color');
-  const annImage = document.getElementById('ann-image');
-  const btnSendAnnouncement = document.getElementById('btn-send-announcement');
+
 
   // Commands Explorer Elements
   const commandsContainer = document.getElementById('commands-container');
@@ -235,60 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
           if (statUptime) statUptime.textContent = data.stats.uptimeFormatted;
         }
 
-        if (data.music) {
-          const m = data.music;
-          if (m.isPlaying) {
-            currentPlayingGuildId = m.guildId;
-            if (musicCover && m.thumbnail) musicCover.src = m.thumbnail;
-            if (musicBadgeText) musicBadgeText.textContent = m.isPaused ? 'Paused' : 'Playing Now';
-            if (musicGuildName) musicGuildName.textContent = m.guildName;
-            if (musicSongName) musicSongName.textContent = m.songName;
-            if (musicArtistName) musicArtistName.textContent = `${m.artist} • ${m.queueCount || 1} เพลงในคิว`;
-            if (musicCurrentTime) musicCurrentTime.textContent = m.currentTime;
-            if (musicDuration) musicDuration.textContent = m.duration;
-            if (musicProgressFill) musicProgressFill.style.width = `${m.progressPercent}%`;
 
-            if (musicRequesterBox) musicRequesterBox.style.display = 'inline-flex';
-            if (musicRequesterName) musicRequesterName.textContent = m.requesterName || '-';
-            if (musicRequesterAvatar && m.requesterAvatar) musicRequesterAvatar.src = m.requesterAvatar;
-
-            if (visualizer) {
-              if (!m.isPaused) visualizer.classList.add('active');
-              else visualizer.classList.remove('active');
-            }
-
-            if (musicPlayBtn) {
-              if (!m.isPaused) {
-                musicPlayBtn.innerHTML = '<i class="fa-solid fa-pause"></i>';
-                musicPlayBtn.title = 'พักเพลงชั่วคราว';
-              } else {
-                musicPlayBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
-                musicPlayBtn.title = 'เล่นต่อ';
-              }
-            }
-
-            if (musicVolText && m.volume !== undefined) {
-              musicVolText.textContent = `${m.volume}%`;
-            }
-          } else {
-            currentPlayingGuildId = null;
-            if (musicCover) musicCover.src = 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbnZzaGhhNTRrNXkxbndxczI4cnpna2tzYnR4cTN6enhrNHpzNWg5ZCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/26AHG5KGFxSkUWw1i/giphy.gif';
-            if (musicBadgeText) musicBadgeText.textContent = 'Standby';
-            if (musicGuildName) musicGuildName.textContent = 'Discord Lounge';
-            if (musicSongName) musicSongName.textContent = 'ยังไม่มีเพลงที่กำลังเล่น';
-            if (musicArtistName) musicArtistName.textContent = 'Uryu Music System • 48kHz Stereo';
-            if (musicCurrentTime) musicCurrentTime.textContent = '00:00';
-            if (musicDuration) musicDuration.textContent = '00:00';
-            if (musicProgressFill) musicProgressFill.style.width = '0%';
-            if (visualizer) visualizer.classList.remove('active');
-            if (musicPlayBtn) {
-              musicPlayBtn.innerHTML = '<i class="fa-solid fa-play"></i>';
-              musicPlayBtn.title = 'ยังไม่มีเพลงเล่น';
-            }
-            if (musicVolText) musicVolText.textContent = '100%';
-            if (musicRequesterBox) musicRequesterBox.style.display = 'none';
-          }
-        }
 
         // Also refresh DJ Deck when Live DJ Studio tab is active
         const djTabPane = document.getElementById('tab-pane-dj');
@@ -1167,7 +1091,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const embedColor = document.getElementById('embed-color');
   const embedAuthorName = document.getElementById('embed-author-name');
   const embedAuthorIcon = document.getElementById('embed-author-icon');
-  const embedAuthorUrl = document.getElementById('embed-author-url');
+  
   const embedThumbnail = document.getElementById('embed-thumbnail');
   const embedImage = document.getElementById('embed-image');
   const embedFooterText = document.getElementById('embed-footer-text');
