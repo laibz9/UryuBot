@@ -272,11 +272,11 @@ async function updateGuildSettings(guildId, newSettings) {
       await pool.query(`
         INSERT INTO guild_settings (
           guild_id, verified_role_id, leader_role_id, admin_role_id,
-          moderator_role_id, verify_channel_id, welcome_channel_id,
+          moderator_role_id, support_role_id, verify_channel_id, welcome_channel_id,
           goodbye_channel_id, enable_welcome, log_channel_id,
           enable_logs, enable_admin_commands, enable_moderation_commands,
           ticket_channel_id, ticket_category_id, music_channel_id
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON DUPLICATE KEY UPDATE
           verified_role_id = VALUES(verified_role_id),
           leader_role_id = VALUES(leader_role_id),
@@ -354,7 +354,21 @@ async function getNextTicketNumber(guildId) {
   return next;
 }
 
+
+function isDbConnected() {
+  return isConnected;
+}
+
+async function disconnectDatabase() {
+  if (pool) {
+    await pool.end();
+    isConnected = false;
+  }
+}
+
 module.exports = {
+  isDbConnected,
+  disconnectDatabase,
   getNextTicketNumber,
   fetchGuildSettingsFresh,
   initDatabase,
