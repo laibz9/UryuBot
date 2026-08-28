@@ -17,7 +17,7 @@ const { updateGuildSettings } = require('../../database/db');
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('setup-roles')
-    .setDescription('สร้างยศ Leader, Admin, Moderator, Support และ Member พร้อมตั้งค่าสิทธิ์ให้อัตโนมัติ (เฉพาะเจ้าของเซิร์ฟเวอร์)')
+    .setDescription('สร้างยศ Leader, Admin, Mod, Support, Member อัตโนมัติ')
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
     .setDMPermission(false),
 
