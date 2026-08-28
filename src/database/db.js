@@ -207,14 +207,15 @@ function getGuildSettings(guildId) {
         moderator_role_id, support_role_id, verify_channel_id, welcome_channel_id,
         goodbye_channel_id, enable_welcome, log_channel_id,
         enable_logs, enable_admin_commands, enable_moderation_commands,
-        ticket_category_id, music_channel_id
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ticket_channel_id, ticket_category_id, music_channel_id
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       guildId,
       defaultSettings.verifiedRoleId,
       defaultSettings.leaderRoleId,
       defaultSettings.adminRoleId,
       defaultSettings.moderatorRoleId,
+      defaultSettings.supportRoleId || null,
       defaultSettings.verifyChannelId,
       defaultSettings.welcomeChannelId,
       defaultSettings.goodbyeChannelId,
@@ -223,8 +224,9 @@ function getGuildSettings(guildId) {
       defaultSettings.enableLogSystem ? 1 : 0,
       defaultSettings.enableAdminCommands ? 1 : 0,
       defaultSettings.enableModerationCommands ? 1 : 0,
-      defaultSettings.ticketCategoryId,
-      defaultSettings.musicChannelId
+      defaultSettings.ticketChannelId || null,
+      defaultSettings.ticketCategoryId || null,
+      defaultSettings.musicChannelId || null
     ]).catch(err => logger.error('[MySQL Insert Error]:', err.message));
   }
 
@@ -301,6 +303,7 @@ async function updateGuildSettings(guildId, newSettings) {
         updated.leaderRoleId,
         updated.adminRoleId,
         updated.moderatorRoleId,
+        updated.supportRoleId || null,
         updated.verifyChannelId,
         updated.welcomeChannelId,
         updated.goodbyeChannelId,
